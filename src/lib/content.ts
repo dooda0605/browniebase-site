@@ -54,7 +54,7 @@ export const content = {
     languages: {
       title: 'Understand Ingredients in 13 Languages',
       body: "Salpim lets you understand ingredient labels from products around the world, even when they're written in unfamiliar languages.",
-      list: ['Korean', 'English', 'Japanese', 'Chinese (Simplified)', 'Chinese (Traditional)', 'Thai', 'Vietnamese', 'Spanish', 'French', 'German', 'Russian', 'Arabic', 'Portuguese'],
+      list: ['Korean', 'English', 'Japanese', 'Chinese (Simplified)', 'Chinese (Traditional)', 'Thai', 'Vietnamese', 'Spanish', 'French', 'German', 'Russian', 'Arabic', 'Filipino'],
     },
     personal: {
       title: 'Personalized for You',
@@ -81,7 +81,7 @@ export const content = {
         { q: 'Does Salpim judge ingredient safety?', a: 'No. Salpim provides informational explanations only. It does not make safety judgments or provide medical advice. Salpim helps you understand what ingredients are and why they are used.' },
         { q: 'Can I scan products from other countries?', a: 'Yes. Salpim is designed to understand ingredient labels from products around the world, regardless of language or country of origin.' },
         { q: 'Can I save ingredients?', a: 'Yes. You can save ingredients to your personal library and review them anytime.' },
-        { q: 'Which languages are supported?', a: 'Salpim supports 13 languages: Korean, English, Japanese, Chinese (Simplified & Traditional), Thai, Vietnamese, Spanish, French, German, Russian, Arabic, and Portuguese.' },
+        { q: 'Which languages are supported?', a: 'Salpim supports 13 languages: Korean, English, Japanese, Chinese (Simplified & Traditional), Thai, Vietnamese, Spanish, French, German, Russian, Arabic, and Filipino.' },
         { q: 'Is Salpim a medical app?', a: 'No. Salpim is an informational tool only. Always consult a qualified healthcare professional for medical advice.' },
       ],
     },
@@ -156,7 +156,7 @@ export const content = {
     languages: {
       title: '13개 언어로 성분을 이해하세요',
       body: '전 세계 어디서 구매한 제품이든, 낯선 언어로 적힌 성분표도 살핌으로 이해할 수 있습니다.',
-      list: ['한국어', 'English', '日本語', '中文 (简体)', '中文 (繁體)', 'ภาษาไทย', 'Tiếng Việt', 'Español', 'Français', 'Deutsch', 'Русский', 'العربية', 'Português'],
+      list: ['한국어', 'English', '日本語', '中文 (简体)', '中文 (繁體)', 'ภาษาไทย', 'Tiếng Việt', 'Español', 'Français', 'Deutsch', 'Русский', 'العربية', 'Filipino'],
     },
     personal: {
       title: '나만의 맞춤 설정',
@@ -183,7 +183,7 @@ export const content = {
         { q: '살핌이 성분의 안전 여부를 판단하나요?', a: '아닙니다. 살핌은 정보 제공 목적으로만 사용됩니다. 성분의 안전 여부를 판단하거나 의학적 조언을 제공하지 않습니다. 각 성분이 무엇이며 왜 사용되는지를 설명합니다.' },
         { q: '해외 제품도 스캔할 수 있나요?', a: '네. 살핌은 전 세계 제품의 성분표를 이해하도록 설계되었습니다. 언어나 원산지에 관계없이 사용할 수 있습니다.' },
         { q: '성분을 저장할 수 있나요?', a: '네. 관심 성분을 개인 라이브러리에 저장하고 언제든지 다시 확인할 수 있습니다.' },
-        { q: '어떤 언어를 지원하나요?', a: '한국어, 영어, 일본어, 중국어(간체·번체), 태국어, 베트남어, 스페인어, 프랑스어, 독일어, 러시아어, 아랍어, 포르투갈어 등 13개 언어를 지원합니다.' },
+        { q: '어떤 언어를 지원하나요?', a: '한국어, 영어, 일본어, 중국어(간체·번체), 태국어, 베트남어, 스페인어, 프랑스어, 독일어, 러시아어, 아랍어, 필리핀어 등 13개 언어를 지원합니다.' },
         { q: '살핌은 의료 앱인가요?', a: '아닙니다. 살핌은 정보 제공 도구입니다. 의료 관련 사항은 반드시 전문의와 상담하세요.' },
       ],
     },
