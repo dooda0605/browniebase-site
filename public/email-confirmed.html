@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>이메일 인증 완료 – 살핌</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f6f2ff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px 32px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(123,97,255,0.10);
+    }
+    .icon {
+      width: 72px;
+      height: 72px;
+      background: #e9e3ff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 36px;
+    }
+    h1 {
+      font-size: 1.4rem;
+      color: #1a1a1a;
+      margin-bottom: 12px;
+    }
+    p {
+      font-size: 0.95rem;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+    .sub {
+      font-size: 0.85rem;
+      color: #999;
+      margin-top: 16px;
+    }
+    .lang { margin-top: 32px; font-size: 0.8rem; color: #bbb; }
+    .lang a { color: #7b61ff; text-decoration: none; }
+    hr { border: none; border-top: 1px solid #eee; margin: 28px 0 20px; }
+    .en { display: none; }
+  </style>
+  <script>
+    // 브라우저 언어가 영어권이면 영문 표시
+    if (navigator.language && !navigator.language.startsWith('ko')) {
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.ko').forEach(function(el) { el.style.display = 'none'; });
+        document.querySelectorAll('.en').forEach(function(el) { el.style.display = ''; });
+      });
+    }
+  </script>
+</head>
+<body>
+<div class="card">
+  <div class="icon">✅</div>
+
+  <div class="ko">
+    <h1>이메일 인증 완료!</h1>
+    <p>이메일 인증이 성공적으로 완료되었습니다.</p>
+    <p>이제 <strong>살핌 앱</strong>으로 돌아가서 로그인해 주세요.</p>
+    <p class="sub">앱을 닫으셨다면 다시 실행하여 로그인해 주세요.</p>
+  </div>
+
+  <div class="en">
+    <h1>Email Verified!</h1>
+    <p>Your email has been successfully verified.</p>
+    <p>Please return to the <strong>Salpim app</strong> and sign in.</p>
+    <p class="sub">If you closed the app, please reopen it and sign in.</p>
+  </div>
+
+  <hr>
+  <div class="lang"><a href="https://browniebase.com">browniebase.com</a></div>
+</div>
+</body>
+</html>
