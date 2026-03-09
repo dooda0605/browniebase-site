@@ -15,7 +15,7 @@ const flagEmoji: Record<string, string> = {
   'Deutsch': '🇩🇪', 'German': '🇩🇪',
   'Русский': '🇷🇺', 'Russian': '🇷🇺',
   'العربية': '🇸🇦', 'Arabic': '🇸🇦',
-  'Português': '🇧🇷', 'Portuguese': '🇧🇷',
+  'Filipino': '🇵🇭',
 }
 
 export default function Languages({ c }: LanguagesProps) {
