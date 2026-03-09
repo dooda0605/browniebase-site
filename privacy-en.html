@@ -19,7 +19,7 @@
 <body>
 
 <h1>Privacy Policy <span class="lang-switch"><a href="privacy.html">한국어</a></span></h1>
-<p class="meta">Effective: March 1, 2026 &nbsp;|&nbsp; Last updated: March 7, 2026</p>
+<p class="meta">Effective: March 1, 2026 &nbsp;|&nbsp; Last updated: March 9, 2026</p>
 
 <p>
   <strong>dududada</strong> ("we", "us", or "operator") values your privacy and is committed to
@@ -31,9 +31,10 @@
 <h2>1. Information We Collect</h2>
 <ul>
   <li><strong>Account Information</strong> – Email address (optional, only when you link an account)</li>
-  <li><strong>Device Identifier</strong> – Anonymous user ID (automatically generated on first launch)</li>
+  <li><strong>Device Identifier</strong> – Anonymous UUID generated on first launch (unrelated to advertising IDs)</li>
   <li><strong>App Settings</strong> – Display language, country/region, personal filters (allergies, dietary restrictions, etc.)</li>
-  <li><strong>Scan History</strong> – Ingredient analysis results and saved ingredient lists (original images are NOT stored on our servers)</li>
+  <li><strong>Scan History</strong> – Ingredient analysis results and saved ingredient lists</li>
+  <li><strong>App Usage Statistics</strong> – Daily active use (DAU), scan count, AI explanation requests, library saves (aggregated data that does not identify individuals)</li>
   <li><strong>Subscription Information</strong> – Purchase confirmation from Google Play, subscription start and expiry dates (we do NOT collect payment card details)</li>
 </ul>
 
@@ -44,7 +45,8 @@
   <li>Library (favorites) ingredient synchronization</li>
   <li>Personalized services such as daily ingredient summaries</li>
   <li>Pro subscription management and access verification</li>
-  <li>Service error analysis and quality improvement</li>
+  <li>Usage analytics and service quality improvement (AI cost monitoring, feature prioritization)</li>
+  <li>Displaying banner ads to free and guest users (Pro users see no ads)</li>
 </ul>
 
 <h2>3. Data Retention</h2>
@@ -59,15 +61,18 @@
 <p>We use the following third-party services to operate the App:</p>
 <ul>
   <li><strong>Supabase Inc.</strong> – Database and authentication (US servers, <a href="https://supabase.com/privacy" target="_blank">Privacy Policy</a>)</li>
-  <li><strong>Google ML Kit</strong> – On-device text recognition (OCR). Images are NOT sent to Google servers.</li>
+  <li><strong>OpenAI Inc.</strong> – AI image analysis (ingredient text extraction) and AI explanation generation. Ingredient label images are transmitted to OpenAI servers for analysis. Images are not used to train OpenAI models. (<a href="https://openai.com/policies/privacy-policy" target="_blank">OpenAI Privacy Policy</a>)</li>
+  <li><strong>Google ML Kit</strong> – On-device text recognition (OCR, fallback only). In this case, images are NOT sent to external servers.</li>
+  <li><strong>Google AdMob</strong> – Banner advertising for free and guest users. AdMob may collect device information and advertising identifiers for ad delivery. Pro users see no ads. (<a href="https://policies.google.com/privacy" target="_blank">Google Privacy Policy</a>)</li>
   <li><strong>Google Play</strong> – Subscription payment processing. Payment card details are managed solely by Google; we only receive purchase confirmation (subscription status and expiry date). (<a href="https://policies.google.com/privacy" target="_blank">Google Privacy Policy</a>)</li>
 </ul>
 
 <h2>5. Camera &amp; Image Handling</h2>
 <p>
   The App requests camera and gallery access to photograph ingredient labels.
-  Text recognition (OCR) is processed on-device. Original images are never transmitted to or
-  stored on external servers.
+  Images are <strong>transmitted to OpenAI servers</strong> for AI-based text extraction.
+  Original images are not stored on our servers (Supabase) and are handled in accordance with OpenAI's data policies.
+  If AI analysis fails (e.g., network error), on-device OCR (Google ML Kit) is used as a fallback — in this case, no image is sent externally.
 </p>
 
 <h2>6. Security Measures</h2>
