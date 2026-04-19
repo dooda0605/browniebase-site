@@ -58,7 +58,7 @@ export default function Nav({ c, lang, setLang }: NavProps) {
             >EN</button>
           </div>
 
-          <a href="#download" className="hidden sm:inline-flex items-center gap-1.5 bg-[#7B61FF] text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-[#6d51f0] transition-colors">
+          <a href="https://play.google.com/store/apps/details?id=app.ingredientanalyzer.consumer" target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1.5 bg-[#7B61FF] text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-[#6d51f0] transition-colors">
             {c.download}
           </a>
 
@@ -78,7 +78,7 @@ export default function Nav({ c, lang, setLang }: NavProps) {
           {links.map(l => (
             <a key={l.label} href={l.href} onClick={() => setOpen(false)} className="text-sm text-gray-700 hover:text-[#7B61FF]">{l.label}</a>
           ))}
-          <a href="#download" className="inline-flex justify-center bg-[#7B61FF] text-white text-sm font-medium px-4 py-2 rounded-full">
+          <a href="https://play.google.com/store/apps/details?id=app.ingredientanalyzer.consumer" target="_blank" rel="noopener noreferrer" className="inline-flex justify-center bg-[#7B61FF] text-white text-sm font-medium px-4 py-2 rounded-full">
             {c.download}
           </a>
         </div>

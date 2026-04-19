@@ -14,13 +14,13 @@ export const content = {
       download: 'Download',
     },
     hero: {
-      badge: 'Browniebase presents',
+      badge: 'Now available on Google Play',
       headline: 'Take a closer look at ingredients',
       subheadline: 'Scan ingredient labels and understand what they mean with AI.',
       tagline: "Found a product you don't recognize? Scan it and take a closer look with Salpim.",
       ctaPrimary: 'Download on Google Play',
       ctaSecondary: 'Learn More',
-      comingSoon: 'Coming Soon on Google Play',
+      comingSoon: 'Download on Google Play',
       quickFeatures: [
         { icon: '🔍', label: 'AI Ingredient Scan' },
         { icon: '🌏', label: '13 Language Support' },
@@ -90,7 +90,7 @@ export const content = {
       body: 'Scan products, understand ingredients, and save what matters to you.',
       primary: 'Download on Google Play',
       secondary: 'Learn More',
-      comingSoon: 'Coming Soon on Google Play',
+      comingSoon: 'Download on Google Play',
     },
     footer: {
       tagline: 'AI-powered ingredient understanding',
@@ -116,13 +116,13 @@ export const content = {
       download: '다운로드',
     },
     hero: {
-      badge: 'Browniebase 출시',
+      badge: 'Google Play 정식 출시',
       headline: 'AI로 성분을 더 자세히 살펴보세요',
       subheadline: 'AI가 각 성분을 쉽게 설명해 드립니다.',
       tagline: '모르는 제품을 발견했다면 AI 스캔으로 성분을 살펴보세요.',
       ctaPrimary: 'Google Play에서 다운로드',
       ctaSecondary: '더 알아보기',
-      comingSoon: 'Google Play 출시 예정',
+      comingSoon: 'Google Play에서 다운로드',
       quickFeatures: [
         { icon: '🔍', label: 'AI 성분 스캔' },
         { icon: '🌏', label: '13개 언어 지원' },
@@ -192,7 +192,7 @@ export const content = {
       body: '제품을 스캔하고, 성분을 이해하고, 중요한 것을 저장하세요.',
       primary: 'Google Play에서 다운로드',
       secondary: '더 알아보기',
-      comingSoon: 'Google Play 출시 예정',
+      comingSoon: 'Google Play에서 다운로드',
     },
     footer: {
       tagline: 'AI 기반 성분 해설 앱',

@@ -46,13 +46,17 @@ export default function Hero({ c }: HeroProps) {
             <p className="text-base text-gray-500 mb-8 max-w-xl mx-auto lg:mx-0 italic">&ldquo;{c.tagline}&rdquo;</p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start" id="download">
-              {/* Coming Soon button */}
-              <div className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-full font-medium cursor-default">
+              <a
+                href="https://play.google.com/store/apps/details?id=app.ingredientanalyzer.consumer"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-full font-medium hover:bg-gray-700 transition-colors"
+              >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3 20.5v-17c0-.83.94-1.3 1.6-.8l14 8.5c.6.37.6 1.23 0 1.6l-14 8.5c-.66.5-1.6.03-1.6-.8z"/>
                 </svg>
-                {c.comingSoon}
-              </div>
+                {c.ctaPrimary}
+              </a>
               <a href="#features" className="inline-flex items-center justify-center gap-2 border border-[#7B61FF] text-[#7B61FF] px-6 py-3 rounded-full font-medium hover:bg-[#7B61FF]/5 transition-colors">
                 {c.ctaSecondary}
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
