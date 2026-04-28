@@ -58,6 +58,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
 .coord-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .coord-values { color: white; font-family: monospace; font-size: 10.5px; text-align: right; }
 .pending-badge { font-size: 9px; background: #FF6D00; color: white; padding: 1px 4px; border-radius: 4px; margin-left: 3px; }
+.delete-badge { font-size: 9px; background: #b71c1c; color: white; padding: 1px 4px; border-radius: 4px; margin-left: 3px; }
+.facility-remove-btn {
+  width: 18px; height: 18px; border-radius: 3px; border: 1px solid #3a2020;
+  background: transparent; color: #7a3030; cursor: pointer; font-size: 11px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background .15s, color .15s; padding: 0;
+}
+.facility-remove-btn:hover { background: #3a1010; color: #ff5252; border-color: #ff5252; }
 .dimmed { opacity: 0.4; }
 
 /* ── Zone 목록 ── */
@@ -657,6 +665,54 @@ function deleteZone(id, isNew) {
   updatePanel();
 }
 
+// ── 샤워/주차 시설 제거 ───────────────────────────────────────────────────
+// 사용자가 시설 제거 → DB의 lat/lon/info/fee 컬럼을 NULL로 PATCH 예약.
+// 저장 전엔 pending 상태로만 표시되고 ↺ 버튼으로 취소 가능.
+function removeFacility(type) {
+  if (!selectedSpot) return;
+  const label = type === 'shower' ? '샤워' : '주차';
+  if (!confirm(`${selectedSpot.name?.ko || selectedSpot.name?.en}의 ${label} 시설을 제거할까요?\n저장 시 DB에서 좌표·설명·요금이 모두 NULL로 처리됩니다.`)) return;
+
+  // 지도에서 마커 즉시 제거 (저장 전 시각 피드백)
+  const existing = activeMarkers.find(m => m.type === type && m.id === selectedSpot.id);
+  if (existing) {
+    existing.marker.remove();
+    activeMarkers = activeMarkers.filter(m => m !== existing);
+  }
+
+  // 관련 컬럼 모두 NULL로 pending 마킹
+  const fields = type === 'shower'
+    ? { shower_lat: null, shower_lon: null, shower_info: null, shower_fee: null }
+    : { parking_lat: null, parking_lon: null, parking_info: null, parking_fee: null };
+  setPending('spot', selectedSpot.id, fields);
+  updatePanel();
+}
+
+// 삭제 예정 취소 — pending에서 해당 시설 필드 제거 + 마커 복원
+function cancelRemoveFacility(type) {
+  if (!selectedSpot) return;
+  const key = `spot:${selectedSpot.id}`;
+  const sp = pendingChanges[key];
+  if (!sp) return;
+  const removeFields = type === 'shower'
+    ? ['shower_lat', 'shower_lon', 'shower_info', 'shower_fee']
+    : ['parking_lat', 'parking_lon', 'parking_info', 'parking_fee'];
+  removeFields.forEach(f => delete sp[f]);
+  if (Object.keys(sp).length === 0) delete pendingChanges[key];
+
+  // 원본 좌표 있으면 마커 복원
+  const lat = type === 'shower' ? selectedSpot.shower_lat : selectedSpot.parking_lat;
+  const lon = type === 'shower' ? selectedSpot.shower_lon : selectedSpot.parking_lon;
+  if (lat && lon) {
+    const cfg = type === 'shower'
+      ? { color: '#00796B', label: '🚿' }
+      : { color: '#1565C0', label: 'P' };
+    addMarker({ type, id: selectedSpot.id, lat, lon, color: cfg.color, label: cfg.label, size: 30 });
+  }
+  markDirty();
+  updatePanel();
+}
+
 // ── Pending 관리 ──────────────────────────────────────────────────────────
 function setPending(type, id, fields) {
   const key = `${type}:${id}`;
@@ -701,14 +757,19 @@ function updatePanel() {
   const zones = allZones.filter(z => z.parent_spot_id === s.id && !pendingDeletes.includes(z.id));
   const newZones = pendingInserts.filter(z => z.parent_spot_id === s.id);
 
-  const lat   = sp.lat       ?? s.lat;
-  const lon   = sp.lon       ?? s.lon;
-  const shLat = sp.shower_lat  ?? s.shower_lat;
-  const shLon = sp.shower_lon  ?? s.shower_lon;
-  const pkLat = sp.parking_lat ?? s.parking_lat;
-  const pkLon = sp.parking_lon ?? s.parking_lon;
+  // hasOwnProperty로 명시적 확인 — pending에 null로 마킹된 경우 ?? 가 fallthrough해서 원본을 보여주는 버그 회피.
+  const get = (key) => Object.prototype.hasOwnProperty.call(sp, key) ? sp[key] : s[key];
+  const lat   = get('lat');
+  const lon   = get('lon');
+  const shLat = get('shower_lat');
+  const shLon = get('shower_lon');
+  const pkLat = get('parking_lat');
+  const pkLon = get('parking_lon');
   const modified = (field) => sp[field] !== undefined;
+  // 시설 삭제 예정: pending에 명시적으로 null이 들어있을 때
+  const markedDelete = (field) => Object.prototype.hasOwnProperty.call(sp, field) && sp[field] === null;
   const badge = () => `<span class="pending-badge">수정</span>`;
+  const delBadge = () => `<span class="delete-badge">삭제 예정</span>`;
 
   let html = `
     <div class="coord-row">
@@ -718,8 +779,15 @@ function updatePanel() {
 
   if (shLat) {
     html += `<div class="coord-row">
-      <div class="coord-label"><div class="coord-dot" style="background:#00796B"></div>샤워${modified('shower_lat') ? badge() : ''}</div>
+      <div class="coord-label"><div class="coord-dot" style="background:#00796B"></div>샤워${modified('shower_lat') && !markedDelete('shower_lat') ? badge() : ''}</div>
       <div class="coord-values">${fmt(shLat)}<br>${fmt(shLon)}</div>
+      <button class="facility-remove-btn" title="샤워 시설 제거" onclick="removeFacility('shower')">×</button>
+    </div>`;
+  } else if (markedDelete('shower_lat')) {
+    html += `<div class="coord-row">
+      <div class="coord-label"><div class="coord-dot" style="background:#00796B"></div>샤워${delBadge()}</div>
+      <div class="coord-values">—</div>
+      <button class="facility-remove-btn" title="삭제 예정 취소" onclick="cancelRemoveFacility('shower')" style="border-color:#7dbdff;color:#7dbdff">↺</button>
     </div>`;
   } else {
     html += `<div class="coord-row dimmed">
@@ -730,8 +798,15 @@ function updatePanel() {
 
   if (pkLat) {
     html += `<div class="coord-row">
-      <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>주차${modified('parking_lat') ? badge() : ''}</div>
+      <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>주차${modified('parking_lat') && !markedDelete('parking_lat') ? badge() : ''}</div>
       <div class="coord-values">${fmt(pkLat)}<br>${fmt(pkLon)}</div>
+      <button class="facility-remove-btn" title="주차 시설 제거" onclick="removeFacility('parking')">×</button>
+    </div>`;
+  } else if (markedDelete('parking_lat')) {
+    html += `<div class="coord-row">
+      <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>주차${delBadge()}</div>
+      <div class="coord-values">—</div>
+      <button class="facility-remove-btn" title="삭제 예정 취소" onclick="cancelRemoveFacility('parking')" style="border-color:#7dbdff;color:#7dbdff">↺</button>
     </div>`;
   } else {
     html += `<div class="coord-row dimmed">
