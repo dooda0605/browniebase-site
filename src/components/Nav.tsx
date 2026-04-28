@@ -42,6 +42,7 @@ export default function Nav({ c, lang, setLang }: NavProps) {
           {links.map(l => (
             <a key={l.label} href={l.href} className="text-sm text-gray-600 hover:text-[#7B61FF] transition-colors">{l.label}</a>
           ))}
+          <a href="/underwater/" className="text-sm text-cyan-600 hover:text-cyan-700 transition-colors font-medium">🌊 Underwater →</a>
         </div>
 
         {/* Right: lang toggle + CTA */}
@@ -78,6 +79,7 @@ export default function Nav({ c, lang, setLang }: NavProps) {
           {links.map(l => (
             <a key={l.label} href={l.href} onClick={() => setOpen(false)} className="text-sm text-gray-700 hover:text-[#7B61FF]">{l.label}</a>
           ))}
+          <a href="/underwater/" className="text-sm text-cyan-600 font-medium">🌊 Underwater →</a>
           <a href="https://play.google.com/store/apps/details?id=app.ingredientanalyzer.consumer" target="_blank" rel="noopener noreferrer" className="inline-flex justify-center bg-[#7B61FF] text-white text-sm font-medium px-4 py-2 rounded-full">
             {c.download}
           </a>
