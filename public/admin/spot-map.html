@@ -231,6 +231,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
     <div id="add-controls">
       <button class="add-btn" id="btn-add-shower" onclick="toggleAddMode('shower')">🚿 샤워</button>
       <button class="add-btn" id="btn-add-parking" onclick="toggleAddMode('parking')">🅿️ 주차</button>
+      <button class="add-btn" id="btn-add-toilet" onclick="toggleAddMode('toilet')">🚽 화장실</button>
     </div>
     <button id="save-btn" disabled onclick="saveChanges()">💾 변경사항 저장</button>
     <button id="undo-btn" onclick="undoChanges()">↩ 변경 취소</button>
@@ -244,6 +245,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
   <div class="legend-item"><div class="legend-dot" style="background:#FF6D00"></div>Zone (수중 구역)</div>
   <div class="legend-item"><div class="legend-dot" style="background:#00796B"></div>샤워 시설</div>
   <div class="legend-item"><div class="legend-dot" style="background:#1565C0"></div>주차장</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#9C27B0"></div>화장실</div>
 </div>
 
 <script>
@@ -413,7 +415,7 @@ function renderExcelPanel(excelData) {
 // ── 데이터 로드 ───────────────────────────────────────────────────────────
 async function loadData() {
   const [spotsRes, zonesRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,parking_lat,parking_lon,parking_info&is_active=eq.true&limit=500`, { headers: API_HEADERS }),
+    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,parking_lat,parking_lon,parking_info,toilet_lat,toilet_lon,toilet_info&is_active=eq.true&limit=500`, { headers: API_HEADERS }),
     fetch(`${SUPABASE_URL}/rest/v1/sub_spots?select=id,zone_code,lat,lon,parent_spot_id&is_active=eq.true&limit=1000`, { headers: API_HEADERS })
   ]);
   if (!spotsRes.ok) throw new Error('spots 로드 실패: ' + await spotsRes.text());
@@ -500,6 +502,8 @@ function placeAllMarkers() {
     addMarker({ type: 'shower', id: s.id, lat: s.shower_lat, lon: s.shower_lon, color: '#00796B', label: '🚿', size: 30 });
   if (s.parking_lat && s.parking_lon)
     addMarker({ type: 'parking', id: s.id, lat: s.parking_lat, lon: s.parking_lon, color: '#1565C0', label: 'P', size: 30 });
+  if (s.toilet_lat && s.toilet_lon)
+    addMarker({ type: 'toilet', id: s.id, lat: s.toilet_lat, lon: s.toilet_lon, color: '#9C27B0', label: '🚽', size: 30 });
 }
 
 // ── 마커 생성 ─────────────────────────────────────────────────────────────
@@ -512,6 +516,7 @@ function addMarker({ type, id, lat, lon, color, label, size = 32, isZone = false
     if (type === 'spot')    setPending('spot', id, { lat: r4lat, lon: r4lng });
     if (type === 'shower')  setPending('spot', id, { shower_lat: r4lat, shower_lon: r4lng });
     if (type === 'parking') setPending('spot', id, { parking_lat: r4lat, parking_lon: r4lng });
+    if (type === 'toilet')  setPending('spot', id, { toilet_lat: r4lat, toilet_lon: r4lng });
     if (type === 'zone')    setPending('zone', id, { lat: r4lat, lon: r4lng });
     if (type === 'zone-new') {
       const pi = pendingInserts.find(z => z.tempId === id);
@@ -562,10 +567,14 @@ map.on('click', e => {
     selectedSpot.shower_lat = r4lat; selectedSpot.shower_lon = r4lng;
     addMarker({ type: 'shower', id: selectedSpot.id, lat: r4lat, lon: r4lng, color: '#00796B', label: '🚿', size: 30 });
     setPending('spot', selectedSpot.id, { shower_lat: r4lat, shower_lon: r4lng });
-  } else {
+  } else if (addMode === 'parking') {
     selectedSpot.parking_lat = r4lat; selectedSpot.parking_lon = r4lng;
     addMarker({ type: 'parking', id: selectedSpot.id, lat: r4lat, lon: r4lng, color: '#1565C0', label: 'P', size: 30 });
     setPending('spot', selectedSpot.id, { parking_lat: r4lat, parking_lon: r4lng });
+  } else if (addMode === 'toilet') {
+    selectedSpot.toilet_lat = r4lat; selectedSpot.toilet_lon = r4lng;
+    addMarker({ type: 'toilet', id: selectedSpot.id, lat: r4lat, lon: r4lng, color: '#9C27B0', label: '🚽', size: 30 });
+    setPending('spot', selectedSpot.id, { toilet_lat: r4lat, toilet_lon: r4lng });
   }
   toggleAddMode(null);
   updatePanel();
@@ -575,6 +584,7 @@ function toggleAddMode(mode) {
   addMode = (addMode === mode) ? null : mode;
   document.getElementById('btn-add-shower').classList.toggle('active', addMode === 'shower');
   document.getElementById('btn-add-parking').classList.toggle('active', addMode === 'parking');
+  document.getElementById('btn-add-toilet').classList.toggle('active', addMode === 'toilet');
   const zoneBtn = document.getElementById('btn-add-zone');
   if (zoneBtn) zoneBtn.classList.toggle('active', addMode === 'zone');
   const hint = document.getElementById('map-hint');
@@ -668,10 +678,18 @@ function deleteZone(id, isNew) {
 // ── 샤워/주차 시설 제거 ───────────────────────────────────────────────────
 // 사용자가 시설 제거 → DB의 lat/lon/info/fee 컬럼을 NULL로 PATCH 예약.
 // 저장 전엔 pending 상태로만 표시되고 ↺ 버튼으로 취소 가능.
+// 시설 종류별 메타데이터
+const FACILITY_META = {
+  shower:  { label: '샤워',   color: '#00796B', icon: '🚿', cols: ['shower_lat', 'shower_lon', 'shower_info', 'shower_fee'] },
+  parking: { label: '주차',   color: '#1565C0', icon: 'P',  cols: ['parking_lat', 'parking_lon', 'parking_info', 'parking_fee'] },
+  toilet:  { label: '화장실', color: '#9C27B0', icon: '🚽', cols: ['toilet_lat', 'toilet_lon', 'toilet_info'] },
+};
+
 function removeFacility(type) {
   if (!selectedSpot) return;
-  const label = type === 'shower' ? '샤워' : '주차';
-  if (!confirm(`${selectedSpot.name?.ko || selectedSpot.name?.en}의 ${label} 시설을 제거할까요?\n저장 시 DB에서 좌표·설명·요금이 모두 NULL로 처리됩니다.`)) return;
+  const meta = FACILITY_META[type];
+  if (!meta) return;
+  if (!confirm(`${selectedSpot.name?.ko || selectedSpot.name?.en}의 ${meta.label} 시설을 제거할까요?\n저장 시 DB에서 좌표·설명·요금이 모두 NULL로 처리됩니다.`)) return;
 
   // 지도에서 마커 즉시 제거 (저장 전 시각 피드백)
   const existing = activeMarkers.find(m => m.type === type && m.id === selectedSpot.id);
@@ -681,9 +699,7 @@ function removeFacility(type) {
   }
 
   // 관련 컬럼 모두 NULL로 pending 마킹
-  const fields = type === 'shower'
-    ? { shower_lat: null, shower_lon: null, shower_info: null, shower_fee: null }
-    : { parking_lat: null, parking_lon: null, parking_info: null, parking_fee: null };
+  const fields = Object.fromEntries(meta.cols.map(c => [c, null]));
   setPending('spot', selectedSpot.id, fields);
   updatePanel();
 }
@@ -691,23 +707,19 @@ function removeFacility(type) {
 // 삭제 예정 취소 — pending에서 해당 시설 필드 제거 + 마커 복원
 function cancelRemoveFacility(type) {
   if (!selectedSpot) return;
+  const meta = FACILITY_META[type];
+  if (!meta) return;
   const key = `spot:${selectedSpot.id}`;
   const sp = pendingChanges[key];
   if (!sp) return;
-  const removeFields = type === 'shower'
-    ? ['shower_lat', 'shower_lon', 'shower_info', 'shower_fee']
-    : ['parking_lat', 'parking_lon', 'parking_info', 'parking_fee'];
-  removeFields.forEach(f => delete sp[f]);
+  meta.cols.forEach(f => delete sp[f]);
   if (Object.keys(sp).length === 0) delete pendingChanges[key];
 
-  // 원본 좌표 있으면 마커 복원
-  const lat = type === 'shower' ? selectedSpot.shower_lat : selectedSpot.parking_lat;
-  const lon = type === 'shower' ? selectedSpot.shower_lon : selectedSpot.parking_lon;
+  // 원본 좌표 있으면 마커 복원 (cols 첫 두 개가 lat/lon)
+  const lat = selectedSpot[meta.cols[0]];
+  const lon = selectedSpot[meta.cols[1]];
   if (lat && lon) {
-    const cfg = type === 'shower'
-      ? { color: '#00796B', label: '🚿' }
-      : { color: '#1565C0', label: 'P' };
-    addMarker({ type, id: selectedSpot.id, lat, lon, color: cfg.color, label: cfg.label, size: 30 });
+    addMarker({ type, id: selectedSpot.id, lat, lon, color: meta.color, label: meta.icon, size: 30 });
   }
   markDirty();
   updatePanel();
@@ -765,6 +777,8 @@ function updatePanel() {
   const shLon = get('shower_lon');
   const pkLat = get('parking_lat');
   const pkLon = get('parking_lon');
+  const tlLat = get('toilet_lat');
+  const tlLon = get('toilet_lon');
   const modified = (field) => sp[field] !== undefined;
   // 시설 삭제 예정: pending에 명시적으로 null이 들어있을 때
   const markedDelete = (field) => Object.prototype.hasOwnProperty.call(sp, field) && sp[field] === null;
@@ -811,6 +825,25 @@ function updatePanel() {
   } else {
     html += `<div class="coord-row dimmed">
       <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>주차 (없음)</div>
+      <div class="coord-values">—</div>
+    </div>`;
+  }
+
+  if (tlLat) {
+    html += `<div class="coord-row">
+      <div class="coord-label"><div class="coord-dot" style="background:#9C27B0"></div>화장실${modified('toilet_lat') && !markedDelete('toilet_lat') ? badge() : ''}</div>
+      <div class="coord-values">${fmt(tlLat)}<br>${fmt(tlLon)}</div>
+      <button class="facility-remove-btn" title="화장실 제거" onclick="removeFacility('toilet')">×</button>
+    </div>`;
+  } else if (markedDelete('toilet_lat')) {
+    html += `<div class="coord-row">
+      <div class="coord-label"><div class="coord-dot" style="background:#9C27B0"></div>화장실${delBadge()}</div>
+      <div class="coord-values">—</div>
+      <button class="facility-remove-btn" title="삭제 예정 취소" onclick="cancelRemoveFacility('toilet')" style="border-color:#7dbdff;color:#7dbdff">↺</button>
+    </div>`;
+  } else {
+    html += `<div class="coord-row dimmed">
+      <div class="coord-label"><div class="coord-dot" style="background:#9C27B0"></div>화장실 (없음)</div>
       <div class="coord-values">—</div>
     </div>`;
   }
