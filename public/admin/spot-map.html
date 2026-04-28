@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>🌊 Spot Admin Map Editor</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; height: 100vh; background: #0b1220; color: white; overflow: hidden; }
+
+/* ── 사이드바 ── */
+#sidebar { width: 270px; min-width: 270px; display: flex; flex-direction: column; background: #111a2e; border-right: 1px solid #1e2f4a; }
+#sidebar-header { padding: 13px 16px; background: #0b1220; font-size: 13px; font-weight: 700; color: #7dbdff; border-bottom: 1px solid #1e2f4a; flex-shrink: 0; }
+#search-box { margin: 8px; padding: 7px 10px; background: #1a2535; border: 1px solid #2a3f5a; border-radius: 6px; color: white; font-size: 12px; outline: none; width: calc(100% - 16px); }
+#search-box::placeholder { color: #4a6080; }
+#spot-list { overflow-y: auto; flex: 1; }
+.spot-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #1a2535; font-size: 12px; transition: background .1s; }
+.spot-item:hover { background: #1e3050; }
+.spot-item.selected { background: #1a4a8a; border-left: 3px solid #1A73E8; }
+.spot-name { font-weight: 600; color: #e0ecff; }
+.spot-country { font-size: 10px; color: #5a7a9a; margin-top: 1px; }
+
+/* ── 지도 ── */
+#map { flex: 1; position: relative; }
+
+/* ── 정보 패널 ── */
+#info-panel {
+  position: absolute; top: 12px; right: 12px; width: 300px;
+  background: rgba(10, 16, 32, 0.97); border: 1px solid #1e3050;
+  border-radius: 10px; z-index: 10;
+  font-size: 12px; backdrop-filter: blur(8px);
+  display: flex; flex-direction: column;
+  max-height: calc(100vh - 60px);
+}
+#panel-header { padding: 12px 14px 0; flex-shrink: 0; }
+#panel-title { color: #7dbdff; font-size: 13px; font-weight: 700; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── 탭 ── */
+.tab-bar { display: flex; border-bottom: 1px solid #1e3050; flex-shrink: 0; }
+.tab-btn {
+  flex: 1; padding: 6px 4px; font-size: 11px; font-weight: 600;
+  background: transparent; border: none; color: #5a7a9a;
+  cursor: pointer; border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.tab-btn.active { color: #7dbdff; border-bottom-color: #7dbdff; }
+.tab-btn:hover:not(.active) { color: #aabbd0; }
+
+/* ── 탭 콘텐츠 ── */
+.tab-content { display: none; overflow-y: auto; flex: 1; padding: 10px 14px; }
+.tab-content.active { display: block; }
+
+/* ── 좌표 탭 ── */
+.coord-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #1a2535; gap: 6px; }
+.coord-row:last-child { border-bottom: none; }
+.coord-label { display: flex; align-items: center; gap: 6px; color: #aabbd0; white-space: nowrap; flex-shrink: 0; }
+.coord-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.coord-values { color: white; font-family: monospace; font-size: 10.5px; text-align: right; }
+.pending-badge { font-size: 9px; background: #FF6D00; color: white; padding: 1px 4px; border-radius: 4px; margin-left: 3px; }
+.dimmed { opacity: 0.4; }
+
+/* ── Zone 목록 ── */
+.zone-section-header { display: flex; justify-content: space-between; align-items: center; padding: 6px 0 4px; border-bottom: 1px solid #1a2535; }
+.zone-section-label { display: flex; align-items: center; gap: 6px; color: #aabbd0; font-size: 12px; }
+.zone-add-inline-btn {
+  font-size: 10px; padding: 2px 8px; background: transparent;
+  border: 1px solid #E65100; color: #E65100; border-radius: 4px;
+  cursor: pointer; transition: background .15s;
+}
+.zone-add-inline-btn:hover { background: rgba(230,81,0,0.15); }
+.zone-add-inline-btn.active { background: rgba(230,81,0,0.3); border-color: #ff7043; color: #ff7043; }
+.zone-item { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px solid #111e30; }
+.zone-item:last-child { border-bottom: none; }
+.zone-color-dot { width: 8px; height: 8px; border-radius: 2px; background: #E65100; flex-shrink: 0; }
+.zone-code-input {
+  flex: 1; background: #0d1928; border: 1px solid #2a3f5a; border-radius: 4px;
+  color: white; font-size: 11px; padding: 2px 6px; outline: none;
+  font-family: monospace; min-width: 0;
+}
+.zone-code-input:focus { border-color: #E65100; }
+.zone-code-input.modified { border-color: #FF6D00; background: #1a1400; }
+.zone-coords-small { font-family: monospace; font-size: 9px; color: #4a6080; white-space: nowrap; flex-shrink: 0; }
+.zone-delete-btn {
+  width: 18px; height: 18px; border-radius: 3px; border: 1px solid #3a2020;
+  background: transparent; color: #7a3030; cursor: pointer; font-size: 11px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background .15s, color .15s;
+}
+.zone-delete-btn:hover { background: #3a1010; color: #ff5252; border-color: #ff5252; }
+.zone-new-badge { font-size: 8px; background: #1b5e20; color: #a5d6a7; padding: 1px 4px; border-radius: 3px; flex-shrink: 0; }
+
+/* ── Zone 이름 다이얼로그 ── */
+#zone-dialog-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 50; display: none; align-items: center; justify-content: center;
+}
+#zone-dialog-backdrop.show { display: flex; }
+#zone-dialog {
+  background: #111a2e; border: 1px solid #2a3f5a; border-radius: 12px;
+  padding: 20px; width: 280px; box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+}
+#zone-dialog h4 { color: #7dbdff; font-size: 13px; margin-bottom: 12px; }
+#zone-dialog .coords-preview { font-family: monospace; font-size: 10px; color: #5a7a9a; margin-bottom: 12px; background: #0d1928; padding: 6px 8px; border-radius: 5px; }
+#zone-name-input {
+  width: 100%; padding: 8px 10px; background: #0d1928; border: 1px solid #E65100;
+  border-radius: 6px; color: white; font-size: 13px; outline: none; margin-bottom: 12px;
+  font-family: monospace;
+}
+#zone-name-input:focus { border-color: #ff7043; box-shadow: 0 0 0 2px rgba(230,81,0,0.2); }
+#zone-name-input::placeholder { color: #3a5070; }
+.dialog-btns { display: flex; gap: 8px; }
+.dialog-btn-confirm {
+  flex: 1; padding: 7px; background: #E65100; border: none; color: white;
+  border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background .15s;
+}
+.dialog-btn-confirm:hover { background: #bf360c; }
+.dialog-btn-cancel {
+  flex: 1; padding: 7px; background: transparent; border: 1px solid #2a3f5a;
+  color: #aabbd0; border-radius: 6px; font-size: 12px; cursor: pointer; transition: background .15s;
+}
+.dialog-btn-cancel:hover { background: #1a2535; }
+
+/* ── 엑셀 탭 ── */
+.excel-section { margin-bottom: 12px; }
+.excel-section-title { font-size: 10px; font-weight: 700; color: #5a7a9a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+.excel-row { display: flex; gap: 6px; margin-bottom: 4px; }
+.excel-label { font-size: 10px; color: #5a7a9a; white-space: nowrap; flex-shrink: 0; min-width: 52px; }
+.excel-val { font-size: 11px; color: #d0e4ff; line-height: 1.4; word-break: keep-all; }
+.excel-desc { font-size: 11px; color: #aabbd0; line-height: 1.5; background: #0d1928; border-radius: 5px; padding: 7px 9px; margin-top: 2px; }
+.activity-chip { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; margin: 1px 2px 1px 0; }
+.chip-beach   { background: #0d47a1; color: #90caf9; }
+.chip-snorkel { background: #006064; color: #80deea; }
+.chip-freedive { background: #1b5e20; color: #a5d6a7; }
+.chip-scuba   { background: #4a148c; color: #ce93d8; }
+.excel-no-data { color: #4a6080; font-size: 11px; padding: 12px 0; text-align: center; }
+.region-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: #1a3050; color: #7dbdff; margin-bottom: 8px; }
+.excel-divider { border: none; border-top: 1px solid #1a2535; margin: 8px 0; }
+.fee-tag { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 4px; background: #1a2535; color: #aabbd0; margin-left: 4px; }
+.excel-source { font-size: 10px; color: #3a5070; margin-top: 8px; font-style: italic; }
+
+/* ── 하단 버튼 영역 ── */
+#panel-footer { padding: 8px 14px 12px; flex-shrink: 0; border-top: 1px solid #1a2535; }
+#add-controls { display: none; gap: 6px; margin-bottom: 6px; }
+.add-btn { flex: 1; padding: 5px; border: 1px solid #2a3f5a; background: transparent; color: #7dbdff; border-radius: 5px; font-size: 10px; cursor: pointer; transition: background .15s; }
+.add-btn:hover { background: #1a2f4a; }
+.add-btn.active { background: #1a4a8a; border-color: #1A73E8; color: white; }
+#save-btn { width: 100%; padding: 8px; background: #1A73E8; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background .15s; }
+#save-btn:hover { background: #1565D8; }
+#save-btn:disabled { background: #2a3f5a; color: #5a7a9a; cursor: default; }
+#save-status { margin-top: 6px; font-size: 11px; text-align: center; min-height: 15px; }
+#undo-btn { margin-top: 5px; width: 100%; padding: 5px; background: transparent; border: 1px solid #2a3f5a; color: #7dbdff; border-radius: 5px; font-size: 11px; cursor: pointer; display: none; }
+#undo-btn:hover { background: #1a2f4a; }
+
+/* ── 범례 ── */
+#legend { position: absolute; bottom: 32px; right: 12px; background: rgba(10,16,32,0.9); border: 1px solid #1e3050; border-radius: 8px; padding: 10px 14px; font-size: 11px; z-index: 10; }
+.legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; color: #aabbd0; }
+.legend-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── 지도 클릭 힌트 ── */
+#map-hint { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: rgba(230,81,0,0.92); color: white; padding: 7px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; z-index: 20; display: none; pointer-events: none; }
+
+/* ── 로딩 ── */
+#loading { position: fixed; inset: 0; background: rgba(11,18,32,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; gap: 12px; }
+#loading .spinner { width: 32px; height: 32px; border: 3px solid #1e3050; border-top-color: #7dbdff; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- Zone 이름 다이얼로그 -->
+<div id="zone-dialog-backdrop">
+  <div id="zone-dialog">
+    <h4>🗺️ 새 Zone 추가</h4>
+    <div class="coords-preview" id="zone-dialog-coords">위도: — 경도: —</div>
+    <input id="zone-name-input" type="text" placeholder="Zone 코드 입력 (예: Z1, Z-Cave, Z-North…)" maxlength="20">
+    <div class="dialog-btns">
+      <button class="dialog-btn-cancel" onclick="cancelZoneDialog()">취소</button>
+      <button class="dialog-btn-confirm" onclick="confirmZoneDialog()">추가</button>
+    </div>
+  </div>
+</div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div style="color:#7dbdff;font-size:13px">스팟 데이터 로딩 중...</div>
+</div>
+
+<div id="sidebar">
+  <div id="sidebar-header">🌊 Spot Admin Map Editor</div>
+  <input id="search-box" placeholder="🔍 스팟 검색..." type="text">
+  <div id="spot-list"></div>
+</div>
+
+<div id="map">
+  <div id="map-hint">🖱️ 지도를 클릭해서 마커를 배치하세요 (ESC 취소)</div>
+</div>
+
+<div id="info-panel">
+  <div id="panel-header">
+    <div id="panel-title">← 스팟을 선택하세요</div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('coords')" id="tab-coords">📍 좌표 수정</button>
+      <button class="tab-btn" onclick="switchTab('excel')" id="tab-excel">📋 엑셀 정보</button>
+    </div>
+  </div>
+
+  <!-- 좌표 탭 -->
+  <div class="tab-content active" id="tab-content-coords">
+    <div id="coord-list">
+      <div style="color:#4a6080;font-size:11px;padding:8px 0">좌측 목록에서 스팟을 선택하면<br>마커를 드래그해 위치를 수정할 수 있습니다.</div>
+    </div>
+  </div>
+
+  <!-- 엑셀 탭 -->
+  <div class="tab-content" id="tab-content-excel">
+    <div id="excel-content">
+      <div class="excel-no-data">좌측 목록에서 스팟을 선택하세요</div>
+    </div>
+  </div>
+
+  <div id="panel-footer">
+    <div id="add-controls">
+      <button class="add-btn" id="btn-add-shower" onclick="toggleAddMode('shower')">🚿 샤워</button>
+      <button class="add-btn" id="btn-add-parking" onclick="toggleAddMode('parking')">🅿️ 주차</button>
+    </div>
+    <button id="save-btn" disabled onclick="saveChanges()">💾 변경사항 저장</button>
+    <button id="undo-btn" onclick="undoChanges()">↩ 변경 취소</button>
+    <div id="save-status"></div>
+  </div>
+</div>
+
+<div id="legend">
+  <div style="font-weight:700;color:#7dbdff;margin-bottom:6px;font-size:11px">마커 종류 (드래그 가능)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1A73E8"></div>스팟 중심점</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#FF6D00"></div>Zone (수중 구역)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#00796B"></div>샤워 시설</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1565C0"></div>주차장</div>
+</div>
+
+<script>
+// ── 엑셀 데이터 ──────────────────────────────────────────────────────────────
+const EXCEL_DATA = [{"region":"제주도","번호":"번호","스팟명(한국어)":"스팟명(한국어)","스팟명(영어)":"스팟명(영어)","스팟명(일본어)":"스팟명(일본어)","위도":"위도","경도":"경도","액티비티":"액티비티","수심 범위":"수심 범위","특징/설명":"특징/설명","DB등록여부":"DB등록여부","샤워장":"샤워장","샤워 요금":"샤워 요금","샤워장_위도":"샤워장_위도","샤워장_경도":"샤워장_경도","주차장":"주차장","주차 요금":"주차 요금","주차장_위도":"주차장_위도","주차장_경도":"주차장_경도","소스":"소스"},{"region":"제주도","번호":1,"스팟명(한국어)":"협재 해수욕장","스팟명(영어)":"Hyeopjae Beach","스팟명(일본어)":"挾才ビーチ","위도":33.3944,"경도":126.2394,"액티비티":"beach_swim, snorkel","수심 범위":"0~3m","특징/설명":"에메랄드빛 얕은 바다. 모래 지형. 비양도 조망. 초보자 적합.","DB등록여부":"✅ 등록됨","샤워장":"백사장 앞 샤워장","샤워 요금":"유료","샤워장_위도":33.394,"샤워장_경도":126.239,"주차장":"해수욕장 주차장","주차 요금":"성수기 유료\n(30분 무료→30분 1,000원→15분 500원)","주차장_위도":33.3955,"주차장_경도":126.2402,"소스":"naver maps / 직접 조사"},{"region":"제주도","번호":2,"스팟명(한국어)":"협재 해수욕장 북쪽","스팟명(영어)":"Hyeopjae Beach North","스팟명(일본어)":"挾才ビーチ北","위도":33.402,"경도":126.235,"액티비티":"snorkel","수심 범위":"0~4m","특징/설명":"협재 북쪽 암반 지대. 해양 생물 다양. 조류 약함.","DB등록여부":"✅ 등록됨","샤워장":"협재 해수욕장 시설 이용","샤워 요금":"유료(협재 동일)","샤워장_위도":33.394,"샤워장_경도":126.239,"주차장":"협재 해수욕장 주차장","주차 요금":"성수기 유료","주차장_위도":33.3955,"주차장_경도":126.2402,"소스":"naver maps / 직접 조사"},{"region":"제주도","번호":3,"스팟명(한국어)":"이호테우 해변","스팟명(영어)":"Iho Tewoo Beach","스팟명(일본어)":"梨湖テウービーチ","위도":33.4861,"경도":126.4427,"액티비티":"beach_swim","수심 범위":"0~2m","특징/설명":"목마 조형물로 유명. 제주시 인근. 수심 얕고 파도 잔잔.","DB등록여부":"✅ 등록됨","샤워장":"해수욕장 내 샤워장","샤워 요금":"무료 (6/25~8/31 운영)","샤워장_위도":33.4858,"샤워장_경도":126.4425,"주차장":"동·서 주차장","주차 요금":"무료","주차장_위도":33.487,"주차장_경도":126.444,"소스":"naver maps / visitjeju.net"},{"region":"제주도","번호":4,"스팟명(한국어)":"성산 일출봉 앞바다","스팟명(영어)":"Seongsan Ilchulbong Sea","스팟명(일본어)":"城山日出峰前海","위도":33.458,"경도":126.9429,"액티비티":"snorkel, freedive","수심 범위":"3~15m","특징/설명":"화산암 지형. 해녀 조업지. 시야 맑고 해양생물 풍부.","DB등록여부":"✅ 등록됨","샤워장":"미확인","샤워 요금":"미확인","샤워장_위도":"-","샤워장_경도":"-","주차장":"성산항 공영주차장","주차 요금":"유료","주차장_위도":33.4618,"주차장_경도":126.9353,"소스":"naver maps / 직접 조사"},{"region":"제주도","번호":5,"스팟명(한국어)":"서귀포 문섬","스팟명(영어)":"Munseom Island","스팟명(일본어)":"文島","위도":33.232,"경도":126.564,"액티비티":"scuba, freedive","수심 범위":"10~30m","특징/설명":"연산호 군락 세계 최대급. 조류 강함. 중급 이상 권장.","DB등록여부":"✅ 등록됨","샤워장":"다이빙센터 샤워 제공","샤워 요금":"다이빙 패키지 포함","샤워장_위도":33.2463,"샤워장_경도":126.5618,"주차장":"서귀포항 / 다이빙센터 주차","주차 요금":"다이빙센터 이용 시 무료","주차장_위도":33.247,"주차장_경도":126.5605,"소스":"divingholic.com / scubanet.kr"},{"region":"제주도","번호":6,"스팟명(한국어)":"우도 산호해변","스팟명(영어)":"Udo Coral Beach","스팟명(일본어)":"牛島サンゴビーチ","위도":33.507,"경도":126.952,"액티비티":"snorkel, beach_swim","수심 범위":"0~5m","특징/설명":"홍조단괴 해변. 국내 유일 산호 해변. 스노쿨링 명소.","DB등록여부":"✅ 등록됨","샤워장":"해변 샤워장 (우도 내)","샤워 요금":"유료","샤워장_위도":33.507,"샤워장_경도":126.952,"주차장":"성산항 선착장 주차장\n(우도 이동 후 차 없음)","주차 요금":"30분 무료→30분 500원\n1일 5,000원","주차장_위도":33.4598,"주차장_경도":126.925,"소스":"naver maps / 직접 조사"},{"region":"제주도","번호":7,"스팟명(한국어)":"서귀포 범섬","스팟명(영어)":"Beomseom Island","스팟명(일본어)":"虎島","위도":33.227,"경도":126.565,"액티비티":"scuba, freedive","수심 범위":"10~25m","특징/설명":"연산호 빼곡. 달고기·자리돔 다수. 서귀포 다이빙 1번지.","DB등록여부":"🆕 신규","샤워장":"다이빙센터 샤워 제공","샤워 요금":"다이빙 패키지 포함","샤워장_위도":33.2463,"샤워장_경도":126.5618,"주차장":"서귀포항 / 다이빙센터 주차","주차 요금":"다이빙센터 이용 시 무료","주차장_위도":33.247,"주차장_경도":126.5605,"소스":"divingholic.com / mobydickdive.co.kr"},{"region":"제주도","번호":8,"스팟명(한국어)":"범섬 기차바위","스팟명(영어)":"Gichababawi (Train Rock)","스팟명(일본어)":"虎島 汽車岩","위도":33.241,"경도":126.558,"액티비티":"scuba","수심 범위":"15~20m","특징/설명":"범섬 인근 바위 군락. 연산호 장관. 초중급 적합.","DB등록여부":"🆕 신규","샤워장":"다이빙센터 샤워 제공","샤워 요금":"다이빙 패키지 포함","샤워장_위도":33.2463,"샤워장_경도":126.5618,"주차장":"서귀포항 / 다이빙센터 주차","주차 요금":"다이빙센터 이용 시 무료","주차장_위도":33.247,"주차장_경도":126.5605,"소스":"divingholic.com"},{"region":"제주도","번호":9,"스팟명(한국어)":"섶섬 (섭섬)","스팟명(영어)":"Seomseom Island","스팟명(일본어)":"渉島","위도":33.231,"경도":126.61,"액티비티":"scuba, freedive","수심 범위":"15~30m","특징/설명":"수심 깊고 어종 다양. 모비딕 포인트 인근. 중급 이상.","DB등록여부":"🆕 신규","샤워장":"다이빙센터 샤워 제공","샤워 요금":"다이빙 패키지 포함","샤워장_위도":33.2463,"샤워장_경도":126.5618,"주차장":"서귀포 다이빙센터 경유","주차 요금":"다이빙센터 이용 시 무료","주차장_위도":33.247,"주차장_경도":126.5605,"소스":"padi.com/ko/dive-sites/jejudo/"},{"region":"제주도","번호":10,"스팟명(한국어)":"황우지 해안","스팟명(영어)":"Hwangwooji Coast","스팟명(일본어)":"黄牛地海岸","위도":33.246,"경도":126.506,"액티비티":"snorkel","수심 범위":"0~5m","특징/설명":"서귀포 자연 풀장. 현무암 지형. 스노쿨링 인기 명소.","DB등록여부":"🆕 신규","샤워장":"없음","샤워 요금":"-","샤워장_위도":"-","샤워장_경도":"-","주차장":"맞은편 혼합 주차 (표지판 확인)","주차 요금":"무료+유료 혼합\n(출입 제한 확인 필요)","주차장_위도":33.2468,"주차장_경도":126.5052,"소스":"naver maps / jejutour"},{"region":"제주도","번호":11,"스팟명(한국어)":"외돌개 해안","스팟명(영어)":"Oedolgae Coast","스팟명(일본어)":"外突崖海岸","위도":33.238,"경도":126.508,"액티비티":"snorkel","수심 범위":"0~8m","특징/설명":"외돌개 바위 주변 암반 지대. 다양한 어종 관찰 가능.","DB등록여부":"🆕 신규","샤워장":"찬물샤워","샤워 요금":"무료","샤워장_위도":"-","샤워장_경도":"-","주차장":"외돌개 공영주차장","주차 요금":"유료","주차장_위도":33.24,"주차장_경도":126.5095,"소스":"naver maps / 직접 조사"},{"region":"제주도","번호":12,"스팟명(한국어)":"마라도 앞바다","스팟명(영어)":"Marado Sea","스팟명(일본어)":"馬羅島前海","위도":33.113,"경도":126.268,"액티비티":"scuba","수심 범위":"10~35m","특징/설명":"한국 최남단 섬 앞. 가파른 월면 지형. 중급 이상.","DB등록여부":"🆕 신규","샤워장":"미확인","샤워 요금":"미확인","샤워장_위도":"-","샤워장_경도":"-","주차장":"운진항 주차장 (출발지)","주차 요금":"무료+유료 혼합","주차장_위도":33.2148,"주차장_경도":126.2813,"소스":"padi.com/ko/dive-sites/jejudo/"},{"region":"제주도","번호":13,"스팟명(한국어)":"수월봉 앞바다","스팟명(영어)":"Suwolbong Sea","스팟명(일본어)":"水月峰前海","위도":33.31,"경도":126.169,"액티비티":"snorkel, freedive","수심 범위":"3~10m","특징/설명":"차귀도 인근 화산 지형. 투명도 우수. 조류 비교적 약함.","DB등록여부":"🆕 신규","샤워장":"미확인","샤워 요금":"미확인","샤워장_위도":"-","샤워장_경도":"-","주차장":"수월봉 주차장","주차 요금":"무료","주차장_위도":33.3102,"주차장_경도":126.1712,"소스":"naver maps / 직접 조사"},{"region":"제주도","번호":14,"스팟명(한국어)":"성산 신양 스노쿨링 파크","스팟명(영어)":"Sinyang Snorkeling Park","스팟명(일본어)":"新陽スノーケリングパーク","위도":33.466,"경도":126.931,"액티비티":"snorkel, beach_swim","수심 범위":"0~4m","특징/설명":"공식 스노쿨링 지정 구역. 안전 요원 상주. 초보자 적합.","DB등록여부":"🆕 신규","샤워장":"샤워장 있음 (성수기 운영)","샤워 요금":"유료","샤워장_위도":33.466,"샤워장_경도":126.931,"주차장":"신양해수욕장 주차장","주차 요금":"성수기 유료","주차장_위도":33.4668,"주차장_경도":126.932,"소스":"jeju.go.kr / tripadvisor"},{"region":"제주도","번호":15,"스팟명(한국어)":"세화 해변","스팟명(영어)":"Sehwa Beach","스팟명(일본어)":"細花ビーチ","위도":33.48,"경도":126.832,"액티비티":"snorkel, beach_swim","수심 범위":"0~3m","특징/설명":"제주 동쪽 조용한 해변. 장기 체류자 선호. 수질 양호.","DB등록여부":"🆕 신규","샤워장":"미확인","샤워 요금":"미확인","샤워장_위도":"-","샤워장_경도":"-","주차장":"공용 주차장 (장애인 전용 1대)","주차 요금":"무료","주차장_위도":33.4808,"주차장_경도":126.8328,"소스":"naver maps / 직접 조사"},{"region":"제주도","번호":16,"스팟명(한국어)":"차귀도 해역","스팟명(영어)":"Chagwido Sea","스팟명(일본어)":"遮歸島海域","위도":33.312,"경도":126.154,"액티비티":"scuba, freedive","수심 범위":"10~30m","특징/설명":"무인도 주변. 엔젤피시·거북 출현. 보트 이동 필요.","DB등록여부":"🆕 신규","샤워장":"미확인","샤워 요금":"미확인","샤워장_위도":"-","샤워장_경도":"-","주차장":"자구내포구 주차장","주차 요금":"무료 또는 소액","주차장_위도":33.3168,"주차장_경도":126.1448,"소스":"padi.com/ko/dive-sites/jejudo/"},{"region":"오키나와","번호":"번호","스팟명(한국어)":"스팟명(한국어)","스팟명(영어)":"스팟명(영어)","스팟명(일본어)":"스팟명(일본어)","위도":"위도","경도":"경도","액티비티":"액티비티","수심 범위":"수심 범위","특징/설명":"특징/설명","DB등록여부":"DB등록여부","샤워장":"샤워장","샤워 요금":"샤워 요금","샤워장_위도":"샤워장_위도","샤워장_경도":"샤워장_경도","주차장":"주차장","주차 요금":"주차 요금","주차장_위도":"주차장_위도","주차장_경도":"주차장_경도","소스":"소스"},{"region":"오키나와","번호":1,"스팟명(한국어)":"만좌모 해변","스팟명(영어)":"Manzamo Beach","스팟명(일본어)":"万座毛ビーチ","위도":26.6932,"경도":127.874,"액티비티":"beach_swim, snorkel","수심 범위":"0~5m","특징/설명":"만좌모 절벽 아래 해변. 투명도 우수. 산호초 분포.","DB등록여부":"✅ 등록됨","샤워장":"샤워 시설 없음 (인근 만자비치 이용)","샤워 요금":"미확인","샤워장_위도":"-","샤워장_경도":"-","주차장":"만좌모 유료 주차장","주차 요금":"유료","주차장_위도":26.6938,"주차장_경도":127.875,"소스":"visitokinawajapan.com / naver maps"},{"region":"오키나와","번호":2,"스팟명(한국어)":"아라하 비치","스팟명(영어)":"Araha Beach","스팟명(일본어)":"アラハビーチ","위도":26.313,"경도":127.766,"액티비티":"beach_swim, snorkel","수심 범위":"0~3m","특징/설명":"찰탄 지역 인기 해변. 모래 바닥. 가족 단위 적합.","DB등록여부":"✅ 등록됨","샤워장":"있음 (성수기)","샤워 요금":"유료","샤워장_위도":26.313,"샤워장_경도":127.766,"주차장":"아라하 공원 주차장","주차 요금":"무료","주차장_위도":26.3142,"주차장_경도":127.7672,"소스":"visitokinawajapan.com"},{"region":"오키나와","번호":3,"스팟명(한국어)":"토키시키 섬","스팟명(영어)":"Tokashiki Island","스팟명(일본어)":"渡嘉敷島","위도":26.194,"경도":127.362,"액티비티":"scuba, freedive","수심 범위":"5~30m","특징/설명":"케라마 제도 최대 섬. 투명도 40m+. 거북 다수 서식.","DB등록여부":"✅ 등록됨","샤워장":"아하렌 해변 샤워장","샤워 요금":"무료~유료 (계절 운영)","샤워장_위도":26.185,"샤워장_경도":127.354,"주차장":"나하 토마린항 주차 후 페리 (600대+)","주차 요금":"유료 (600엔/일~)","주차장_위도":26.2218,"주차장_경도":127.6862,"소스":"alohadiversokinawa.com / padi.com"},{"region":"오키나와","번호":4,"스팟명(한국어)":"케라마 자마미","스팟명(영어)":"Zamami (Kerama)","스팟명(일본어)":"座間味島（慶良間）","위도":26.228,"경도":127.299,"액티비티":"scuba, freedive","수심 범위":"5~30m","특징/설명":"케라마 블루 투명도. 만타·고래 출현. 1~3월 혹등고래.","DB등록여부":"✅ 등록됨","샤워장":"코토자마미 해변 샤워장\n(4~10월 운영)","샤워 요금":"유료 (시즌)","샤워장_위도":26.232,"샤워장_경도":127.3,"주차장":"자마미 섬 내 차 불필요\n(나하 토마린항 출발 페리)","주차 요금":"나하 토마린항 주차 유료","주차장_위도":26.2218,"주차장_경도":127.6862,"소스":"alohadiversokinawa.com / visitokinawajapan.com"},{"region":"오키나와","번호":5,"스팟명(한국어)":"미이바루 비치","스팟명(영어)":"Miibaru Beach","스팟명(일본어)":"ミイバルビーチ","위도":26.122,"경도":127.786,"액티비티":"beach_swim, snorkel","수심 범위":"0~4m","특징/설명":"남부 조용한 해변. 산호초 스노쿨링 명소.","DB등록여부":"✅ 등록됨","샤워장":"있음 (성수기)","샤워 요금":"유료","샤워장_위도":26.122,"샤워장_경도":127.786,"주차장":"미이바루 주차장","주차 요금":"유료","주차장_위도":26.1228,"주차장_경도":127.787,"소스":"naver maps / okinawa-tourguide"},{"region":"오키나와","번호":6,"스팟명(한국어)":"요미탄 잔파 곶","스팟명(영어)":"Zanpa Cape (Yomitan)","스팟명(일본어)":"残波岬（読谷村）","위도":26.441,"경도":127.715,"액티비티":"snorkel, freedive","수심 범위":"3~15m","특징/설명":"잔파 곶 암반 지대. 다양한 열대어. 조류 주의.","DB등록여부":"✅ 등록됨","샤워장":"잔파미사키 파크 샤워장","샤워 요금":"유료","샤워장_위도":26.4412,"샤워장_경도":127.7155,"주차장":"잔파미사키 공원 주차장","주차 요금":"유료","주차장_위도":26.442,"주차장_경도":127.7162,"소스":"naver maps / visitokinawajapan.com"},{"region":"오키나와","번호":7,"스팟명(한국어)":"마에다 곶 블루케이브","스팟명(영어)":"Cape Maeda Blue Cave","스팟명(일본어)":"真栄田岬ブルーケイブ","위도":26.444,"경도":127.697,"액티비티":"snorkel, scuba, beach_swim","수심 범위":"3~18m","특징/설명":"오키나와 최유명 스팟. 동굴 내 파란빛 절경. 성수기 혼잡.","DB등록여부":"🆕 신규","샤워장":"남녀 각 10부스 동전식 샤워","샤워 요금":"200엔/2분","샤워장_위도":26.444,"샤워장_경도":127.697,"주차장":"마에다 곶 주차장 (180대)","주차 요금":"100엔/시간","주차장_위도":26.445,"주차장_경도":127.6978,"소스":"alohadiversokinawa.com / visitokinawajapan.com"},{"region":"오키나와","번호":8,"스팟명(한국어)":"만자 드림홀","스팟명(영어)":"Manza Dream Hole","스팟명(일본어)":"万座ドリームホール","위도":26.503,"경도":127.873,"액티비티":"scuba, freedive","수심 범위":"10~35m","특징/설명":"수직 터널 구조 독특한 지형. 중급 이상. 고급 다이버 명소.","DB등록여부":"🆕 신규","샤워장":"다이빙샵 샤워 제공","샤워 요금":"다이빙 투어 포함","샤워장_위도":26.5032,"샤워장_경도":127.8732,"주차장":"Route 58 인근 / 다이빙샵 주차","주차 요금":"다이빙샵 이용 시 무료","주차장_위도":26.5035,"주차장_경도":127.874,"소스":"alohadiversokinawa.com / worldadventuredivers.com"},{"region":"오키나와","번호":9,"스팟명(한국어)":"선베 시월","스팟명(영어)":"Sunabe Seawall","스팟명(일본어)":"砂辺シーウォール","위도":26.3,"경도":127.759,"액티비티":"scuba, snorkel","수심 범위":"3~25m","특징/설명":"찰탄 인근 장벽 지형. 야간 다이빙 인기. 접근 용이.","DB등록여부":"🆕 신규","샤워장":"없음","샤워 요금":"대인 1,500원\n소인 1,000원\n수건 3,000원\n바디워시 500원","샤워장_위도":"-","샤워장_경도":"-","주차장":"노상 주차 (혼잡)","주차 요금":"어려움 (주변 코인파킹)","주차장_위도":26.3002,"주차장_경도":127.7592,"소스":"alohadiversokinawa.com / usmc-mccs.org"},{"region":"오키나와","번호":10,"스팟명(한국어)":"미나 섬","스팟명(영어)":"Minna Island","스팟명(일본어)":"水納島","위도":26.635,"경도":127.633,"액티비티":"scuba, snorkel","수심 범위":"3~20m","특징/설명":"초승달 모양 섬. 산호초 정원. 여름 시즌 인기.","DB등록여부":"🆕 신규","샤워장":"인포메이션센터 샤워\n(개인 부스 7칸/성별)","샤워 요금":"100엔/90초","샤워장_위도":26.635,"샤워장_경도":127.633,"주차장":"토구치항 주차 (성수기 혼잡, 다층)","주차 요금":"유료","주차장_위도":26.6172,"주차장_경도":127.6558,"소스":"alohadiversokinawa.com"},{"region":"오키나와","번호":11,"스팟명(한국어)":"세소코 섬","스팟명(영어)":"Sesoko Island","스팟명(일본어)":"瀬底島","위도":26.634,"경도":127.829,"액티비티":"scuba, snorkel","수심 범위":"5~25m","특징/설명":"나고 북쪽 연결 섬. 연중 다이빙 가능. 다양한 지형.","DB등록여부":"🆕 신규","샤워장":"세소코 비치 샤워장 (온수, 4~10월)","샤워 요금":"500엔/인","샤워장_위도":26.634,"샤워장_경도":127.829,"주차장":"비치프런트 주차장\n(세소코 공원 무료 30대)","주차 요금":"비치: 500엔/일 (비수기 무료)","주차장_위도":26.6345,"주차장_경도":127.8298,"소스":"alohadiversokinawa.com / worldadventuredivers.com"},{"region":"오키나와","번호":12,"스팟명(한국어)":"코우리 섬 해변","스팟명(영어)":"Kouri Island Beach","스팟명(일본어)":"古宇利島ビーチ","위도":26.765,"경도":127.962,"액티비티":"beach_swim, snorkel","수심 범위":"0~5m","특징/설명":"사랑의 섬. 에메랄드 바다. 하트 바위 포토스팟.","DB등록여부":"🆕 신규","샤워장":"서쪽 야외 샤워장\n코코넛클럽(동쪽) 샤워","샤워 요금":"서쪽 100엔\n코코넛클럽 300엔","샤워장_위도":26.765,"샤워장_경도":127.962,"주차장":"코우리/토케이 비치 무료\n하트락 주변 유료","주차 요금":"무료~유료 300~500엔/일","주차장_위도":26.7652,"주차장_경도":127.9625,"소스":"visitokinawajapan.com / naver"},{"region":"오키나와","번호":13,"스팟명(한국어)":"기노완 부기 비치","스팟명(영어)":"Ginowan Bougainvillea Beach","스팟명(일본어)":"宜野湾ボギービーチ","위도":26.282,"경도":127.777,"액티비티":"beach_swim, snorkel","수심 범위":"0~5m","특징/설명":"기노완 해변 공원 내. 도심 접근성 우수. 가족 적합.","DB등록여부":"🆕 신규","샤워장":"기노완 마린 샤워실 (온수·탈의실)","샤워 요금":"유료","샤워장_위도":26.282,"샤워장_경도":127.777,"주차장":"기노완 마리나 주차장","주차 요금":"300엔/일","주차장_위도":26.2832,"주차장_경도":127.778,"소스":"visitokinawajapan.com"},{"region":"오키나와","번호":14,"스팟명(한국어)":"세나가 섬","스팟명(영어)":"Senaga Island","스팟명(일본어)":"瀬長島","위도":26.189,"경도":127.678,"액티비티":"snorkel, beach_swim","수심 범위":"0~5m","특징/설명":"나하 공항 인근. 웅키나와 움마리 비치 인기. 석양 명소.","DB등록여부":"🆕 신규","샤워장":"공공 샤워 없음\n(료큐 온천 호텔 시설)","샤워 요금":"호텔 투숙객 한정","샤워장_위도":"-","샤워장_경도":"-","주차장":"우미카지 테라스 주차장 (4개, 580대)","주차 요금":"무료 (성수기 혼잡)","주차장_위도":26.1895,"주차장_경도":127.6788,"소스":"visitokinawajapan.com / naver"},{"region":"BALI","번호":"번호","스팟명(한국어)":"스팟명(한국어)","스팟명(영어)":"스팟명(영어)","스팟명(일본어)":"스팟명(일본어)","위도":"위도","경도":"경도","액티비티":"액티비티","수심 범위":"수심 범위","특징/설명":"특징/설명","DB등록여부":"DB등록여부","샤워장":"샤워장","샤워 요금":"샤워 요금","샤워장_위도":"샤워장_위도","샤워장_경도":"샤워장_경도","주차장":"주차장","주차 요금":"주차 요금","주차장_위도":"주차장_위도","주차장_경도":"주차장_경도","소스":"소스","스팟_검증위도":"스팟_검증위도","스팟_검증경도":"스팟_검증경도","좌표검증상태":"좌표검증상태","교차검증소스":"교차검증소스","검증비고":"검증비고","샤워장_후보":"샤워장_후보","샤워장_위도_검증":"샤워장_위도_검증","샤워장_경도_검증":"샤워장_경도_검증","주차장_후보":"주차장_후보","주차장_위도_검증":"주차장_위도_검증","주차장_경도_검증":"주차장_경도_검증","검증일(KST)":"검증일(KST)"},{"region":"BALI","번호":1,"스팟명(한국어)":"아메드 비치","스팟명(영어)":"Amed Beach","스팟명(일본어)":null,"위도":-8.339,"경도":115.657,"액티비티":"beach_swim,snorkel,freedive,scuba","수심 범위":"medium","특징/설명":null,"DB등록여부":"✅ 등록됨","샤워장":"⚠️ 미입력","샤워 요금":"2,000원","샤워장_위도":null,"샤워장_경도":null,"주차장":"parking","주차 요금":"-","주차장_위도":-8.33879,"주차장_경도":115.659585,"소스":"spot_zone_master.xlsx (Bali)","스팟_검증위도":-8.333991,"스팟_검증경도":115.642737,"좌표검증상태":"검증완료","교차검증소스":"nominatim+photon","검증비고":"교차검증 일치(np=0.45km)","샤워장_후보":"미확인","샤워장_위도_검증":null,"샤워장_경도_검증":null,"주차장_후보":"parking","주차장_위도_검증":-8.33879,"주차장_경도_검증":115.659585,"검증일(KST)":"2026-04-16 19:29:00"},{"region":"BALI","번호":2,"스팟명(한국어)":"누사 렘봉안 - 블루 코너","스팟명(영어)":"Nusa Lembongan - Blue Corner","스팟명(일본어)":null,"위도":-8.688,"경도":115.446,"액티비티":"freedive,scuba","수심 범위":"deep","특징/설명":null,"DB등록여부":"✅ 등록됨","샤워장":"⚠️ 미입력","샤워 요금":"-","샤워장_위도":null,"샤워장_경도":null,"주차장":"오토바이 주차","주차 요금":"-","주차장_위도":null,"주차장_경도":null,"소스":"spot_zone_master.xlsx (Bali)","스팟_검증위도":-8.666273,"스팟_검증경도":115.448944,"좌표검증상태":"부분검증","교차검증소스":"photon","검증비고":"단일 소스 근접(d=2.44km)","샤워장_후보":"미확인","샤워장_위도_검증":null,"샤워장_경도_검증":null,"주차장_후보":"미확인","주차장_위도_검증":null,"주차장_경도_검증":null,"검증일(KST)":"2026-04-16 19:29:00"},{"region":"BALI","번호":3,"스팟명(한국어)":"누사 페니다 - 크리스탈 베이","스팟명(영어)":"Nusa Penida - Crystal Bay","스팟명(일본어)":null,"위도":-8.728,"경도":115.458,"액티비티":"snorkel,freedive,scuba","수심 범위":"deep","특징/설명":null,"DB등록여부":"✅ 등록됨","샤워장":"⚠️ 미입력","샤워 요금":"-","샤워장_위도":null,"샤워장_경도":null,"주차장":"⚠️ 미입력","주차 요금":"-","주차장_위도":null,"주차장_경도":null,"소스":"spot_zone_master.xlsx (Bali)","스팟_검증위도":-8.707961,"스팟_검증경도":115.476475,"좌표검증상태":"재검증필요","교차검증소스":"photon","검증비고":"단일 소스 불일치(d=3.01km)","샤워장_후보":"미확인","샤워장_위도_검증":null,"샤워장_경도_검증":null,"주차장_후보":"미확인","주차장_위도_검증":null,"주차장_경도_검증":null,"검증일(KST)":"2026-04-16 19:29:00"},{"region":"BALI","번호":4,"스팟명(한국어)":"누사 페니다 - 만타 포인트","스팟명(영어)":"Nusa Penida - Manta Point","스팟명(일본어)":null,"위도":-8.762,"경도":115.458,"액티비티":"snorkel,freedive,scuba","수심 범위":"deep","특징/설명":null,"DB등록여부":"✅ 등록됨","샤워장":"마루티 리조트에서 샤워장 사용 가능","샤워 요금":"-","샤워장_위도":null,"샤워장_경도":null,"주차장":"⚠️ 미입력","주차 요금":"-","주차장_위도":null,"주차장_경도":null,"소스":"spot_zone_master.xlsx (Bali)","스팟_검증위도":-8.798485,"스팟_검증경도":115.52949,"좌표검증상태":"재검증필요","교차검증소스":"photon","검증비고":"단일 소스 불일치(d=8.84km)","샤워장_후보":"미확인","샤워장_위도_검증":null,"샤워장_경도_검증":null,"주차장_후보":"미확인","주차장_위도_검증":null,"주차장_경도_검증":null,"검증일(KST)":"2026-04-16 19:29:00"},{"region":"BALI","번호":5,"스팟명(한국어)":"파당 바이","스팟명(영어)":"Padang Bai","스팟명(일본어)":null,"위도":-8.531,"경도":115.509,"액티비티":"snorkel,freedive,scuba","수심 범위":"medium","특징/설명":null,"DB등록여부":"✅ 등록됨","샤워장":"수영장 옆 샤워장","샤워 요금":"-","샤워장_위도":null,"샤워장_경도":null,"주차장":"주차 가능","주차 요금":"무료","주차장_위도":-8.532239,"주차장_경도":115.507679,"소스":"spot_zone_master.xlsx (Bali)","스팟_검증위도":-8.53358,"스팟_검증경도":115.508248,"좌표검증상태":"검증완료","교차검증소스":"nominatim+photon","검증비고":"교차검증 일치(np=0.17km)","샤워장_후보":"미확인","샤워장_위도_검증":null,"샤워장_경도_검증":null,"주차장_후보":"parking","주차장_위도_검증":-8.532239,"주차장_경도_검증":115.507679,"검증일(KST)":"2026-04-16 19:29:00"},{"region":"BALI","번호":6,"스팟명(한국어)":"사누르 비치","스팟명(영어)":"Sanur Beach","스팟명(일본어)":null,"위도":-8.685,"경도":115.262,"액티비티":"beach_swim,snorkel","수심 범위":"shallow","특징/설명":null,"DB등록여부":"✅ 등록됨","샤워장":"샤워장 1\n샤워장 2","샤워 요금":"2,000원","샤워장_위도":null,"샤워장_경도":null,"주차장":"주차장 이용 가능","주차 요금":"무료","주차장_위도":-8.6880422,"주차장_경도":115.2645918,"소스":"spot_zone_master.xlsx (Bali)","스팟_검증위도":-8.68118,"스팟_검증경도":115.263464,"좌표검증상태":"부분검증","교차검증소스":"nominatim+photon","검증비고":"근접 일치(dn=1.51km, dp=0.73km)","샤워장_후보":"미확인","샤워장_위도_검증":null,"샤워장_경도_검증":null,"주차장_후보":"미확인","주차장_위도_검증":null,"주차장_경도_검증":null,"검증일(KST)":"2026-04-16 19:29:00"},{"region":"BALI","번호":7,"스팟명(한국어)":"툴람벤 (리버티 렉)","스팟명(영어)":"Tulamben (USAT Liberty)","스팟명(일본어)":null,"위도":-8.2742,"경도":115.5972,"액티비티":"snorkel,freedive,scuba","수심 범위":"deep","특징/설명":null,"DB등록여부":"✅ 등록됨","샤워장":"⚠️ 미입력","샤워 요금":"-","샤워장_위도":null,"샤워장_경도":null,"주차장":"Tulamben Parking","주차 요금":"-","주차장_위도":-8.27623,"주차장_경도":115.5925362,"소스":"spot_zone_master.xlsx (Bali)","스팟_검증위도":-8.273931,"스팟_검증경도":115.59025,"좌표검증상태":"부분검증","교차검증소스":"photon","검증비고":"단일 소스 근접(d=0.77km)","샤워장_후보":"미확인","샤워장_위도_검증":null,"샤워장_경도_검증":null,"주차장_후보":"Tulamben Parking","주차장_위도_검증":-8.27623,"주차장_경도_검증":115.592536,"검증일(KST)":"2026-04-16 19:29:00"},{"region":"세부","번호":"번호","스팟명(한국어)":"스팟명(한국어)","스팟명(영어)":"스팟명(영어)","스팟명(일본어)":"스팟명(일본어)","위도":"위도","경도":"경도","액티비티":"액티비티","수심 범위":"수심 범위","특징/설명":"특징/설명","DB등록여부":"DB등록여부","샤워장":"샤워장","샤워 요금":"샤워 요금","샤워장_위도":"샤워장_위도","샤워장_경도":"샤워장_경도","주차장":"주차장","주차 요금":"주차 요금","주차장_위도":"주차장_위도","주차장_경도":"주차장_경도","소스":"소스"},{"region":"세부","번호":1,"스팟명(한국어)":"가토 섬","스팟명(영어)":"Gato Island","스팟명(일본어)":null,"위도":11.4495138,"경도":124.0176676,"액티비티":"freedive, scuba","수심 범위":"미정","특징/설명":"해양 동굴과 수중 아치. 흰끝상어, 바다뱀 서식. 경험자 추천. 투명도 15~25m.","DB등록여부":"✅ 등록됨","샤워장":"섬 내 편의시설 없음. 출발지(Maya/Daanbantayan 항)에서 이용","샤워 요금":"미확인","샤워장_위도":null,"샤워장_경도":null,"주차장":"섬 내 주차 불가 (보트 접근). Maya 항구 인근 주차 가능","주차 요금":"현지 확인","주차장_위도":11.3755,"주차장_경도":124.1084,"소스":"Supabase DB / 직접 조사"},{"region":"세부","번호":2,"스팟명(한국어)":"난루수완 섬","스팟명(영어)":"Nalusuan Island","스팟명(일본어)":null,"위도":10.1904354,"경도":124.0006036,"액티비티":"snorkel, beach_swim","수심 범위":"미정","특징/설명":"해양 보호구역 소형 섬. 저조시 모래톱 노출. 다양한 열대어와 스노클링. 클룩 세부 호핑투어 필수 코스.","DB등록여부":"✅ 등록됨","샤워장":"섬 내 샤워시설 없음 (리뷰 확인: \"샤워실 없음\")","샤워 요금":"해당 없음","샤워장_위도":null,"샤워장_경도":null,"주차장":"섬 내 주차 불가 (보트 접근). 출발지(세부/막탄) 선착장 주차 가능 (주차 관련 리뷰 없음)","주차 요금":"현지 확인","주차장_위도":10.2679,"주차장_경도":124.0031,"소스":"Supabase DB / Google Maps 리뷰 조사 (2026-04-08)"},{"region":"세부","번호":3,"스팟명(한국어)":"막탄 섬 다이빙 포인트","스팟명(영어)":"Mactan Island Dive Sites","스팟명(일본어)":null,"위도":10.2679,"경도":124.0031,"액티비티":"beach_swim, snorkel, freedive, scuba","수심 범위":"미정","특징/설명":"세부 공항 인근 접근성 최고. 다양한 리조트 다이브센터. 산호초, 침선 다이빙. 투명도 10~20m.","DB등록여부":"✅ 등록됨","샤워장":"다이빙 센터(Mactan Scuba, E&Z Diving 등) 샤워시설 이용 가능","샤워 요금":"미확인","샤워장_위도":null,"샤워장_경도":null,"주차장":"다이빙 센터/리조트 주차 가능. 일부 유료","주차 요금":"현지 확인","주차장_위도":10.2679,"주차장_경도":124.0031,"소스":"Supabase DB / 직접 조사"},{"region":"세부","번호":4,"스팟명(한국어)":"말라파스쿠아 섬","스팟명(영어)":"Malapascua Island","스팟명(일본어)":null,"위도":11.3302,"경도":124.1213,"액티비티":"snorkel, freedive, scuba","수심 범위":"미정","특징/설명":"세계 유일 매일 볼 수 있는 환도상어 포인트. 새벽 다이빙 필수. Bounty Beach 입수.","DB등록여부":"✅ 등록됨","샤워장":"섬 내 다이빙 센터/리조트 샤워 이용 가능","샤워 요금":"미확인","샤워장_위도":null,"샤워장_경도":null,"주차장":"섬 내 주차 불가 (보트 접근). Maya 항구 주차 가능 (~₱100/일)","주차 요금":"현지 확인","주차장_위도":11.3523,"주차장_경도":124.0889,"소스":"Supabase DB / 직접 조사"},{"region":"세부","번호":5,"스팟명(한국어)":"모알보알 파나그사마 비치","스팟명(영어)":"Moalboal Panagsama Beach","스팟명(일본어)":null,"위도":9.9464,"경도":123.3956,"액티비티":"snorkel, freedive, scuba","수심 범위":"미정","특징/설명":"세계적으로 유명한 정어리 떼가 해안선을 따라 연중 서식. 스노클링으로도 관찰 가능. 투명도 15~25m.","DB등록여부":"✅ 등록됨","샤워장":"해변 리조트 및 레스토랑 샤워시설. 퍼블릭 화장실(Municipal Hall 인근)","샤워 요금":"무료~유료","샤워장_위도":null,"샤워장_경도":null,"주차장":"유료 공영주차장 있음 (Venz Kitchen, Veranda 레스토랑 옆). 약 ₱20~50","주차 요금":"₱20~50","주차장_위도":9.9464,"주차장_경도":123.3956,"소스":"Supabase DB / 직접 조사"},{"region":"세부","번호":6,"스팟명(한국어)":"수밀론 섬","스팟명(영어)":"Sumilon Island","스팟명(일본어)":null,"위도":9.4328,"경도":123.391,"액티비티":"beach_swim, snorkel, freedive, scuba","수심 범위":"미정","특징/설명":"필리핀 최초 해양 보호구역. 산호 정원, 화이트 샌드 비치, 투명한 바닷물. 투명도 20~30m.","DB등록여부":"✅ 등록됨","샤워장":"Bluewater Sumilon 리조트 시설 이용 가능 (데이 패스 포함)","샤워 요금":"데이패스 포함 (₱1,500/인~)","샤워장_위도":9.43278,"샤워장_경도":123.391,"주차장":"섬 내 주차 불가 (보트 접근). Bancogon 선착장 주차","주차 요금":"현지 확인","주차장_위도":9.52,"주차장_경도":123.42,"소스":"Supabase DB / 직접 조사"},{"region":"세부","번호":7,"스팟명(한국어)":"오슬롭 고래상어 포인트","스팟명(영어)":"Oslob Whale Shark Point","스팟명(일본어)":null,"위도":9.5175,"경도":123.3883,"액티비티":"beach_swim, snorkel, freedive","수심 범위":"미정","특징/설명":"연중 고래상어와 근접 조우. 수심 3~10m. 스노클링으로도 충분. 오전 이른 시간 방문 권장.","DB등록여부":"✅ 등록됨","샤워장":"고래상어 관람 브리핑 센터 내 기본 화장실/샤워 시설","샤워 요금":"무료 (화장실 ₱20)","샤워장_위도":9.46346,"샤워장_경도":123.37981,"주차장":"브리핑 센터 근처 주차 가능","주차 요금":"현지 확인","주차장_위도":9.5175,"주차장_경도":123.3883,"소스":"Supabase DB / 직접 조사"},{"region":"세부","번호":8,"스팟명(한국어)":"판다논 섬","스팟명(영어)":"Pandanon Island","스팟명(일본어)":null,"위도":10.1788,"경도":124.0821,"액티비티":"beach_swim, snorkel","수심 범위":"미정","특징/설명":"청록빛 바다와 백사장이 아름다운 무인도. 클룩 세부 호핑투어 점심 정박지.","DB등록여부":"✅ 등록됨","샤워장":"섬 내 코티지 화장실 이용 가능","샤워 요금":"미확인","샤워장_위도":10.18066,"샤워장_경도":124.08793,"주차장":"섬 내 주차 불가 (보트 접근). Cebu/Cordova 출발지 주차","주차 요금":"현지 확인","주차장_위도":10.2679,"주차장_경도":124.0031,"소스":"Supabase DB / 직접 조사"},{"region":"세부","번호":9,"스팟명(한국어)":"페스카도르 섬","스팟명(영어)":"Pescador Island","스팟명(일본어)":null,"위도":9.9217,"경도":123.3436,"액티비티":"freedive, scuba","수심 범위":"미정","특징/설명":"수직 월 다이빙과 해양 생물 다양성으로 유명한 해양 보호구역. 수심 5~40m. 상어, 가오리 출몰.","DB등록여부":"✅ 등록됨","샤워장":"섬 내 시설 없음. Panagsama Beach 또는 모알보알 시내 이용","샤워 요금":"미확인","샤워장_위도":null,"샤워장_경도":null,"주차장":"섬 내 주차 불가 (보트 접근). Panagsama Beach 출발지 주차","주차 요금":"현지 확인","주차장_위도":9.9464,"주차장_경도":123.3956,"소스":"Supabase DB / 직접 조사"},{"region":"세부","번호":10,"스팟명(한국어)":"힐루퉁안 섬","스팟명(영어)":"Hilutungan Island","스팟명(일본어)":null,"위도":10.2067,"경도":123.9886,"액티비티":"snorkel, beach_swim","수심 범위":"미정","특징/설명":"막탄 섬에서 보트 15분. 해양 보호구역으로 산호와 열대어가 풍부. 클룩 호핑투어 첫 스톱.","DB등록여부":"✅ 등록됨","샤워장":"섬 내 기본 화장실 있음. 시설 제한적","샤워 요금":"미확인","샤워장_위도":null,"샤워장_경도":null,"주차장":"섬 내 주차 불가 (보트 접근). Mactan/Cordova 출발지 주차","주차 요금":"현지 확인","주차장_위도":10.2679,"주차장_경도":124.0031,"소스":"Supabase DB / 직접 조사"},{"region":"보홀","번호":"번호","스팟명(한국어)":"스팟명(한국어)","스팟명(영어)":"스팟명(영어)","스팟명(일본어)":"스팟명(일본어)","위도":"위도","경도":"경도","액티비티":"액티비티","수심 범위":"수심 범위","특징/설명":"특징/설명","DB등록여부":"DB등록여부","샤워장":"샤워장","샤워 요금":"샤워 요금","샤워장_위도":"샤워장_위도","샤워장_경도":"샤워장_경도","주차장":"주차장","주차 요금":"주차 요금","주차장_위도":"주차장_위도","주차장_경도":"주차장_경도","소스":"소스"},{"region":"보홀","번호":1,"스팟명(한국어)":"돌조 비치","스팟명(영어)":"Doljo Beach","스팟명(일본어)":null,"위도":9.5784,"경도":123.7183,"액티비티":"beach_swim, snorkel","수심 범위":"미정","특징/설명":"팡글라오 섬 북쪽 조용한 해변. 얕은 산호초 스노클링. 가족 단위 적합. 투명도 10~20m.","DB등록여부":"✅ 등록됨","샤워장":"해변 리조트 샤워시설 이용 가능","샤워 요금":"미확인","샤워장_위도":9.5889,"샤워장_경도":123.7282,"주차장":"무료 주차 가능 (제한적). 노상 주차 가능","주차 요금":"현지 확인","주차장_위도":9.5784,"주차장_경도":123.7183,"소스":"Supabase DB / 직접 조사"},{"region":"보홀","번호":2,"스팟명(한국어)":"두말루안 비치","스팟명(영어)":"Dumaluan Beach","스팟명(일본어)":null,"위도":9.564,"경도":123.76,"액티비티":"beach_swim, snorkel","수심 범위":"미정","특징/설명":"팡글라오 섬 화이트 샌드 비치. 수심 얕아 수영·스노클링 최적. 리조트 밀집. 투명도 10~15m.","DB등록여부":"✅ 등록됨","샤워장":"Dumaluan Beach Resort 등 해변 리조트 샤워 가능","샤워 요금":"미확인","샤워장_위도":9.5556,"샤워장_경도":123.805,"주차장":"입장료 ₱25/인, 주차 ₱25. South Palms Resort 오토바이 주차 무료","주차 요금":"₱25","주차장_위도":9.564,"주차장_경도":123.76,"소스":"Supabase DB / 직접 조사"},{"region":"보홀","번호":3,"스팟명(한국어)":"발리카삭 섬","스팟명(영어)":"Balicasag Island","스팟명(일본어)":null,"위도":9.518,"경도":123.6803,"액티비티":"snorkel, freedive, scuba","수심 범위":"미정","특징/설명":"보홀 최고의 다이빙 포인트. 드라마틱한 수직 월, 거대 잭피시 무리, 거북이. 투명도 20~40m.","DB등록여부":"✅ 등록됨","샤워장":"섬 내 Balicasag Island Dive Resort 샤워 이용 가능 (데이 트리퍼 포함)","샤워 요금":"미확인","샤워장_위도":null,"샤워장_경도":null,"주차장":"섬 내 주차 불가 (보트 접근). Alona Beach/Panglao 출발지 주차","주차 요금":"현지 확인","주차장_위도":9.5571,"주차장_경도":123.7514,"소스":"Supabase DB / 직접 조사"},{"region":"보홀","번호":4,"스팟명(한국어)":"버진 아일랜드","스팟명(영어)":"Virgin Island","스팟명(일본어)":null,"위도":9.5328,"경도":123.7328,"액티비티":"beach_swim, snorkel","수심 범위":"미정","특징/설명":"알로나 비치에서 보트 30분. 만조 시 모래톱이 침수되어 야자나무만 남는 환상적인 경관.","DB등록여부":"✅ 등록됨","샤워장":"모래톱 섬, 시설 없음. 물과 간식 지참 권장","샤워 요금":"300페소","샤워장_위도":null,"샤워장_경도":null,"주차장":"섬 내 주차 불가 (보트 접근). Panglao 출발지 주차","주차 요금":"현지 확인","주차장_위도":9.5571,"주차장_경도":123.7514,"소스":"Supabase DB / 직접 조사"},{"region":"보홀","번호":5,"스팟명(한국어)":"알로나 비치","스팟명(영어)":"Alona Beach","스팟명(일본어)":null,"위도":9.5571,"경도":123.7514,"액티비티":"beach_swim, snorkel, freedive, scuba","수심 범위":"미정","특징/설명":"팡글라오 섬 메인 비치. 다이브샵 밀집, 접근성 최고. 모래사장 앞 산호초 스노클링 가능. 투명도 15~20m.","DB등록여부":"✅ 등록됨","샤워장":"해변 리조트/레스토랑 샤워시설 다수. 유료/무료 혼재","샤워 요금":"미확인","샤워장_위도":9.5472,"샤워장_경도":123.771,"주차장":"해변 입구 약 200m 지점 주차 가능. 요금 현지 확인 필요","주차 요금":"현지 확인","주차장_위도":9.5571,"주차장_경도":123.7514,"소스":"Supabase DB / 직접 조사"},{"region":"보홀","번호":6,"스팟명(한국어)":"카빌라오 섬","스팟명(영어)":"Cabilao Island","스팟명(일본어)":null,"위도":9.8796,"경도":123.7724,"액티비티":"freedive, scuba","수심 범위":"미정","특징/설명":"망치상어, 귀상어 출몰(12~4월). 거의 오염되지 않은 산호초. 알로나 비치에서 보트 2시간. 투명도 20~30m.","DB등록여부":"✅ 등록됨","샤워장":"소형 리조트/게스트하우스 기본 시설. 물 공급 제한적","샤워 요금":"미확인","샤워장_위도":null,"샤워장_경도":null,"주차장":"섬 내 주차 불가 (보트 접근). Loon 또는 Tagbilaran 선착장 주차","주차 요금":"현지 확인","주차장_위도":9.85,"주차장_경도":123.85,"소스":"Supabase DB / 직접 조사"},{"region":"보홀","번호":7,"스팟명(한국어)":"파밀라칸 섬","스팟명(영어)":"Pamilacan Island","스팟명(일본어)":null,"위도":9.4697,"경도":123.9421,"액티비티":"snorkel, freedive, scuba","수심 범위":"미정","특징/설명":"돌고래·고래 관찰 명소. 청정 산호초. 고요한 섬 분위기. 투명도 15~25m.","DB등록여부":"✅ 등록됨","샤워장":"Pueblo de Pamilacan 리조트 기본 시설. 인프라 제한적","샤워 요금":"미확인","샤워장_위도":null,"샤워장_경도":null,"주차장":"섬 내 주차 불가 (보트 접근). Baclayon/Tagbilaran 선착장 주차","주차 요금":"현지 확인","주차장_위도":9.65,"주차장_경도":123.83,"소스":"Supabase DB / 직접 조사"}];
+
+// ── 설정 ──────────────────────────────────────────────────────────────────
+// 토큰은 git 커밋 안 들어가도록 URL hash → localStorage → prompt 순으로 로드.
+//   첫 사용 시: ?mb=pk.xxx&sb=eyJ... 식으로 URL 파라미터 한 번만 주면 localStorage 캐시.
+//   이후 재방문은 URL 없이도 바로 사용 가능.
+function _loadKey(name, label) {
+  const fromUrl = new URLSearchParams(window.location.search).get(name);
+  if (fromUrl) {
+    localStorage.setItem('admin_' + name, fromUrl);
+    return fromUrl;
+  }
+  let v = localStorage.getItem('admin_' + name);
+  if (!v) {
+    v = prompt(label + ' 입력:');
+    if (v) localStorage.setItem('admin_' + name, v);
+  }
+  return v;
+}
+const SUPABASE_URL = 'https://gprgkcouugiwrfnbcsjz.supabase.co';
+const SUPABASE_KEY = _loadKey('sb', 'Supabase anon key (eyJ...)');
+mapboxgl.accessToken = _loadKey('mb', 'Mapbox public token (pk....)');
+
+const API_HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=minimal'
+};
+const API_HEADERS_RETURN = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+// ── State ─────────────────────────────────────────────────────────────────
+let allSpots = [];
+let allZones = [];
+let selectedSpot = null;
+let activeMarkers = [];
+let pendingChanges = {};   // { 'spot:UUID': {...}, 'zone:UUID': {...} }
+let pendingDeletes = [];     // zone UUIDs to delete (existing)
+let pendingInserts = [];     // { tempId, zone_code, lat, lon, parent_spot_id }
+let addMode = null;          // 'shower' | 'parking' | 'zone' | null
+let originalValues = {};
+let currentTab = 'coords';
+
+// Zone 다이얼로그 임시 state
+let pendingZoneLat = null, pendingZoneLon = null;
+let zoneInsertCounter = 0;   // temp ID for new zones before DB insert
+
+// ── Mapbox 초기화 ─────────────────────────────────────────────────────────
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/satellite-streets-v12',
+  center: [126.5, 26.0],
+  zoom: 4
+});
+map.addControl(new mapboxgl.NavigationControl(), 'bottom-left');
+
+// ── 탭 전환 ───────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('tab-content-' + tab).classList.add('active');
+  if (selectedSpot) {
+    document.getElementById('add-controls').style.display = tab === 'coords' ? 'flex' : 'none';
+  }
+}
+
+// ── 엑셀 매칭 ─────────────────────────────────────────────────────────────
+function findExcelData(spot) {
+  if (!spot) return null;
+  const dbName = (spot.name?.ko || '').trim().toLowerCase();
+  const dbNameEn = (spot.name?.en || '').trim().toLowerCase();
+  const dbLat = parseFloat(spot.lat), dbLon = parseFloat(spot.lon);
+
+  let match = EXCEL_DATA.find(e => (e['스팟명(한국어)'] || '').trim().toLowerCase() === dbName);
+  if (match) return match;
+  if (dbNameEn) {
+    match = EXCEL_DATA.find(e => (e['스팟명(영어)'] || '').trim().toLowerCase() === dbNameEn);
+    if (match) return match;
+  }
+  if (!isNaN(dbLat) && !isNaN(dbLon)) {
+    let bestDist = 999, bestMatch = null;
+    for (const e of EXCEL_DATA) {
+      const eLat = parseFloat(e['위도']), eLon = parseFloat(e['경도']);
+      if (isNaN(eLat) || isNaN(eLon)) continue;
+      const dist = Math.sqrt((eLat - dbLat) ** 2 + (eLon - dbLon) ** 2);
+      if (dist < bestDist) { bestDist = dist; bestMatch = e; }
+    }
+    if (bestDist < 0.008) return bestMatch;
+  }
+  return null;
+}
+
+// ── 엑셀 패널 렌더링 ──────────────────────────────────────────────────────
+function renderExcelPanel(excelData) {
+  const el = document.getElementById('excel-content');
+  if (!excelData) {
+    el.innerHTML = '<div class="excel-no-data">📭 엑셀 데이터 없음<br><small style="color:#3a5070">이름/좌표가 일치하는 데이터를 찾지 못했습니다</small></div>';
+    return;
+  }
+  const regionFlags = { '제주도': '🇰🇷', '오키나와': '🇯🇵', 'BALI': '🇮🇩', '세부': '🇵🇭', '보홀': '🇵🇭' };
+  const flag = regionFlags[excelData.region] || '🌊';
+  const actStr = (excelData['액티비티'] || '');
+  const actChips = actStr.split(/[,，]/).map(a => {
+    const act = a.trim().toLowerCase();
+    if (act.includes('beach')) return '<span class="activity-chip chip-beach">🏖 Beach</span>';
+    if (act.includes('snorkel')) return '<span class="activity-chip chip-snorkel">🤿 Snorkel</span>';
+    if (act.includes('freedive')) return '<span class="activity-chip chip-freedive">🌊 Freedive</span>';
+    if (act.includes('scuba')) return '<span class="activity-chip chip-scuba">🐠 Scuba</span>';
+    return '';
+  }).join('');
+
+  const showerInfo = excelData['샤워장'] || '—';
+  const showerFee  = excelData['샤워 요금'];
+  const showerLat  = excelData['샤워장_위도'];
+  const showerLon  = excelData['샤워장_경도'];
+  const hasShowerCoords = showerLat && !isNaN(parseFloat(showerLat));
+  const parkInfo = excelData['주차장'] || '—';
+  const parkFee  = excelData['주차 요금'];
+  const parkLat  = excelData['주차장_위도'];
+  const parkLon  = excelData['주차장_경도'];
+  const hasParkCoords = parkLat && !isNaN(parseFloat(parkLat));
+
+  el.innerHTML = `
+    <div class="region-badge">${flag} ${excelData.region} #${excelData['번호']}</div>
+    <div class="excel-section">
+      <div class="excel-row"><span class="excel-label">한국어</span><span class="excel-val" style="font-weight:600;color:#e0ecff">${excelData['스팟명(한국어)'] || '—'}</span></div>
+      <div class="excel-row"><span class="excel-label">English</span><span class="excel-val">${excelData['스팟명(영어)'] || '—'}</span></div>
+      <div class="excel-row"><span class="excel-label">日本語</span><span class="excel-val">${excelData['스팟명(일본어)'] || '—'}</span></div>
+    </div>
+    <hr class="excel-divider">
+    <div class="excel-section">
+      <div class="excel-section-title">액티비티 & 수심</div>
+      <div style="margin-bottom:5px">${actChips || '<span style="color:#4a6080">미지정</span>'}</div>
+      <div class="excel-row"><span class="excel-label">수심 범위</span><span class="excel-val">${excelData['수심 범위'] || '—'}</span></div>
+    </div>
+    ${excelData['특징/설명'] ? `<div class="excel-section"><div class="excel-section-title">특징 / 설명</div><div class="excel-desc">${(excelData['특징/설명'] || '').replace(/\n/g, '<br>')}</div></div>` : ''}
+    <hr class="excel-divider">
+    <div class="excel-section">
+      <div class="excel-section-title">🚿 샤워장</div>
+      <div class="excel-row"><span class="excel-label">위치</span><span class="excel-val">${showerInfo}${showerFee && showerFee !== '미확인' && showerFee !== '-' ? ` <span class="fee-tag">${showerFee}</span>` : ''}</span></div>
+      ${hasShowerCoords ? `<div class="excel-row"><span class="excel-label">좌표</span><span class="excel-val" style="font-family:monospace;font-size:10px;color:#5a9a8a">${parseFloat(showerLat).toFixed(4)}, ${parseFloat(showerLon).toFixed(4)}</span></div>` : ''}
+    </div>
+    <div class="excel-section">
+      <div class="excel-section-title">🅿️ 주차장</div>
+      <div class="excel-row"><span class="excel-label">위치</span><span class="excel-val">${parkInfo}${parkFee && parkFee !== '미확인' && parkFee !== '-' ? ` <span class="fee-tag">${parkFee.replace(/\n/g, ' ')}</span>` : ''}</span></div>
+      ${hasParkCoords ? `<div class="excel-row"><span class="excel-label">좌표</span><span class="excel-val" style="font-family:monospace;font-size:10px;color:#5a7aba">${parseFloat(parkLat).toFixed(4)}, ${parseFloat(parkLon).toFixed(4)}</span></div>` : ''}
+    </div>
+    <hr class="excel-divider">
+    <div class="excel-section">
+      <div class="excel-row"><span class="excel-label">DB 상태</span><span class="excel-val">${excelData['DB등록여부'] || '—'}</span></div>
+      ${excelData['소스'] ? `<div class="excel-source">📎 ${excelData['소스']}</div>` : ''}
+    </div>
+  `;
+}
+
+// ── 데이터 로드 ───────────────────────────────────────────────────────────
+async function loadData() {
+  const [spotsRes, zonesRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,parking_lat,parking_lon,parking_info&is_active=eq.true&limit=500`, { headers: API_HEADERS }),
+    fetch(`${SUPABASE_URL}/rest/v1/sub_spots?select=id,zone_code,lat,lon,parent_spot_id&is_active=eq.true&limit=1000`, { headers: API_HEADERS })
+  ]);
+  if (!spotsRes.ok) throw new Error('spots 로드 실패: ' + await spotsRes.text());
+  if (!zonesRes.ok) throw new Error('zones 로드 실패: ' + await zonesRes.text());
+  allSpots = await spotsRes.json();
+  allZones = await zonesRes.json();
+  allSpots.sort((a, b) => (a.name?.ko || '').localeCompare(b.name?.ko || ''));
+  renderSpotList(allSpots);
+  document.getElementById('loading').style.display = 'none';
+}
+
+// ── 스팟 목록 렌더링 ──────────────────────────────────────────────────────
+function renderSpotList(spots) {
+  document.getElementById('spot-list').innerHTML = spots.map(s => {
+    const name = s.name?.ko || s.name?.en || '이름없음';
+    const flag = getFlag(s.lat, s.lon);
+    const excelDot = findExcelData(s) ? '<span style="color:#4CAF50;margin-left:4px;font-size:9px">●</span>' : '';
+    return `<div class="spot-item" id="item-${s.id}" onclick="selectSpot('${s.id}')">
+      <div class="spot-name">${name}${excelDot}</div>
+      <div class="spot-country">${flag}</div>
+    </div>`;
+  }).join('');
+}
+
+function getFlag(lat, lon) {
+  if (!lat || !lon) return '';
+  if (lat > 33 && lat < 39 && lon > 124 && lon < 130) return '🇰🇷 한국';
+  if (lat > 24 && lat < 46 && lon > 122 && lon < 155) return '🇯🇵 일본';
+  if (lat > 4  && lat < 22 && lon > 116 && lon < 128) return '🇵🇭 필리핀';
+  if (lat > -12 && lat < 5 && lon > 105 && lon < 122) return '🇮🇩 인도네시아';
+  if (lat > 5  && lat < 22 && lon > 98  && lon < 110) return '🇹🇭 태국';
+  return '🌊';
+}
+
+// ── 검색 ─────────────────────────────────────────────────────────────────
+document.getElementById('search-box').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  renderSpotList(allSpots.filter(s =>
+    ((s.name?.ko || '') + (s.name?.en || '')).toLowerCase().includes(q)
+  ));
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('zone-dialog-backdrop').classList.contains('show')) {
+      cancelZoneDialog();
+    } else {
+      toggleAddMode(null);
+    }
+  }
+});
+
+// ── 스팟 선택 ─────────────────────────────────────────────────────────────
+function selectSpot(id) {
+  selectedSpot = allSpots.find(s => s.id === id);
+  if (!selectedSpot) return;
+  document.querySelectorAll('.spot-item').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById(`item-${id}`);
+  if (el) { el.classList.add('selected'); el.scrollIntoView({ block: 'nearest' }); }
+  map.flyTo({ center: [selectedSpot.lon, selectedSpot.lat], zoom: 16, duration: 1000 });
+  clearMarkers();
+  placeAllMarkers();
+  updatePanel();
+  renderExcelPanel(findExcelData(selectedSpot));
+}
+
+// ── 마커 전체 배치 ────────────────────────────────────────────────────────
+function placeAllMarkers() {
+  const s = selectedSpot;
+  if (!s) return;
+  addMarker({ type: 'spot', id: s.id, lat: s.lat, lon: s.lon, color: '#1A73E8', label: '📍', size: 36 });
+
+  // 기존 zones (DB)
+  allZones.filter(z => z.parent_spot_id === s.id && z.lat && z.lon && !pendingDeletes.includes(z.id))
+    .forEach(z => addMarker({ type: 'zone', id: z.id, lat: z.lat, lon: z.lon,
+      color: '#E65100', label: z.zone_code, isZone: true }));
+
+  // 새로 추가된 zones (pending insert)
+  pendingInserts.filter(z => z.parent_spot_id === s.id)
+    .forEach(z => addMarker({ type: 'zone-new', id: z.tempId, lat: z.lat, lon: z.lon,
+      color: '#bf360c', label: z.zone_code, isZone: true }));
+
+  if (s.shower_lat && s.shower_lon)
+    addMarker({ type: 'shower', id: s.id, lat: s.shower_lat, lon: s.shower_lon, color: '#00796B', label: '🚿', size: 30 });
+  if (s.parking_lat && s.parking_lon)
+    addMarker({ type: 'parking', id: s.id, lat: s.parking_lat, lon: s.parking_lon, color: '#1565C0', label: 'P', size: 30 });
+}
+
+// ── 마커 생성 ─────────────────────────────────────────────────────────────
+function addMarker({ type, id, lat, lon, color, label, size = 32, isZone = false }) {
+  const el = isZone ? makeZoneEl(color, label) : makeCircleEl(color, label, size);
+  const marker = new mapboxgl.Marker({ element: el, draggable: true }).setLngLat([lon, lat]).addTo(map);
+  marker.on('dragend', () => {
+    const { lng, lat: newLat } = marker.getLngLat();
+    const r4lat = round4(newLat), r4lng = round4(lng);
+    if (type === 'spot')    setPending('spot', id, { lat: r4lat, lon: r4lng });
+    if (type === 'shower')  setPending('spot', id, { shower_lat: r4lat, shower_lon: r4lng });
+    if (type === 'parking') setPending('spot', id, { parking_lat: r4lat, parking_lon: r4lng });
+    if (type === 'zone')    setPending('zone', id, { lat: r4lat, lon: r4lng });
+    if (type === 'zone-new') {
+      const pi = pendingInserts.find(z => z.tempId === id);
+      if (pi) { pi.lat = r4lat; pi.lon = r4lng; }
+      markDirty();
+    }
+    updatePanel();
+  });
+  el.title = `${label} — 드래그해서 위치 수정`;
+  activeMarkers.push({ type, id, marker });
+}
+
+function makeCircleEl(color, label, size) {
+  const el = document.createElement('div');
+  el.style.cssText = `width:${size}px;height:${size}px;background:${color};border:2.5px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.42)}px;font-weight:700;color:white;cursor:grab;box-shadow:0 2px 6px rgba(0,0,0,0.55);user-select:none;`;
+  el.textContent = label;
+  return el;
+}
+
+function makeZoneEl(color, label) {
+  const el = document.createElement('div');
+  el.style.cssText = `background:${color};border:2px solid white;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700;color:white;cursor:grab;box-shadow:0 2px 4px rgba(0,0,0,0.5);white-space:nowrap;user-select:none;`;
+  el.textContent = label;
+  return el;
+}
+
+// ── 지도 클릭 ─────────────────────────────────────────────────────────────
+map.on('click', e => {
+  if (!addMode || !selectedSpot) return;
+  const { lng, lat } = e.lngLat;
+  const r4lat = round4(lat), r4lng = round4(lng);
+
+  if (addMode === 'zone') {
+    pendingZoneLat = r4lat;
+    pendingZoneLon = r4lng;
+    document.getElementById('zone-dialog-coords').textContent = `위도: ${r4lat}  경도: ${r4lng}`;
+    document.getElementById('zone-name-input').value = '';
+    document.getElementById('zone-dialog-backdrop').classList.add('show');
+    setTimeout(() => document.getElementById('zone-name-input').focus(), 50);
+    toggleAddMode(null);
+    return;
+  }
+
+  const existing = activeMarkers.find(m => m.type === addMode);
+  if (existing) { existing.marker.remove(); activeMarkers = activeMarkers.filter(m => m !== existing); }
+
+  if (addMode === 'shower') {
+    selectedSpot.shower_lat = r4lat; selectedSpot.shower_lon = r4lng;
+    addMarker({ type: 'shower', id: selectedSpot.id, lat: r4lat, lon: r4lng, color: '#00796B', label: '🚿', size: 30 });
+    setPending('spot', selectedSpot.id, { shower_lat: r4lat, shower_lon: r4lng });
+  } else {
+    selectedSpot.parking_lat = r4lat; selectedSpot.parking_lon = r4lng;
+    addMarker({ type: 'parking', id: selectedSpot.id, lat: r4lat, lon: r4lng, color: '#1565C0', label: 'P', size: 30 });
+    setPending('spot', selectedSpot.id, { parking_lat: r4lat, parking_lon: r4lng });
+  }
+  toggleAddMode(null);
+  updatePanel();
+});
+
+function toggleAddMode(mode) {
+  addMode = (addMode === mode) ? null : mode;
+  document.getElementById('btn-add-shower').classList.toggle('active', addMode === 'shower');
+  document.getElementById('btn-add-parking').classList.toggle('active', addMode === 'parking');
+  const zoneBtn = document.getElementById('btn-add-zone');
+  if (zoneBtn) zoneBtn.classList.toggle('active', addMode === 'zone');
+  const hint = document.getElementById('map-hint');
+  if (addMode === 'zone') hint.textContent = '🖱️ 지도를 클릭해서 Zone 위치를 지정하세요 (ESC 취소)';
+  else hint.textContent = '🖱️ 지도를 클릭해서 마커를 배치하세요 (ESC 취소)';
+  hint.style.display = addMode ? 'block' : 'none';
+  map.getCanvas().style.cursor = addMode ? 'crosshair' : '';
+}
+
+// ── Zone 다이얼로그 ───────────────────────────────────────────────────────
+function confirmZoneDialog() {
+  const code = document.getElementById('zone-name-input').value.trim();
+  if (!code) {
+    document.getElementById('zone-name-input').focus();
+    document.getElementById('zone-name-input').style.borderColor = '#ff5252';
+    return;
+  }
+  document.getElementById('zone-name-input').style.borderColor = '#E65100';
+  document.getElementById('zone-dialog-backdrop').classList.remove('show');
+
+  const tempId = `new-${++zoneInsertCounter}`;
+  const newZone = { tempId, zone_code: code, lat: pendingZoneLat, lon: pendingZoneLon, parent_spot_id: selectedSpot.id };
+  pendingInserts.push(newZone);
+
+  addMarker({ type: 'zone-new', id: tempId, lat: pendingZoneLat, lon: pendingZoneLon, color: '#bf360c', label: code, isZone: true });
+  markDirty();
+  updatePanel();
+}
+
+function cancelZoneDialog() {
+  document.getElementById('zone-dialog-backdrop').classList.remove('show');
+  pendingZoneLat = pendingZoneLon = null;
+}
+
+// Enter 키로 다이얼로그 확인
+document.getElementById('zone-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmZoneDialog();
+});
+
+// ── Zone 이름 변경 (인라인) ───────────────────────────────────────────────
+function onZoneCodeChange(id, isNew, value) {
+  if (isNew) {
+    const pi = pendingInserts.find(z => z.tempId === id);
+    if (pi) pi.zone_code = value;
+    // 마커 라벨 업데이트
+    const am = activeMarkers.find(m => m.id === id && m.type === 'zone-new');
+    if (am) am.marker.getElement().textContent = value || '?';
+  } else {
+    const prevCode = allZones.find(z => z.id === id)?.zone_code;
+    if (value !== prevCode) {
+      setPending('zone', id, { zone_code: value });
+    } else {
+      // 원래 값이면 pending에서 zone_code만 제거
+      const key = `zone:${id}`;
+      if (pendingChanges[key]) {
+        delete pendingChanges[key].zone_code;
+        if (Object.keys(pendingChanges[key]).length === 0) delete pendingChanges[key];
+        if (Object.keys(pendingChanges).length === 0 && pendingInserts.length === 0 && pendingDeletes.length === 0) {
+          document.getElementById('save-btn').disabled = true;
+          document.getElementById('undo-btn').style.display = 'none';
+        }
+      }
+    }
+    // input 스타일 업데이트
+    const inp = document.getElementById(`zone-input-${id}`);
+    if (inp) inp.classList.toggle('modified', value !== prevCode);
+    // 마커 라벨 업데이트
+    const am = activeMarkers.find(m => m.id === id && m.type === 'zone');
+    if (am) am.marker.getElement().textContent = value || '?';
+  }
+}
+
+// ── Zone 삭제 ─────────────────────────────────────────────────────────────
+function deleteZone(id, isNew) {
+  if (!confirm(isNew ? '추가 중인 Zone을 취소할까요?' : 'DB에서 Zone을 삭제하시겠습니까? 이 작업은 저장 후 되돌릴 수 없습니다.')) return;
+  if (isNew) {
+    pendingInserts = pendingInserts.filter(z => z.tempId !== id);
+    const am = activeMarkers.find(m => m.id === id && m.type === 'zone-new');
+    if (am) { am.marker.remove(); activeMarkers = activeMarkers.filter(m => m !== am); }
+  } else {
+    if (!pendingDeletes.includes(id)) pendingDeletes.push(id);
+    const am = activeMarkers.find(m => m.id === id && m.type === 'zone');
+    if (am) { am.marker.remove(); activeMarkers = activeMarkers.filter(m => m !== am); }
+    // pendingChanges에서도 제거
+    delete pendingChanges[`zone:${id}`];
+  }
+  markDirty();
+  updatePanel();
+}
+
+// ── Pending 관리 ──────────────────────────────────────────────────────────
+function setPending(type, id, fields) {
+  const key = `${type}:${id}`;
+  if (!originalValues[key]) {
+    if (type === 'spot') {
+      const s = allSpots.find(x => x.id === id);
+      if (s) originalValues[key] = Object.fromEntries(Object.keys(fields).map(k => [k, s[k]]));
+    } else {
+      const z = allZones.find(x => x.id === id);
+      if (z) originalValues[key] = Object.fromEntries(Object.keys(fields).map(k => [k, z[k]]));
+    }
+  }
+  pendingChanges[key] = { ...(pendingChanges[key] || {}), ...fields };
+  markDirty();
+}
+
+function markDirty() {
+  const hasPending = Object.keys(pendingChanges).length > 0 || pendingInserts.length > 0 || pendingDeletes.length > 0;
+  document.getElementById('save-btn').disabled = !hasPending;
+  document.getElementById('undo-btn').style.display = hasPending ? 'block' : 'none';
+}
+
+function undoChanges() {
+  if (!confirm('저장하지 않은 모든 변경을 취소할까요?')) return;
+  pendingChanges = {};
+  originalValues = {};
+  pendingInserts = [];
+  pendingDeletes = [];
+  if (selectedSpot) { clearMarkers(); placeAllMarkers(); }
+  document.getElementById('save-btn').disabled = true;
+  document.getElementById('undo-btn').style.display = 'none';
+  updatePanel();
+}
+
+// ── 패널 업데이트 ─────────────────────────────────────────────────────────
+function updatePanel() {
+  if (!selectedSpot) return;
+  const s = selectedSpot;
+  document.getElementById('panel-title').textContent = s.name?.ko || s.name?.en || '?';
+
+  const sp = pendingChanges[`spot:${s.id}`] || {};
+  const zones = allZones.filter(z => z.parent_spot_id === s.id && !pendingDeletes.includes(z.id));
+  const newZones = pendingInserts.filter(z => z.parent_spot_id === s.id);
+
+  const lat   = sp.lat       ?? s.lat;
+  const lon   = sp.lon       ?? s.lon;
+  const shLat = sp.shower_lat  ?? s.shower_lat;
+  const shLon = sp.shower_lon  ?? s.shower_lon;
+  const pkLat = sp.parking_lat ?? s.parking_lat;
+  const pkLon = sp.parking_lon ?? s.parking_lon;
+  const modified = (field) => sp[field] !== undefined;
+  const badge = () => `<span class="pending-badge">수정</span>`;
+
+  let html = `
+    <div class="coord-row">
+      <div class="coord-label"><div class="coord-dot" style="background:#1A73E8"></div>스팟 중심${modified('lat') ? badge() : ''}</div>
+      <div class="coord-values">${fmt(lat)}<br>${fmt(lon)}</div>
+    </div>`;
+
+  if (shLat) {
+    html += `<div class="coord-row">
+      <div class="coord-label"><div class="coord-dot" style="background:#00796B"></div>샤워${modified('shower_lat') ? badge() : ''}</div>
+      <div class="coord-values">${fmt(shLat)}<br>${fmt(shLon)}</div>
+    </div>`;
+  } else {
+    html += `<div class="coord-row dimmed">
+      <div class="coord-label"><div class="coord-dot" style="background:#00796B"></div>샤워 (없음)</div>
+      <div class="coord-values">—</div>
+    </div>`;
+  }
+
+  if (pkLat) {
+    html += `<div class="coord-row">
+      <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>주차${modified('parking_lat') ? badge() : ''}</div>
+      <div class="coord-values">${fmt(pkLat)}<br>${fmt(pkLon)}</div>
+    </div>`;
+  } else {
+    html += `<div class="coord-row dimmed">
+      <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>주차 (없음)</div>
+      <div class="coord-values">—</div>
+    </div>`;
+  }
+
+  // Zone 섹션
+  const totalZones = zones.length + newZones.length;
+  html += `
+    <div class="zone-section-header">
+      <div class="zone-section-label">
+        <div class="coord-dot" style="background:#E65100;border-radius:2px"></div>
+        Zone <span style="color:#7dbdff;margin-left:2px">${totalZones}개</span>
+      </div>
+      <button class="zone-add-inline-btn" id="btn-add-zone" onclick="toggleAddMode('zone')">+ Zone 추가</button>
+    </div>`;
+
+  if (totalZones === 0) {
+    html += `<div style="color:#3a5070;font-size:10px;padding:6px 0 2px;text-align:center">Zone 없음 — 위의 [+ Zone 추가] 버튼으로 추가</div>`;
+  } else {
+    html += `<div style="margin-top:4px">`;
+    // 기존 DB zones
+    zones.forEach(z => {
+      const zp = pendingChanges[`zone:${z.id}`] || {};
+      const curCode = zp.zone_code ?? z.zone_code;
+      const curLat  = zp.lat ?? z.lat;
+      const curLon  = zp.lon ?? z.lon;
+      const isModified = !!zp.zone_code || !!zp.lat;
+      html += `<div class="zone-item">
+        <div class="zone-color-dot"></div>
+        <input class="zone-code-input${isModified ? ' modified' : ''}" id="zone-input-${z.id}"
+          value="${escHtml(curCode)}" maxlength="20"
+          oninput="onZoneCodeChange('${z.id}', false, this.value)"
+          placeholder="Zone 코드">
+        <span class="zone-coords-small">${fmt(curLat)}<br>${fmt(curLon)}</span>
+        <button class="zone-delete-btn" onclick="deleteZone('${z.id}', false)" title="Zone 삭제">✕</button>
+      </div>`;
+    });
+    // 새 zones (pending insert)
+    newZones.forEach(z => {
+      html += `<div class="zone-item">
+        <div class="zone-color-dot" style="background:#bf360c"></div>
+        <input class="zone-code-input modified" id="zone-input-${z.tempId}"
+          value="${escHtml(z.zone_code)}" maxlength="20"
+          oninput="onZoneCodeChange('${z.tempId}', true, this.value)"
+          placeholder="Zone 코드">
+        <span class="zone-coords-small">${fmt(z.lat)}<br>${fmt(z.lon)}</span>
+        <span class="zone-new-badge">NEW</span>
+        <button class="zone-delete-btn" onclick="deleteZone('${z.tempId}', true)" title="취소">✕</button>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  const totalPending = Object.keys(pendingChanges).length + pendingInserts.length + pendingDeletes.length;
+  if (totalPending > 0) {
+    html += `<div style="margin-top:8px;font-size:10px;color:#FF9800;text-align:center">⚠ ${totalPending}건 미저장 변경</div>`;
+  }
+
+  document.getElementById('coord-list').innerHTML = html;
+  document.getElementById('add-controls').style.display = currentTab === 'coords' ? 'flex' : 'none';
+  // zone add 버튼 active 상태 복원
+  const zb = document.getElementById('btn-add-zone');
+  if (zb && addMode === 'zone') zb.classList.add('active');
+}
+
+// ── 저장 ─────────────────────────────────────────────────────────────────
+async function saveChanges() {
+  const btn = document.getElementById('save-btn');
+  const status = document.getElementById('save-status');
+  btn.disabled = true;
+  status.textContent = '저장 중...';
+  status.style.color = '#7dbdff';
+
+  let saved = 0;
+  try {
+    // 1. PATCH 기존 변경
+    for (const [key, fields] of Object.entries(pendingChanges)) {
+      const [type, id] = key.split(':');
+      const table = type === 'spot' ? 'spots' : 'sub_spots';
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+        method: 'PATCH', headers: API_HEADERS, body: JSON.stringify(fields)
+      });
+      if (!res.ok) throw new Error(`${key} 저장 실패 (${res.status}): ${await res.text()}`);
+      if (type === 'spot') {
+        const s = allSpots.find(x => x.id === id);
+        if (s) Object.assign(s, fields);
+        if (selectedSpot?.id === id) Object.assign(selectedSpot, fields);
+      } else {
+        const z = allZones.find(x => x.id === id);
+        if (z) Object.assign(z, fields);
+      }
+      saved++;
+    }
+
+    // 2. DELETE zones
+    for (const zid of pendingDeletes) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/sub_spots?id=eq.${zid}`, {
+        method: 'DELETE', headers: API_HEADERS
+      });
+      if (!res.ok) throw new Error(`zone ${zid} 삭제 실패: ${await res.text()}`);
+      allZones = allZones.filter(z => z.id !== zid);
+      saved++;
+    }
+
+    // 3. INSERT new zones
+    for (const pi of pendingInserts) {
+      const body = {
+        zone_code: pi.zone_code,
+        lat: pi.lat,
+        lon: pi.lon,
+        parent_spot_id: pi.parent_spot_id,
+        is_active: true,
+        // sub_spots NOT NULL 기본값
+        face_normal_deg: 0,
+        sort_order: 0,
+        base_attenuation: 1.0,
+        zone_type: 'dive_site',
+        structure_shielding: 'none',
+        local_wave_break: 'none',
+        crowd_level: 'low',
+        current_tendency: 'weak',
+        runoff_risk: 'none',
+        bloom_season_risk: 'low',
+        recommended_activities: []
+      };
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/sub_spots`, {
+        method: 'POST', headers: API_HEADERS_RETURN, body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error(`zone 추가 실패: ${await res.text()}`);
+      const created = await res.json();
+      // allZones에 반영
+      const newZ = Array.isArray(created) ? created[0] : created;
+      if (newZ) allZones.push(newZ);
+      saved++;
+    }
+
+    pendingChanges = {};
+    originalValues = {};
+    pendingInserts = [];
+    pendingDeletes = [];
+    status.textContent = `✅ ${saved}건 저장 완료`;
+    status.style.color = '#00c853';
+    document.getElementById('undo-btn').style.display = 'none';
+    clearMarkers();
+    placeAllMarkers();
+    updatePanel();
+    setTimeout(() => { status.textContent = ''; }, 3000);
+
+  } catch (err) {
+    console.error(err);
+    status.textContent = `❌ ${err.message}`;
+    status.style.color = '#ff5252';
+    btn.disabled = false;
+  }
+}
+
+// ── 마커 정리 ─────────────────────────────────────────────────────────────
+function clearMarkers() {
+  activeMarkers.forEach(({ marker }) => marker.remove());
+  activeMarkers = [];
+}
+
+// ── 유틸 ─────────────────────────────────────────────────────────────────
+const round4 = n => Math.round(n * 10000) / 10000;
+const fmt    = n => n != null ? Number(n).toFixed(4) : '—';
+const escHtml = s => (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+map.on('load', () => {
+  loadData().catch(err => {
+    document.getElementById('loading').innerHTML =
+      `<div style="color:#ff5252">❌ 로드 실패<br><small>${err.message}</small></div>`;
+  });
+});
+</script>
+</body>
+</html>
