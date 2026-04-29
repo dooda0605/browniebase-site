@@ -88,6 +88,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
 }
 .zone-code-input:focus { border-color: #E65100; }
 .zone-code-input.modified { border-color: #FF6D00; background: #1a1400; }
+.zone-code-input.duplicate { border-color: #f44336 !important; background: #2a0a0a !important; }
 
 /* ── 시설 정보 입력 (info/fee) ── */
 .facility-fields { padding: 4px 0 10px 16px; display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid #1a2535; margin-bottom: 4px; }
@@ -638,6 +639,26 @@ document.getElementById('zone-name-input').addEventListener('keydown', e => {
 });
 
 // ── Zone 이름 변경 (인라인) ───────────────────────────────────────────────
+// 같은 spot 안에 같은 zone_code가 이미 있는지 (DB + 다른 pending insert + 다른 pending rename)
+function _isDuplicateZoneCode(parentSpotId, zoneCode, excludeId, excludeTempId) {
+  if (!zoneCode || !zoneCode.trim()) return false;
+  const code = zoneCode.trim();
+  const dbDup = allZones.find(z =>
+    z.parent_spot_id === parentSpotId &&
+    z.zone_code === code &&
+    z.id !== excludeId &&
+    !pendingDeletes.includes(z.id)
+  );
+  if (dbDup) return true;
+  const insertDup = pendingInserts.find(p =>
+    p.parent_spot_id === parentSpotId &&
+    p.zone_code === code &&
+    p.tempId !== excludeTempId
+  );
+  if (insertDup) return true;
+  return false;
+}
+
 function onZoneCodeChange(id, isNew, value) {
   if (isNew) {
     const pi = pendingInserts.find(z => z.tempId === id);
@@ -645,8 +666,13 @@ function onZoneCodeChange(id, isNew, value) {
     // 마커 라벨 업데이트
     const am = activeMarkers.find(m => m.id === id && m.type === 'zone-new');
     if (am) am.marker.getElement().textContent = value || '?';
+    // 중복 표시
+    const inp = document.getElementById(`zone-input-${id}`);
+    if (inp && pi) inp.classList.toggle('duplicate',
+      _isDuplicateZoneCode(pi.parent_spot_id, value, null, id));
   } else {
-    const prevCode = allZones.find(z => z.id === id)?.zone_code;
+    const z = allZones.find(z => z.id === id);
+    const prevCode = z?.zone_code;
     if (value !== prevCode) {
       setPending('zone', id, { zone_code: value });
     } else {
@@ -663,7 +689,11 @@ function onZoneCodeChange(id, isNew, value) {
     }
     // input 스타일 업데이트
     const inp = document.getElementById(`zone-input-${id}`);
-    if (inp) inp.classList.toggle('modified', value !== prevCode);
+    if (inp) {
+      inp.classList.toggle('modified', value !== prevCode);
+      inp.classList.toggle('duplicate',
+        z && _isDuplicateZoneCode(z.parent_spot_id, value, id, null));
+    }
     // 마커 라벨 업데이트
     const am = activeMarkers.find(m => m.id === id && m.type === 'zone');
     if (am) am.marker.getElement().textContent = value || '?';
@@ -969,20 +999,53 @@ function updatePanel() {
 async function saveChanges() {
   const btn = document.getElementById('save-btn');
   const status = document.getElementById('save-status');
+
+  // ── 사전 충돌 체크 — 같은 spot에 같은 zone_code가 이미 있거나 batch 내 중복인지
+  const conflicts = [];
+  const batchSeen = new Map();
+  for (const pi of pendingInserts) {
+    if (!pi.zone_code || !pi.zone_code.trim()) {
+      conflicts.push(`(빈 코드 · spot ${pi.parent_spot_id.slice(0,8)})`);
+      continue;
+    }
+    const k = `${pi.parent_spot_id}:${pi.zone_code}`;
+    const dbDup = allZones.find(z =>
+      z.parent_spot_id === pi.parent_spot_id &&
+      z.zone_code === pi.zone_code &&
+      !pendingDeletes.includes(z.id)
+    );
+    const batchDup = batchSeen.has(k);
+    if (dbDup || batchDup) {
+      const sp = allSpots.find(s => s.id === pi.parent_spot_id);
+      const spName = sp?.name?.ko || sp?.name?.en || pi.parent_spot_id.slice(0,8);
+      conflicts.push(`"${pi.zone_code}" (${spName})`);
+    }
+    batchSeen.set(k, pi.tempId);
+  }
+  if (conflicts.length > 0) {
+    const preview = conflicts.slice(0, 3).join(', ') + (conflicts.length > 3 ? ` 외 ${conflicts.length-3}건` : '');
+    status.textContent = `⚠️ Zone 코드 중복: ${preview} — 코드 변경 후 다시 저장`;
+    status.style.color = '#FF9800';
+    console.warn('Zone 중복 충돌:', conflicts);
+    return;
+  }
+
   btn.disabled = true;
   status.textContent = '저장 중...';
   status.style.color = '#7dbdff';
 
   let saved = 0;
-  try {
-    // 1. PATCH 기존 변경
-    for (const [key, fields] of Object.entries(pendingChanges)) {
+  const failures = [];
+
+  // 1. PATCH 기존 변경 — 각 항목 개별 try-catch
+  for (const [key, fields] of Object.entries(pendingChanges)) {
+    try {
       const [type, id] = key.split(':');
       const table = type === 'spot' ? 'spots' : 'sub_spots';
       const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
         method: 'PATCH', headers: API_HEADERS, body: JSON.stringify(fields)
       });
-      if (!res.ok) throw new Error(`${key} 저장 실패 (${res.status}): ${await res.text()}`);
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
       if (type === 'spot') {
         const s = allSpots.find(x => x.id === id);
         if (s) Object.assign(s, fields);
@@ -991,28 +1054,41 @@ async function saveChanges() {
         const z = allZones.find(x => x.id === id);
         if (z) Object.assign(z, fields);
       }
+      delete pendingChanges[key];
+      if (originalValues[key]) delete originalValues[key];
       saved++;
+    } catch (e) {
+      failures.push(`PATCH ${key}: ${e.message}`);
     }
+  }
 
-    // 2. DELETE zones
-    for (const zid of pendingDeletes) {
+  // 2. DELETE zones — 개별 try-catch, 실패한 것만 큐에 남김
+  const remainingDeletes = [];
+  for (const zid of pendingDeletes) {
+    try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/sub_spots?id=eq.${zid}`, {
         method: 'DELETE', headers: API_HEADERS
       });
-      if (!res.ok) throw new Error(`zone ${zid} 삭제 실패: ${await res.text()}`);
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
       allZones = allZones.filter(z => z.id !== zid);
       saved++;
+    } catch (e) {
+      failures.push(`DELETE zone ${zid.slice(0,8)}: ${e.message}`);
+      remainingDeletes.push(zid);
     }
+  }
+  pendingDeletes = remainingDeletes;
 
-    // 3. INSERT new zones
-    for (const pi of pendingInserts) {
+  // 3. INSERT new zones — 개별 try-catch, 친절한 충돌 메시지
+  const remainingInserts = [];
+  for (const pi of pendingInserts) {
+    try {
       const body = {
         zone_code: pi.zone_code,
         lat: pi.lat,
         lon: pi.lon,
         parent_spot_id: pi.parent_spot_id,
         is_active: true,
-        // sub_spots NOT NULL 기본값
         face_normal_deg: 0,
         sort_order: 0,
         base_attenuation: 1.0,
@@ -1028,32 +1104,41 @@ async function saveChanges() {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/sub_spots`, {
         method: 'POST', headers: API_HEADERS_RETURN, body: JSON.stringify(body)
       });
-      if (!res.ok) throw new Error(`zone 추가 실패: ${await res.text()}`);
+      if (!res.ok) {
+        const txt = await res.text();
+        const msg = txt.includes('duplicate key')
+          ? `중복된 zone 코드 "${pi.zone_code}"`
+          : `${res.status}: ${txt}`;
+        throw new Error(msg);
+      }
       const created = await res.json();
-      // allZones에 반영
       const newZ = Array.isArray(created) ? created[0] : created;
       if (newZ) allZones.push(newZ);
       saved++;
+    } catch (e) {
+      failures.push(`Zone "${pi.zone_code}": ${e.message}`);
+      remainingInserts.push(pi);
     }
+  }
+  pendingInserts = remainingInserts;
 
+  // 결과 표시
+  if (failures.length === 0) {
     pendingChanges = {};
     originalValues = {};
-    pendingInserts = [];
-    pendingDeletes = [];
     status.textContent = `✅ ${saved}건 저장 완료`;
     status.style.color = '#00c853';
     document.getElementById('undo-btn').style.display = 'none';
-    clearMarkers();
-    placeAllMarkers();
-    updatePanel();
     setTimeout(() => { status.textContent = ''; }, 3000);
-
-  } catch (err) {
-    console.error(err);
-    status.textContent = `❌ ${err.message}`;
-    status.style.color = '#ff5252';
+  } else {
+    status.textContent = `⚠️ ${saved}건 저장 / ${failures.length}건 실패 — F12 콘솔 확인`;
+    status.style.color = '#FF9800';
+    console.error('저장 실패 상세:\n' + failures.join('\n'));
     btn.disabled = false;
   }
+
+  if (selectedSpot) { clearMarkers(); placeAllMarkers(); }
+  updatePanel();
 }
 
 // ── 마커 정리 ─────────────────────────────────────────────────────────────
