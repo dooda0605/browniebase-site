@@ -88,6 +88,19 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
 }
 .zone-code-input:focus { border-color: #E65100; }
 .zone-code-input.modified { border-color: #FF6D00; background: #1a1400; }
+
+/* ── 시설 정보 입력 (info/fee) ── */
+.facility-fields { padding: 4px 0 10px 16px; display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid #1a2535; margin-bottom: 4px; }
+.facility-fields label { font-size: 9.5px; color: #5a7a9a; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: -2px; }
+.facility-input, .facility-textarea {
+  background: #0d1928; border: 1px solid #2a3f5a; border-radius: 4px;
+  color: white; font-size: 11px; padding: 4px 6px; outline: none;
+  font-family: inherit; width: 100%; resize: vertical; box-sizing: border-box;
+}
+.facility-input:focus, .facility-textarea:focus { border-color: #1A73E8; }
+.facility-input.modified, .facility-textarea.modified { border-color: #FF6D00; background: #1a1400; }
+.facility-textarea { min-height: 34px; line-height: 1.35; }
+.facility-input::placeholder, .facility-textarea::placeholder { color: #3a5070; }
 .zone-coords-small { font-family: monospace; font-size: 9px; color: #4a6080; white-space: nowrap; flex-shrink: 0; }
 .zone-delete-btn {
   width: 18px; height: 18px; border-radius: 3px; border: 1px solid #3a2020;
@@ -725,6 +738,28 @@ function cancelRemoveFacility(type) {
   updatePanel();
 }
 
+// ── 시설 정보 입력 (info/fee) ────────────────────────────────────────────
+// info textarea / fee input 변경 시 호출. 원본과 같으면 pending에서 제거,
+// 다르면 setPending. 패널 재렌더 안 해서 입력 포커스 유지.
+function onFacilityFieldChange(field, value, el) {
+  if (!selectedSpot) return;
+  const orig = selectedSpot[field] ?? '';
+  const key = `spot:${selectedSpot.id}`;
+  const same = value === orig || (value === '' && (orig === null || orig === undefined));
+  if (same) {
+    if (pendingChanges[key]) {
+      delete pendingChanges[key][field];
+      if (Object.keys(pendingChanges[key]).length === 0) delete pendingChanges[key];
+    }
+    if (originalValues[key]) delete originalValues[key][field];
+    markDirty();
+    if (el) el.classList.remove('modified');
+  } else {
+    setPending('spot', selectedSpot.id, { [field]: value === '' ? null : value });
+    if (el) el.classList.add('modified');
+  }
+}
+
 // ── Pending 관리 ──────────────────────────────────────────────────────────
 function setPending(type, id, fields) {
   const key = `${type}:${id}`;
@@ -785,6 +820,25 @@ function updatePanel() {
   const badge = () => `<span class="pending-badge">수정</span>`;
   const delBadge = () => `<span class="delete-badge">삭제 예정</span>`;
 
+  // 각 시설(샤워/주차/화장실)별 정보(info)·요금(fee) 입력 필드
+  const facilityFields = (prefix) => {
+    if (markedDelete(prefix + '_lat')) return ''; // 삭제 예정이면 입력 칸 숨김
+    const info = get(prefix + '_info') ?? '';
+    const fee  = get(prefix + '_fee')  ?? '';
+    return `
+      <div class="facility-fields">
+        <label>📝 정보</label>
+        <textarea class="facility-textarea${modified(prefix + '_info') ? ' modified' : ''}"
+          placeholder="시설 설명 (위치, 운영시간, 특이사항 등)"
+          oninput="onFacilityFieldChange('${prefix}_info', this.value, this)">${escHtml(info)}</textarea>
+        <label>💰 요금</label>
+        <input type="text" class="facility-input${modified(prefix + '_fee') ? ' modified' : ''}"
+          placeholder="예: 무료 / 유료 / 500엔 / ₱25"
+          value="${escHtml(fee)}"
+          oninput="onFacilityFieldChange('${prefix}_fee', this.value, this)">
+      </div>`;
+  };
+
   let html = `
     <div class="coord-row">
       <div class="coord-label"><div class="coord-dot" style="background:#1A73E8"></div>스팟 중심${modified('lat') ? badge() : ''}</div>
@@ -793,60 +847,63 @@ function updatePanel() {
 
   if (shLat) {
     html += `<div class="coord-row">
-      <div class="coord-label"><div class="coord-dot" style="background:#00796B"></div>샤워${modified('shower_lat') && !markedDelete('shower_lat') ? badge() : ''}</div>
+      <div class="coord-label"><div class="coord-dot" style="background:#00796B"></div>🚿 샤워${modified('shower_lat') && !markedDelete('shower_lat') ? badge() : ''}</div>
       <div class="coord-values">${fmt(shLat)}<br>${fmt(shLon)}</div>
       <button class="facility-remove-btn" title="샤워 시설 제거" onclick="removeFacility('shower')">×</button>
     </div>`;
   } else if (markedDelete('shower_lat')) {
     html += `<div class="coord-row">
-      <div class="coord-label"><div class="coord-dot" style="background:#00796B"></div>샤워${delBadge()}</div>
+      <div class="coord-label"><div class="coord-dot" style="background:#00796B"></div>🚿 샤워${delBadge()}</div>
       <div class="coord-values">—</div>
       <button class="facility-remove-btn" title="삭제 예정 취소" onclick="cancelRemoveFacility('shower')" style="border-color:#7dbdff;color:#7dbdff">↺</button>
     </div>`;
   } else {
     html += `<div class="coord-row dimmed">
-      <div class="coord-label"><div class="coord-dot" style="background:#00796B"></div>샤워 (없음)</div>
+      <div class="coord-label"><div class="coord-dot" style="background:#00796B"></div>🚿 샤워 (좌표 없음)</div>
       <div class="coord-values">—</div>
     </div>`;
   }
+  html += facilityFields('shower');
 
   if (pkLat) {
     html += `<div class="coord-row">
-      <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>주차${modified('parking_lat') && !markedDelete('parking_lat') ? badge() : ''}</div>
+      <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>🅿️ 주차${modified('parking_lat') && !markedDelete('parking_lat') ? badge() : ''}</div>
       <div class="coord-values">${fmt(pkLat)}<br>${fmt(pkLon)}</div>
       <button class="facility-remove-btn" title="주차 시설 제거" onclick="removeFacility('parking')">×</button>
     </div>`;
   } else if (markedDelete('parking_lat')) {
     html += `<div class="coord-row">
-      <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>주차${delBadge()}</div>
+      <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>🅿️ 주차${delBadge()}</div>
       <div class="coord-values">—</div>
       <button class="facility-remove-btn" title="삭제 예정 취소" onclick="cancelRemoveFacility('parking')" style="border-color:#7dbdff;color:#7dbdff">↺</button>
     </div>`;
   } else {
     html += `<div class="coord-row dimmed">
-      <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>주차 (없음)</div>
+      <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>🅿️ 주차 (좌표 없음)</div>
       <div class="coord-values">—</div>
     </div>`;
   }
+  html += facilityFields('parking');
 
   if (tlLat) {
     html += `<div class="coord-row">
-      <div class="coord-label"><div class="coord-dot" style="background:#9C27B0"></div>화장실${modified('toilet_lat') && !markedDelete('toilet_lat') ? badge() : ''}</div>
+      <div class="coord-label"><div class="coord-dot" style="background:#9C27B0"></div>🚽 화장실${modified('toilet_lat') && !markedDelete('toilet_lat') ? badge() : ''}</div>
       <div class="coord-values">${fmt(tlLat)}<br>${fmt(tlLon)}</div>
       <button class="facility-remove-btn" title="화장실 제거" onclick="removeFacility('toilet')">×</button>
     </div>`;
   } else if (markedDelete('toilet_lat')) {
     html += `<div class="coord-row">
-      <div class="coord-label"><div class="coord-dot" style="background:#9C27B0"></div>화장실${delBadge()}</div>
+      <div class="coord-label"><div class="coord-dot" style="background:#9C27B0"></div>🚽 화장실${delBadge()}</div>
       <div class="coord-values">—</div>
       <button class="facility-remove-btn" title="삭제 예정 취소" onclick="cancelRemoveFacility('toilet')" style="border-color:#7dbdff;color:#7dbdff">↺</button>
     </div>`;
   } else {
     html += `<div class="coord-row dimmed">
-      <div class="coord-label"><div class="coord-dot" style="background:#9C27B0"></div>화장실 (없음)</div>
+      <div class="coord-label"><div class="coord-dot" style="background:#9C27B0"></div>🚽 화장실 (좌표 없음)</div>
       <div class="coord-values">—</div>
     </div>`;
   }
+  html += facilityFields('toilet');
 
   // Zone 섹션
   const totalZones = zones.length + newZones.length;
