@@ -415,7 +415,7 @@ function renderExcelPanel(excelData) {
 // ── 데이터 로드 ───────────────────────────────────────────────────────────
 async function loadData() {
   const [spotsRes, zonesRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,parking_lat,parking_lon,parking_info,toilet_lat,toilet_lon,toilet_info&is_active=eq.true&limit=500`, { headers: API_HEADERS }),
+    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,shower_fee,parking_lat,parking_lon,parking_info,parking_fee,toilet_lat,toilet_lon,toilet_info,toilet_fee&is_active=eq.true&limit=500`, { headers: API_HEADERS }),
     fetch(`${SUPABASE_URL}/rest/v1/sub_spots?select=id,zone_code,lat,lon,parent_spot_id&is_active=eq.true&limit=1000`, { headers: API_HEADERS })
   ]);
   if (!spotsRes.ok) throw new Error('spots 로드 실패: ' + await spotsRes.text());
@@ -682,7 +682,7 @@ function deleteZone(id, isNew) {
 const FACILITY_META = {
   shower:  { label: '샤워',   color: '#00796B', icon: '🚿', cols: ['shower_lat', 'shower_lon', 'shower_info', 'shower_fee'] },
   parking: { label: '주차',   color: '#1565C0', icon: 'P',  cols: ['parking_lat', 'parking_lon', 'parking_info', 'parking_fee'] },
-  toilet:  { label: '화장실', color: '#9C27B0', icon: '🚽', cols: ['toilet_lat', 'toilet_lon', 'toilet_info'] },
+  toilet:  { label: '화장실', color: '#9C27B0', icon: '🚽', cols: ['toilet_lat', 'toilet_lon', 'toilet_info', 'toilet_fee'] },
 };
 
 function removeFacility(type) {
