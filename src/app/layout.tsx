@@ -2,13 +2,13 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Salpim – AI Ingredient Reader | Browniebase',
-  description: 'Scan ingredient labels and understand what they mean with AI. 13 languages supported.',
+  title: 'Browniebase – Caring digital tools',
+  description: 'Browniebase builds caring digital tools. Salpim (AI ingredient reader) and Mulsok (underwater visibility forecast).',
   openGraph: {
-    title: 'Salpim – AI Ingredient Reader',
-    description: 'Take a closer look at ingredients with AI.',
+    title: 'Browniebase – Caring digital tools',
+    description: 'Salpim · Mulsok — small tools that look closer at everyday life.',
     url: 'https://browniebase.com',
-    siteName: 'Salpim by Browniebase',
+    siteName: 'Browniebase',
     type: 'website',
   },
 }

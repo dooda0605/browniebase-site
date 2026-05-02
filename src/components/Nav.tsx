@@ -27,7 +27,7 @@ export default function Nav({ c, lang, setLang }: NavProps) {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
         {/* Logo */}
-        <a href="#" className="flex items-center gap-2">
+        <a href="/salpim/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#7B61FF] to-[#a78bfa] flex items-center justify-center shadow-sm">
             <span className="text-white text-xs font-bold">S</span>
           </div>
@@ -42,7 +42,7 @@ export default function Nav({ c, lang, setLang }: NavProps) {
           {links.map(l => (
             <a key={l.label} href={l.href} className="text-sm text-gray-600 hover:text-[#7B61FF] transition-colors">{l.label}</a>
           ))}
-          <a href="/underwater/" className="text-sm text-cyan-600 hover:text-cyan-700 transition-colors font-medium">🌊 Underwater →</a>
+          <a href="/mulsok/" className="text-sm text-cyan-600 hover:text-cyan-700 transition-colors font-medium">🌊 Mulsok →</a>
         </div>
 
         {/* Right: lang toggle + CTA */}
@@ -79,7 +79,7 @@ export default function Nav({ c, lang, setLang }: NavProps) {
           {links.map(l => (
             <a key={l.label} href={l.href} onClick={() => setOpen(false)} className="text-sm text-gray-700 hover:text-[#7B61FF]">{l.label}</a>
           ))}
-          <a href="/underwater/" className="text-sm text-cyan-600 font-medium">🌊 Underwater →</a>
+          <a href="/mulsok/" className="text-sm text-cyan-600 font-medium">🌊 Mulsok →</a>
           <a href="https://play.google.com/store/apps/details?id=app.ingredientanalyzer.consumer" target="_blank" rel="noopener noreferrer" className="inline-flex justify-center bg-[#7B61FF] text-white text-sm font-medium px-4 py-2 rounded-full">
             {c.download}
           </a>

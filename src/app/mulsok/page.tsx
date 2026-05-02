@@ -8,9 +8,9 @@ const c = {
     nav: { features: '주요 기능', regions: '지원 지역', activities: '활동', faq: 'FAQ', launch: '앱 열기' },
     hero: {
       badge: '베타 테스트 진행 중',
-      headline: '수중 시야를 미리 살펴보세요',
-      subheadline: 'AI가 파고·조류·너울을 종합 분석해 다이빙·스노쿨링 활동에 적합한 시간을 알려드립니다.',
-      tagline: '"바다 들어가기 전에 시야부터 살펴보세요."',
+      headline: '바다 속 시야를 미리 살펴보세요',
+      subheadline: 'AI가 파고·조류·너울·바람·강수를 종합 분석해 다이빙·스노클링 활동에 적합한 시간을 알려드립니다.',
+      tagline: '"물속에 들어가기 전, 시야부터 살펴보세요."',
       cta1: '앱 열기',
       cta2: '자세히 알아보기',
       pills: [
@@ -20,8 +20,8 @@ const c = {
       ],
     },
     what: {
-      title: 'Underwater Visibility란?',
-      body: '바다에 들어가기 전, 수중 시야를 객관적으로 예측하는 도구입니다. 파고·조류·스웰·바람·강수 등 다양한 해양 데이터를 종합해 격자별 등급(A~E)으로 시각화합니다. 다이빙·스노쿨링·프리다이빙·해변수영을 즐기는 분들께 "지금 들어가도 잘 보일까?"에 답해 드립니다.',
+      title: 'Mulsok이란?',
+      body: '바다에 들어가기 전, 수중 시야를 객관적으로 예측하는 도구입니다. 파고·조류·스웰·바람·강수 등 다양한 해양 데이터를 종합해 격자별 등급(A~E)으로 시각화합니다. 다이빙·스노클링·프리다이빙·해변수영을 즐기는 분들께 "지금 들어가도 잘 보일까?"에 답해 드립니다.',
     },
     features: {
       title: '주요 기능',
@@ -29,7 +29,7 @@ const c = {
         { icon: '🗺️', title: '지역 등급 지도', desc: '바다 위에 격자별로 A~E 등급을 색으로 표시. 어디가 좋은지 한눈에 파악.' },
         { icon: '⏱️', title: '시간대별 예보', desc: '3시간 단위로 7일치 예보 + 8~14일 참고 예보까지 제공.' },
         { icon: '🌊', title: '윈디 스타일 기상 레이어', desc: '조류·파고·큰 너울·교차 너울 입자 애니메이션으로 흐름 시각화.' },
-        { icon: '🤿', title: '활동별 맞춤 등급', desc: '해변수영·스노쿨링·프리다이빙·스쿠버 4가지 활동별로 다른 임계값 적용.' },
+        { icon: '🤿', title: '활동별 맞춤 등급', desc: '해변수영·스노클링·프리다이빙·스쿠버 4가지 활동별로 다른 임계값 적용.' },
         { icon: '📊', title: '하이브리드 채점', desc: 'wave/swell/wind/current/temperature/water quality 종합 평가.' },
         { icon: '🌐', title: '10개 언어', desc: '한국어·영어·일본어·중국어 등 10개 언어로 정보 제공.' },
       ],
@@ -38,7 +38,7 @@ const c = {
       title: '4가지 활동 지원',
       list: [
         { icon: '🏖️', title: '해변 수영', desc: '얕은 수심, 안전 위주' },
-        { icon: '🤿', title: '스노쿨링', desc: '표면 활동, 시야 중요' },
+        { icon: '🤿', title: '스노클링', desc: '표면 활동, 시야 중요' },
         { icon: '🐠', title: '프리다이빙', desc: '중간 수심, 안정성' },
         { icon: '🌊', title: '스쿠버 다이빙', desc: '깊은 수심, 종합 평가' },
       ],
@@ -64,10 +64,15 @@ const c = {
       title: '이렇게 사용하세요',
       steps: [
         { step: '01', title: '지역 선택', desc: '11개 지원 지역 중 가려는 곳을 선택' },
-        { step: '02', title: '활동 선택', desc: '해변수영·스노쿨링·프리다이빙·스쿠버 중 활동 선택' },
+        { step: '02', title: '활동 선택', desc: '해변수영·스노클링·프리다이빙·스쿠버 중 활동 선택' },
         { step: '03', title: '시간 슬라이더', desc: '3시간 단위로 시간대별 등급 변화 확인' },
         { step: '04', title: '스팟 상세', desc: '구체적 스팟 클릭 시 파고·조류 그래프와 등급 변동 확인' },
       ],
+    },
+    brand: {
+      title: '왜 이름이 "Mulsok"인가요?',
+      body: '"Mulsok(물속)"은 한국어 토박이말로 "물 안쪽 = 바다 속"이라는 뜻입니다.',
+      connection: '바다 속 상황을 미리 살펴 적절한 시간을 찾아드리는 앱의 본질을 그대로 담은 이름입니다. 자매 앱 "Salpim(살핌)"과 같은 토박이말 패턴입니다.',
     },
     cta: {
       title: '지금 바로 시야를 살펴보세요',
@@ -80,7 +85,7 @@ const c = {
     nav: { features: 'Features', regions: 'Regions', activities: 'Activities', faq: 'FAQ', launch: 'Launch App' },
     hero: {
       badge: 'Beta in progress',
-      headline: 'Check underwater visibility before you dive',
+      headline: 'See underwater visibility before you dive',
       subheadline: 'AI combines waves, swell, current, wind & rain to forecast the best time for diving and snorkeling.',
       tagline: '"Take a closer look at the water before you go in."',
       cta1: 'Launch App',
@@ -92,7 +97,7 @@ const c = {
       ],
     },
     what: {
-      title: 'What is Underwater Visibility?',
+      title: 'What is Mulsok?',
       body: 'A forecasting tool that gives an objective grade for underwater visibility before you enter the sea. By combining wave, swell, current, wind and rain data, it produces an A~E grade for each grid cell — answering "will I see anything if I go in now?" for snorkelers, freedivers, scuba divers, and beach swimmers.',
     },
     features: {
@@ -141,6 +146,11 @@ const c = {
         { step: '04', title: 'Spot detail', desc: 'Click a spot for wave/current charts and grade timeline.' },
       ],
     },
+    brand: {
+      title: 'Why the name "Mulsok"?',
+      body: '"Mulsok (물속)" is a pure Korean word meaning "inside the water" — literally, underwater.',
+      connection: 'It captures the essence of the app: looking inside the sea before you go in. It shares the native-Korean pattern with our sister app "Salpim (살핌)".',
+    },
     cta: {
       title: 'Check your visibility now',
       body: 'A minute before you enter the water can save the trip.',
@@ -150,10 +160,9 @@ const c = {
   },
 } as const
 
-// 실제 앱이 배포될 URL — 추후 결정 시 교체
-const APP_URL = 'https://browniebase.com/underwater-app/'
+const APP_URL = 'https://browniebase.com/mulsok-app/'
 
-export default function UnderwaterPage() {
+export default function MulsokPage() {
   const [lang, setLang] = useState<Lang>('ko')
   const t = c[lang]
 
@@ -162,13 +171,13 @@ export default function UnderwaterPage() {
       {/* ── Nav ─────────────────────────────────────────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-          <a href="/underwater/" className="flex items-center gap-2">
+          <a href="/mulsok/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-400 flex items-center justify-center shadow-sm">
               <span className="text-white text-base">🌊</span>
             </div>
             <div>
-              <span className="font-bold text-gray-900 text-lg leading-none">Underwater</span>
-              <span className="block text-[10px] text-gray-400 leading-none">by Browniebase</span>
+              <span className="font-bold text-gray-900 text-lg leading-none">Mulsok</span>
+              <span className="block text-[10px] text-gray-400 leading-none">물속 · by Browniebase</span>
             </div>
           </a>
 
@@ -176,7 +185,7 @@ export default function UnderwaterPage() {
             <a href="#features" className="text-sm text-gray-600 hover:text-cyan-600 transition-colors">{t.nav.features}</a>
             <a href="#activities" className="text-sm text-gray-600 hover:text-cyan-600 transition-colors">{t.nav.activities}</a>
             <a href="#regions" className="text-sm text-gray-600 hover:text-cyan-600 transition-colors">{t.nav.regions}</a>
-            <a href="/" className="text-sm text-gray-600 hover:text-cyan-600 transition-colors">Salpim →</a>
+            <a href="/salpim/" className="text-sm text-gray-500 hover:text-[#7B61FF] transition-colors">Salpim →</a>
           </div>
 
           <div className="flex items-center gap-3">
@@ -313,6 +322,15 @@ export default function UnderwaterPage() {
         </div>
       </section>
 
+      {/* ── Brand story ─────────────────────────────────────────── */}
+      <section className="py-16 bg-white">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">{t.brand.title}</h2>
+          <p className="text-lg text-gray-700 mb-4 leading-relaxed">{t.brand.body}</p>
+          <p className="text-gray-600 leading-relaxed">{t.brand.connection}</p>
+        </div>
+      </section>
+
       {/* ── CTA ─────────────────────────────────────────────────── */}
       <section className="py-20 bg-gradient-to-br from-cyan-600 to-teal-500 text-white overflow-hidden relative">
         <div className="absolute inset-0 opacity-10">
@@ -338,14 +356,15 @@ export default function UnderwaterPage() {
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-400 flex items-center justify-center">
                   <span className="text-white text-base">🌊</span>
                 </div>
-                <span className="font-bold text-lg">Underwater</span>
-                <span className="text-gray-500 text-sm">/ 수중시야</span>
+                <span className="font-bold text-lg">Mulsok</span>
+                <span className="text-gray-500 text-sm">/ 물속</span>
               </div>
               <p className="text-gray-400 text-sm">{t.footerTagline}</p>
               <p className="text-gray-500 text-xs mt-1">by Browniebase</p>
             </div>
             <div className="flex flex-wrap gap-6">
-              <a href="/" className="text-gray-400 hover:text-white text-sm transition-colors">Salpim</a>
+              <a href="/" className="text-gray-400 hover:text-white text-sm transition-colors">Browniebase</a>
+              <a href="/salpim/" className="text-gray-400 hover:text-white text-sm transition-colors">Salpim</a>
               <a href="/privacy.html" className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
               <a href="/terms.html" className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '이용약관' : 'Terms'}</a>
               <a href="mailto:support@browniebase.com" className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '문의' : 'Contact'}</a>

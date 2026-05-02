@@ -96,6 +96,8 @@ export const content = {
       tagline: 'AI-powered ingredient understanding',
       company: 'Browniebase',
       links: [
+        { label: 'Browniebase', href: '/' },
+        { label: 'Mulsok', href: '/mulsok/' },
         { label: 'Privacy Policy', href: '/privacy.html' },
         { label: 'Terms of Service', href: '/terms.html' },
         { label: 'Contact', href: 'mailto:support@browniebase.com' },
@@ -198,6 +200,8 @@ export const content = {
       tagline: 'AI 기반 성분 해설 앱',
       company: 'Browniebase',
       links: [
+        { label: 'Browniebase', href: '/' },
+        { label: 'Mulsok', href: '/mulsok/' },
         { label: '개인정보처리방침', href: '/privacy.html' },
         { label: '이용약관', href: '/terms.html' },
         { label: '문의', href: 'mailto:support@browniebase.com' },
