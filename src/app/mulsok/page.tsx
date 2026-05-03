@@ -365,8 +365,8 @@ export default function MulsokPage() {
             <div className="flex flex-wrap gap-6">
               <a href="/" className="text-gray-400 hover:text-white text-sm transition-colors">Browniebase</a>
               <a href="/salpim/" className="text-gray-400 hover:text-white text-sm transition-colors">Salpim</a>
-              <a href="/privacy.html" className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
-              <a href="/terms.html" className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '이용약관' : 'Terms'}</a>
+              <a href={lang === 'ko' ? '/privacy-mulsok.html' : '/privacy-mulsok-en.html'} className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
+              <a href={lang === 'ko' ? '/terms-mulsok.html' : '/terms-mulsok-en.html'} className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '이용약관' : 'Terms'}</a>
               <a href="mailto:support@browniebase.com" className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '문의' : 'Contact'}</a>
             </div>
           </div>
