@@ -2,7 +2,39 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>🌊 Spot Admin Map Editor</title>
+<script>
+// In-app browser (KakaoTalk/NAVER/Instagram/Facebook 등) 자동 외부 브라우저 리다이렉트.
+// Mapbox WebGL이 in-app에서 자주 깨지고, localStorage도 격리됨 → 외부 Chrome/Safari 강제.
+(function() {
+  var ua = navigator.userAgent || '';
+  var isInApp = /KAKAOTALK|NAVER|FB_IAB|FBAN|FBAV|Instagram|Line|Twitter|Snapchat/i.test(ua);
+  if (!isInApp) return;
+  var url = window.location.href;
+  var isAndroid = /Android/i.test(ua);
+  if (isAndroid) {
+    // Android intent — Chrome 강제 실행
+    var cleanUrl = url.replace(/^https?:\/\//, '');
+    location.href = 'intent://' + cleanUrl + '#Intent;scheme=https;package=com.android.chrome;end';
+  } else {
+    // iOS — 안내 화면
+    document.documentElement.innerHTML =
+      '<body style="margin:0;padding:24px;font-family:-apple-system,sans-serif;background:#0b1220;color:#e0ecff;display:flex;align-items:center;justify-content:center;min-height:100vh;">' +
+      '<div style="max-width:340px;text-align:center;">' +
+      '<div style="font-size:48px;margin-bottom:16px;">📱</div>' +
+      '<h2 style="font-size:18px;margin-bottom:12px;color:#7dbdff;">외부 브라우저로 열어주세요</h2>' +
+      '<p style="font-size:14px;line-height:1.6;color:#a0b8d0;margin-bottom:24px;">카카오톡 등 인앱 브라우저에서는 지도가 작동하지 않습니다. Safari로 열어주세요.</p>' +
+      '<div style="background:#1a2535;border-radius:10px;padding:14px;font-size:13px;color:#c0d0e0;text-align:left;">' +
+      '<b style="color:#7dbdff;">Safari로 여는 법:</b><br>' +
+      '1. 우측 상단 <b>···</b> 또는 <b>공유</b> 버튼<br>' +
+      '2. <b>"Safari로 열기"</b> 또는 <b>"기본 브라우저로 열기"</b> 선택<br>' +
+      '<br>또는 아래 주소를 복사해서 Safari 주소창에 붙여넣기:<br>' +
+      '<div style="margin-top:8px;padding:8px;background:#0b1220;border-radius:6px;font-size:11px;word-break:break-all;color:#7dbdff;">' + url.split('?')[0] + '</div>' +
+      '</div></div></body>';
+  }
+})();
+</script>
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <style>
