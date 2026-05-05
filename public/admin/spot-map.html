@@ -42,8 +42,20 @@
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; height: 100vh; background: #0b1220; color: white; overflow: hidden; }
 
 /* ── 사이드바 ── */
-#sidebar { width: 270px; min-width: 270px; display: flex; flex-direction: column; background: #111a2e; border-right: 1px solid #1e2f4a; }
-#sidebar-header { padding: 13px 16px; background: #0b1220; font-size: 13px; font-weight: 700; color: #7dbdff; border-bottom: 1px solid #1e2f4a; flex-shrink: 0; }
+#sidebar { width: 270px; min-width: 270px; display: flex; flex-direction: column; background: #111a2e; border-right: 1px solid #1e2f4a; transition: width .2s, min-width .2s; }
+#sidebar.collapsed { width: 0; min-width: 0; border-right: none; overflow: hidden; }
+#sidebar-header { padding: 13px 16px; background: #0b1220; font-size: 13px; font-weight: 700; color: #7dbdff; border-bottom: 1px solid #1e2f4a; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+#sidebar-toggle { background: transparent; border: none; color: #7dbdff; cursor: pointer; font-size: 16px; padding: 0 4px; line-height: 1; }
+#sidebar-toggle:hover { color: #aabbd0; }
+#sidebar-reopen {
+  position: absolute; top: 12px; left: 12px; z-index: 15;
+  background: rgba(10,16,32,0.95); border: 1px solid #1e3050;
+  color: #7dbdff; cursor: pointer; padding: 7px 11px;
+  border-radius: 8px; font-size: 13px; display: none;
+  backdrop-filter: blur(8px);
+}
+#sidebar-reopen:hover { background: #1a2f4a; }
+#sidebar-reopen.show { display: block; }
 #search-box { margin: 8px; padding: 7px 10px; background: #1a2535; border: 1px solid #2a3f5a; border-radius: 6px; color: white; font-size: 12px; outline: none; width: calc(100% - 16px); }
 #search-box::placeholder { color: #4a6080; }
 #spot-list { overflow-y: auto; flex: 1; }
@@ -63,7 +75,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
   border-radius: 10px; z-index: 10;
   font-size: 12px; backdrop-filter: blur(8px);
   display: flex; flex-direction: column;
-  max-height: calc(100vh - 60px);
+  max-height: calc(100vh - 130px);
 }
 #panel-header { padding: 12px 14px 0; flex-shrink: 0; }
 #panel-title { color: #7dbdff; font-size: 13px; font-weight: 700; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -207,8 +219,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
 #undo-btn:hover { background: #1a2f4a; }
 
 /* ── 범례 ── */
-#legend { position: absolute; bottom: 32px; right: 12px; background: rgba(10,16,32,0.9); border: 1px solid #1e3050; border-radius: 8px; padding: 10px 14px; font-size: 11px; z-index: 10; }
+#legend { position: absolute; bottom: 12px; left: 12px; background: rgba(10,16,32,0.92); border: 1px solid #1e3050; border-radius: 8px; font-size: 11px; z-index: 10; backdrop-filter: blur(8px); transition: padding .15s; }
+#legend.collapsed .legend-body { display: none; }
+#legend-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; cursor: pointer; user-select: none; }
+#legend-header:hover { color: #aabbd0; }
+#legend-title { font-weight: 700; color: #7dbdff; font-size: 11px; }
+#legend-toggle { color: #7dbdff; font-size: 11px; line-height: 1; }
+.legend-body { padding: 0 12px 10px; }
 .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; color: #aabbd0; }
+.legend-item:last-child { margin-bottom: 0; }
 .legend-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
 
 /* ── 지도 클릭 힌트 ── */
@@ -241,12 +260,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
 </div>
 
 <div id="sidebar">
-  <div id="sidebar-header">🌊 Spot Admin Map Editor</div>
+  <div id="sidebar-header">
+    <span>🌊 Spot Admin Map Editor</span>
+    <button id="sidebar-toggle" onclick="toggleSidebar()" title="사이드바 접기">✕</button>
+  </div>
   <input id="search-box" placeholder="🔍 스팟 검색..." type="text">
   <div id="spot-list"></div>
 </div>
 
 <div id="map">
+  <button id="sidebar-reopen" onclick="toggleSidebar()" title="사이드바 열기">☰ 스팟 목록</button>
   <div id="map-hint">🖱️ 지도를 클릭해서 마커를 배치하세요 (ESC 취소)</div>
 </div>
 
@@ -286,12 +309,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
 </div>
 
 <div id="legend">
-  <div style="font-weight:700;color:#7dbdff;margin-bottom:6px;font-size:11px">마커 종류 (드래그 가능)</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#1A73E8"></div>스팟 중심점</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#FF6D00"></div>Zone (수중 구역)</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#00796B"></div>샤워 시설</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#1565C0"></div>주차장</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#9C27B0"></div>화장실</div>
+  <div id="legend-header" onclick="toggleLegend()">
+    <span id="legend-title">마커 종류 (드래그 가능)</span>
+    <span id="legend-toggle">▼</span>
+  </div>
+  <div class="legend-body">
+    <div class="legend-item"><div class="legend-dot" style="background:#1A73E8"></div>스팟 중심점</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#FF6D00"></div>Zone (수중 구역)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#00796B"></div>샤워 시설</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1565C0"></div>주차장</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#9C27B0"></div>화장실</div>
+  </div>
 </div>
 
 <script>
@@ -355,7 +383,22 @@ const map = new mapboxgl.Map({
   center: [126.5, 26.0],
   zoom: 4
 });
-map.addControl(new mapboxgl.NavigationControl(), 'bottom-left');
+map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+// ── 사이드바 / 범례 토글 ──────────────────────────────────────────────────
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const reopen = document.getElementById('sidebar-reopen');
+  const collapsed = sb.classList.toggle('collapsed');
+  reopen.classList.toggle('show', collapsed);
+  // 지도 리사이즈 (mapbox는 컨테이너 크기 변경 시 resize 필요)
+  setTimeout(() => map.resize(), 220);
+}
+function toggleLegend() {
+  document.getElementById('legend').classList.toggle('collapsed');
+  const t = document.getElementById('legend-toggle');
+  t.textContent = t.textContent === '▼' ? '▲' : '▼';
+}
 
 // ── 탭 전환 ───────────────────────────────────────────────────────────────
 function switchTab(tab) {
