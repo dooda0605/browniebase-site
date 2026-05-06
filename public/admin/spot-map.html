@@ -298,9 +298,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
 
   <div id="panel-footer">
     <div id="add-controls">
-      <button class="add-btn" id="btn-add-shower" onclick="toggleAddMode('shower')">🚿 샤워</button>
-      <button class="add-btn" id="btn-add-parking" onclick="toggleAddMode('parking')">🅿️ 주차</button>
-      <button class="add-btn" id="btn-add-toilet" onclick="toggleAddMode('toilet')">🚽 화장실</button>
+      <button class="add-btn" id="btn-add-shower" title="기본 미설정이면 기본으로, 이미 있으면 추가 시설로 등록" onclick="toggleAddMode('shower')">🚿 샤워+</button>
+      <button class="add-btn" id="btn-add-parking" title="기본 미설정이면 기본으로, 이미 있으면 추가 시설로 등록" onclick="toggleAddMode('parking')">🅿️ 주차+</button>
+      <button class="add-btn" id="btn-add-toilet" title="기본 미설정이면 기본으로, 이미 있으면 추가 시설로 등록" onclick="toggleAddMode('toilet')">🚽 화장실+</button>
     </div>
     <button id="save-btn" disabled onclick="saveChanges()">💾 변경사항 저장</button>
     <button id="undo-btn" onclick="undoChanges()">↩ 변경 취소</button>
@@ -319,6 +319,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
     <div class="legend-item"><div class="legend-dot" style="background:#00796B"></div>샤워 시설</div>
     <div class="legend-item"><div class="legend-dot" style="background:#1565C0"></div>주차장</div>
     <div class="legend-item"><div class="legend-dot" style="background:#9C27B0"></div>화장실</div>
+    <div class="legend-item" style="margin-top:6px;padding-top:6px;border-top:1px solid #1e3050;font-size:10px;color:#5a7a9a">버튼 한번 더 누르면 추가 시설 (작은 마커)</div>
   </div>
 </div>
 
@@ -504,7 +505,7 @@ function renderExcelPanel(excelData) {
 // ── 데이터 로드 ───────────────────────────────────────────────────────────
 async function loadData() {
   const [spotsRes, zonesRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,shower_fee,parking_lat,parking_lon,parking_info,parking_fee,toilet_lat,toilet_lon,toilet_info,toilet_fee&is_active=eq.true&limit=500`, { headers: API_HEADERS }),
+    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,shower_fee,parking_lat,parking_lon,parking_info,parking_fee,toilet_lat,toilet_lon,toilet_info,toilet_fee,extra_facilities&is_active=eq.true&limit=500`, { headers: API_HEADERS }),
     fetch(`${SUPABASE_URL}/rest/v1/sub_spots?select=id,zone_code,lat,lon,parent_spot_id&is_active=eq.true&limit=1000`, { headers: API_HEADERS })
   ]);
   if (!spotsRes.ok) throw new Error('spots 로드 실패: ' + await spotsRes.text());
@@ -593,6 +594,13 @@ function placeAllMarkers() {
     addMarker({ type: 'parking', id: s.id, lat: s.parking_lat, lon: s.parking_lon, color: '#1565C0', label: 'P', size: 30 });
   if (s.toilet_lat && s.toilet_lon)
     addMarker({ type: 'toilet', id: s.id, lat: s.toilet_lat, lon: s.toilet_lon, color: '#9C27B0', label: '🚽', size: 30 });
+
+  // 추가 시설 (extra_facilities) — pending 포함해서 렌더
+  getExtras().forEach(ef => {
+    const meta = FACILITY_META[ef.type];
+    if (!meta || ef.lat == null || ef.lon == null) return;
+    addMarker({ type: `extra-${ef.type}`, id: ef.id, lat: ef.lat, lon: ef.lon, color: meta.color, label: meta.icon, size: 26 });
+  });
 }
 
 // ── 마커 생성 ─────────────────────────────────────────────────────────────
@@ -606,6 +614,9 @@ function addMarker({ type, id, lat, lon, color, label, size = 32, isZone = false
     if (type === 'shower')  setPending('spot', id, { shower_lat: r4lat, shower_lon: r4lng });
     if (type === 'parking') setPending('spot', id, { parking_lat: r4lat, parking_lon: r4lng });
     if (type === 'toilet')  setPending('spot', id, { toilet_lat: r4lat, toilet_lon: r4lng });
+    if (type && type.startsWith('extra-')) {
+      _updateExtras(getExtras().map(ef => ef.id === id ? { ...ef, lat: r4lat, lon: r4lng } : ef));
+    }
     if (type === 'zone')    setPending('zone', id, { lat: r4lat, lon: r4lng });
     if (type === 'zone-new') {
       const pi = pendingInserts.find(z => z.tempId === id);
@@ -649,21 +660,26 @@ map.on('click', e => {
     return;
   }
 
-  const existing = activeMarkers.find(m => m.type === addMode);
-  if (existing) { existing.marker.remove(); activeMarkers = activeMarkers.filter(m => m !== existing); }
-
-  if (addMode === 'shower') {
-    selectedSpot.shower_lat = r4lat; selectedSpot.shower_lon = r4lng;
-    addMarker({ type: 'shower', id: selectedSpot.id, lat: r4lat, lon: r4lng, color: '#00796B', label: '🚿', size: 30 });
-    setPending('spot', selectedSpot.id, { shower_lat: r4lat, shower_lon: r4lng });
-  } else if (addMode === 'parking') {
-    selectedSpot.parking_lat = r4lat; selectedSpot.parking_lon = r4lng;
-    addMarker({ type: 'parking', id: selectedSpot.id, lat: r4lat, lon: r4lng, color: '#1565C0', label: 'P', size: 30 });
-    setPending('spot', selectedSpot.id, { parking_lat: r4lat, parking_lon: r4lng });
-  } else if (addMode === 'toilet') {
-    selectedSpot.toilet_lat = r4lat; selectedSpot.toilet_lon = r4lng;
-    addMarker({ type: 'toilet', id: selectedSpot.id, lat: r4lat, lon: r4lng, color: '#9C27B0', label: '🚽', size: 30 });
-    setPending('spot', selectedSpot.id, { toilet_lat: r4lat, toilet_lon: r4lng });
+  if (addMode === 'shower' || addMode === 'parking' || addMode === 'toilet') {
+    const type = addMode;
+    const meta = FACILITY_META[type];
+    // 현재 보이는 기본 시설 마커가 있는지로 판정 (삭제 예정이면 마커가 이미 사라진 상태)
+    const hasPrimary = activeMarkers.some(m => m.type === type && m.id === selectedSpot.id);
+    if (!hasPrimary) {
+      // 기본 시설 미설정 → 기본으로 추가
+      // 만약 이전에 삭제 예정이었다면 그 pending도 제거
+      const sp = pendingChanges[`spot:${selectedSpot.id}`];
+      if (sp) ['_lat','_lon','_info','_fee'].forEach(suf => { if (sp[type + suf] === null) delete sp[type + suf]; });
+      selectedSpot[type + '_lat'] = r4lat;
+      selectedSpot[type + '_lon'] = r4lng;
+      addMarker({ type, id: selectedSpot.id, lat: r4lat, lon: r4lng, color: meta.color, label: meta.icon, size: 30 });
+      setPending('spot', selectedSpot.id, { [type + '_lat']: r4lat, [type + '_lon']: r4lng });
+    } else {
+      // 기본 시설 이미 존재 → extra_facilities 배열에 추가
+      addExtraFacility(type, r4lat, r4lng);
+      toggleAddMode(null);
+      return;
+    }
   }
   toggleAddMode(null);
   updatePanel();
@@ -678,7 +694,13 @@ function toggleAddMode(mode) {
   if (zoneBtn) zoneBtn.classList.toggle('active', addMode === 'zone');
   const hint = document.getElementById('map-hint');
   if (addMode === 'zone') hint.textContent = '🖱️ 지도를 클릭해서 Zone 위치를 지정하세요 (ESC 취소)';
-  else hint.textContent = '🖱️ 지도를 클릭해서 마커를 배치하세요 (ESC 취소)';
+  else if (addMode === 'shower' || addMode === 'parking' || addMode === 'toilet') {
+    const meta = FACILITY_META[addMode];
+    const hasPrimary = selectedSpot && activeMarkers.some(m => m.type === addMode && m.id === selectedSpot.id);
+    hint.textContent = hasPrimary
+      ? `🖱️ ${meta.icon} ${meta.label} 추가 시설을 배치할 위치 클릭 (ESC 취소)`
+      : `🖱️ ${meta.icon} ${meta.label} 기본 위치 클릭 (ESC 취소)`;
+  } else hint.textContent = '🖱️ 지도를 클릭해서 마커를 배치하세요 (ESC 취소)';
   hint.style.display = addMode ? 'block' : 'none';
   map.getCanvas().style.cursor = addMode ? 'crosshair' : '';
 }
@@ -802,6 +824,43 @@ const FACILITY_META = {
   parking: { label: '주차',   color: '#1565C0', icon: 'P',  cols: ['parking_lat', 'parking_lon', 'parking_info', 'parking_fee'] },
   toilet:  { label: '화장실', color: '#9C27B0', icon: '🚽', cols: ['toilet_lat', 'toilet_lon', 'toilet_info', 'toilet_fee'] },
 };
+
+// ── 추가 시설 (extra_facilities JSONB 배열) ──────────────────────────────
+// 기본 시설(shower/parking/toilet 단일)이 이미 있을 때 추가로 등록되는 시설들.
+// 각 element: { id, type: 'shower'|'parking'|'toilet', lat, lon, info, fee }
+function genExtraId() {
+  return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'ef-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+}
+function getExtras() {
+  if (!selectedSpot) return [];
+  const sp = pendingChanges[`spot:${selectedSpot.id}`] || {};
+  if (Object.prototype.hasOwnProperty.call(sp, 'extra_facilities')) return sp.extra_facilities;
+  return Array.isArray(selectedSpot.extra_facilities) ? selectedSpot.extra_facilities : [];
+}
+function _updateExtras(arr) {
+  setPending('spot', selectedSpot.id, { extra_facilities: arr });
+}
+function addExtraFacility(type, lat, lon) {
+  const meta = FACILITY_META[type];
+  if (!meta) return;
+  const ef = { id: genExtraId(), type, lat: round4(lat), lon: round4(lon), info: '', fee: '' };
+  _updateExtras([...getExtras(), ef]);
+  addMarker({ type: `extra-${type}`, id: ef.id, lat: ef.lat, lon: ef.lon, color: meta.color, label: meta.icon, size: 26 });
+  updatePanel();
+}
+function removeExtraFacility(id) {
+  if (!selectedSpot) return;
+  if (!confirm('추가 시설을 제거할까요?')) return;
+  _updateExtras(getExtras().filter(ef => ef.id !== id));
+  const am = activeMarkers.find(m => m.id === id && m.type && m.type.startsWith('extra-'));
+  if (am) { am.marker.remove(); activeMarkers = activeMarkers.filter(m => m !== am); }
+  updatePanel();
+}
+function updateExtraField(id, field, value) {
+  const arr = getExtras().map(ef => ef.id === id ? { ...ef, [field]: value } : ef);
+  _updateExtras(arr);
+  // 입력 포커스 유지를 위해 패널 재렌더 X
+}
 
 function removeFacility(type) {
   if (!selectedSpot) return;
@@ -1009,6 +1068,35 @@ function updatePanel() {
     </div>`;
   }
   html += facilityFields('toilet');
+
+  // ── 추가 시설 (extra_facilities) ───────────────────────────────────────
+  const extras = getExtras();
+  if (extras.length > 0) {
+    html += `<div class="zone-section-header" style="margin-top:6px">
+      <div class="zone-section-label">
+        <div class="coord-dot" style="background:#4caf50;border-radius:2px"></div>
+        추가 시설 <span style="color:#7dbdff;margin-left:2px">${extras.length}개</span>
+      </div>
+      <span style="font-size:9px;color:#5a7a9a">버튼으로 추가 →</span>
+    </div>`;
+    extras.forEach(ef => {
+      const meta = FACILITY_META[ef.type] || { color: '#888', icon: '?', label: '?' };
+      html += `<div class="coord-row" style="margin-top:4px">
+        <div class="coord-label"><div class="coord-dot" style="background:${meta.color}"></div>${meta.icon} ${meta.label} <span style="font-size:9px;color:#4caf50">+추가</span></div>
+        <div class="coord-values">${fmt(ef.lat)}<br>${fmt(ef.lon)}</div>
+        <button class="facility-remove-btn" title="추가 시설 제거" onclick="removeExtraFacility('${ef.id}')">×</button>
+      </div>
+      <div class="facility-fields">
+        <label>📝 정보</label>
+        <textarea class="facility-textarea" placeholder="시설 설명 (위치, 운영시간 등)"
+          oninput="updateExtraField('${ef.id}', 'info', this.value)">${escHtml(ef.info || '')}</textarea>
+        <label>💰 요금</label>
+        <input type="text" class="facility-input" placeholder="예: 무료 / 500엔 / 유료"
+          value="${escHtml(ef.fee || '')}"
+          oninput="updateExtraField('${ef.id}', 'fee', this.value)">
+      </div>`;
+    });
+  }
 
   // Zone 섹션
   const totalZones = zones.length + newZones.length;
