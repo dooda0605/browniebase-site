@@ -28,22 +28,22 @@ const t = {
           ctaLabel: '자세히 보기',
         },
         {
-          slug: 'mulsok',
+          slug: 'badapong',
           icon: '🌊',
           color: 'from-cyan-500 to-teal-400',
-          name: 'Mulsok',
-          korean: '물속',
+          name: 'Badapong',
+          korean: '바다퐁',
           tagline: '수중 시야 예보 앱',
           desc: '바다 들어가기 전 시야를 예보합니다. 다이빙·스노클링·프리다이빙·해변수영 활동별 등급(A~E) 제공.',
-          status: '베타 진행 중',
-          statusColor: 'text-amber-700 bg-amber-50 border-amber-200',
+          status: 'App Store · Google Play 출시 예정',
+          statusColor: 'text-cyan-700 bg-cyan-50 border-cyan-200',
           ctaLabel: '자세히 보기',
         },
       ],
     },
     about: {
       title: 'Browniebase',
-      body: 'Browniebase(브라우니베이스)는 사람들이 일상의 정보를 더 명확하게 이해할 수 있도록 돕는 디지털 도구를 만듭니다. 한국어 토박이말 이름으로 각 앱의 정체성을 담습니다 — Salpim(살핌)은 자세히 살펴봄, Mulsok(물속)은 바다 속을 미리 봄.',
+      body: 'Browniebase(브라우니베이스)는 사람들이 일상의 정보를 더 명확하게 이해할 수 있도록 돕는 디지털 도구를 만듭니다. 한국어 토박이말과 친근한 의성어로 각 앱의 정체성을 담습니다 — Salpim(살핌)은 자세히 살펴봄, Badapong(바다퐁)은 바다에 퐁 떨어지듯 가볍게 들여다봄.',
     },
     contact: {
       title: '문의',
@@ -79,22 +79,22 @@ const t = {
           ctaLabel: 'Learn more',
         },
         {
-          slug: 'mulsok',
+          slug: 'badapong',
           icon: '🌊',
           color: 'from-cyan-500 to-teal-400',
-          name: 'Mulsok',
-          korean: '물속',
+          name: 'Badapong',
+          korean: '바다퐁',
           tagline: 'Underwater Visibility Forecast',
           desc: 'Forecast underwater visibility before you enter the sea. A~E grades by activity (dive, snorkel, freedive, swim).',
-          status: 'Beta in progress',
-          statusColor: 'text-amber-700 bg-amber-50 border-amber-200',
+          status: 'Coming to App Store · Google Play',
+          statusColor: 'text-cyan-700 bg-cyan-50 border-cyan-200',
           ctaLabel: 'Learn more',
         },
       ],
     },
     about: {
       title: 'Browniebase',
-      body: 'Browniebase builds digital tools that help people understand everyday information more clearly. Each app carries a Korean native-word name reflecting its identity — Salpim means "looking closely," Mulsok means "underwater."',
+      body: 'Browniebase builds digital tools that help people understand everyday information more clearly. Each app carries a Korean-rooted name reflecting its identity — Salpim means "looking closely," and Badapong combines "Bada" (sea) with "Pong" (the sound of a droplet plopping into water).',
     },
     contact: {
       title: 'Contact',
@@ -239,7 +239,7 @@ export default function BrowniebasePage() {
           </div>
           <div className="flex flex-wrap gap-6 text-sm">
             <a href="/salpim/" className="text-gray-400 hover:text-white transition-colors">Salpim</a>
-            <a href="/mulsok/" className="text-gray-400 hover:text-white transition-colors">Mulsok</a>
+            <a href="/badapong/" className="text-gray-400 hover:text-white transition-colors">Badapong</a>
             <a href="/privacy.html" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
             <a href="/terms.html" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '이용약관' : 'Terms'}</a>
           </div>

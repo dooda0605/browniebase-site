@@ -97,7 +97,7 @@ export const content = {
       company: 'Browniebase',
       links: [
         { label: 'Browniebase', href: '/' },
-        { label: 'Mulsok', href: '/mulsok/' },
+        { label: 'Badapong', href: '/badapong/' },
         { label: 'Privacy Policy', href: '/privacy.html' },
         { label: 'Terms of Service', href: '/terms.html' },
         { label: 'Contact', href: 'mailto:support@browniebase.com' },
@@ -201,7 +201,7 @@ export const content = {
       company: 'Browniebase',
       links: [
         { label: 'Browniebase', href: '/' },
-        { label: 'Mulsok', href: '/mulsok/' },
+        { label: 'Badapong', href: '/badapong/' },
         { label: '개인정보처리방침', href: '/privacy.html' },
         { label: '이용약관', href: '/terms.html' },
         { label: '문의', href: 'mailto:support@browniebase.com' },
