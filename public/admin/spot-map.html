@@ -362,16 +362,22 @@ function _loadKey(name, label) {
 const SUPABASE_URL = 'https://gprgkcouugiwrfnbcsjz.supabase.co';
 const SUPABASE_KEY = _loadKey('sb', 'Supabase anon key (eyJ...)');
 mapboxgl.accessToken = _loadKey('mb', 'Mapbox public token (pk....)');
+// 어드민 토큰 (?at=... URL 파라미터 → localStorage → prompt).
+// spots/sub_spots INSERT/UPDATE/DELETE 시 RLS의 is_spot_admin() 함수가
+// x-admin-token 헤더를 admin_tokens 테이블의 값과 비교.
+const ADMIN_TOKEN = _loadKey('at', 'Admin token (32+ char)');
 
 const API_HEADERS = {
   'apikey': SUPABASE_KEY,
   'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'x-admin-token': ADMIN_TOKEN,
   'Content-Type': 'application/json',
   'Prefer': 'return=minimal'
 };
 const API_HEADERS_RETURN = {
   'apikey': SUPABASE_KEY,
   'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'x-admin-token': ADMIN_TOKEN,
   'Content-Type': 'application/json',
   'Prefer': 'return=representation'
 };
