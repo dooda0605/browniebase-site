@@ -111,6 +111,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
 }
 .facility-remove-btn:hover { background: #3a1010; color: #ff5252; border-color: #ff5252; }
 .dimmed { opacity: 0.4; }
+/* "좌표 없음" 행 — dimmed 대신 약간 흐릿 + hint 강조해서 "정보는 입력 가능" UX */
+.coord-noloc { opacity: 0.85; background: rgba(255,180,80,0.05); border-left: 2px solid #ff9800; padding-left: 4px; }
+.noloc-hint { display: inline-block; margin-left: 6px; font-size: 9.5px; font-weight: 500; color: #ffb74d; background: rgba(255,152,0,0.12); padding: 1px 6px; border-radius: 8px; }
 
 /* ── Zone 목록 ── */
 .zone-section-header { display: flex; justify-content: space-between; align-items: center; padding: 6px 0 4px; border-bottom: 1px solid #1a2535; }
@@ -1043,9 +1046,9 @@ function updatePanel() {
       <button class="facility-remove-btn" title="삭제 예정 취소" onclick="cancelRemoveFacility('shower')" style="border-color:#7dbdff;color:#7dbdff">↺</button>
     </div>`;
   } else {
-    html += `<div class="coord-row dimmed">
-      <div class="coord-label"><div class="coord-dot" style="background:#00796B"></div>🚿 샤워 (좌표 없음)</div>
-      <div class="coord-values">—</div>
+    html += `<div class="coord-row coord-noloc">
+      <div class="coord-label"><div class="coord-dot" style="background:#00796B"></div>🚿 샤워 <span class="noloc-hint">좌표 없음 — 아래 정보만 입력 가능</span></div>
+      <div class="coord-values" style="font-size:9px">—</div>
     </div>`;
   }
   html += facilityFields('shower');
@@ -1063,9 +1066,9 @@ function updatePanel() {
       <button class="facility-remove-btn" title="삭제 예정 취소" onclick="cancelRemoveFacility('parking')" style="border-color:#7dbdff;color:#7dbdff">↺</button>
     </div>`;
   } else {
-    html += `<div class="coord-row dimmed">
-      <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>🅿️ 주차 (좌표 없음)</div>
-      <div class="coord-values">—</div>
+    html += `<div class="coord-row coord-noloc">
+      <div class="coord-label"><div class="coord-dot" style="background:#1565C0"></div>🅿️ 주차 <span class="noloc-hint">좌표 없음 — 아래 정보만 입력 가능</span></div>
+      <div class="coord-values" style="font-size:9px">—</div>
     </div>`;
   }
   html += facilityFields('parking');
@@ -1083,9 +1086,9 @@ function updatePanel() {
       <button class="facility-remove-btn" title="삭제 예정 취소" onclick="cancelRemoveFacility('toilet')" style="border-color:#7dbdff;color:#7dbdff">↺</button>
     </div>`;
   } else {
-    html += `<div class="coord-row dimmed">
-      <div class="coord-label"><div class="coord-dot" style="background:#9C27B0"></div>🚽 화장실 (좌표 없음)</div>
-      <div class="coord-values">—</div>
+    html += `<div class="coord-row coord-noloc">
+      <div class="coord-label"><div class="coord-dot" style="background:#9C27B0"></div>🚽 화장실 <span class="noloc-hint">좌표 없음 — 아래 정보만 입력 가능</span></div>
+      <div class="coord-values" style="font-size:9px">—</div>
     </div>`;
   }
   html += facilityFields('toilet');
