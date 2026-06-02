@@ -5,31 +5,31 @@ type Lang = 'ko' | 'en'
 
 const c = {
   ko: {
-    nav: { features: '주요 기능', regions: '지원 지역', activities: '활동', faq: 'FAQ', launch: '곧 출시' },
+    nav: { features: '주요 기능', regions: '지원 지역', activities: '활동', faq: 'FAQ', launch: 'App Store 다운로드' },
     hero: {
-      badge: 'iOS App Store · Google Play 출시 예정',
-      headline: '바다 속 시야를 미리 살펴보세요',
-      subheadline: 'AI가 파고·조류·너울·바람·강수를 종합 분석해 다이빙·스노클링 활동에 적합한 시간을 알려드립니다.',
-      tagline: '"바다에 들어가기 전, 시야부터 살펴보세요."',
-      cta1: 'App Store에서 곧 출시',
-      cta2: 'Google Play에서 곧 출시',
+      badge: 'iOS App Store 출시 · Google Play 출시 예정',
+      headline: '바다 들어가기 전, 기상부터 시야까지',
+      subheadline: '해양 액티비티에 필요한 종합 기상 예보 앱. 파고·조류·너울·바람·강수에 더해 수중 시야 예보까지 함께 제공합니다.',
+      tagline: '"바다 들어가기 전, 기상과 시야를 한 번에 살펴보세요."',
+      cta1: 'App Store에서 다운로드',
+      cta2: 'Google Play 출시 예정',
       cta3: '자세히 알아보기',
       pills: [
-        { icon: '🌊', label: '실시간 해양 예보' },
+        { icon: '🌊', label: '실시간 해양 기상' },
         { icon: '📍', label: '11개 지역 지원' },
         { icon: '🤿', label: '4가지 활동' },
       ],
     },
     what: {
       title: 'Badapong이란?',
-      body: '바다에 들어가기 전, 수중 시야를 객관적으로 예측하는 도구입니다. 파고·조류·스웰·바람·강수 등 다양한 해양 데이터를 종합해 격자별 등급(A~E)으로 시각화합니다. 다이빙·스노클링·프리다이빙·해변수영을 즐기는 분들께 "지금 들어가도 잘 보일까?"에 답해 드립니다.',
+      body: '해양 액티비티에 필요한 종합 기상 예보 앱입니다. 파고·조류·스웰·바람·강수·수온 등 핵심 해양 데이터를 격자별로 시각화하고, 다이빙·스노클링·프리다이빙·해변수영 활동별로 수중 시야 예보(A~E 등급)까지 함께 제공합니다.',
     },
     features: {
       title: '주요 기능',
       items: [
-        { icon: '🗺️', title: '지역 등급 지도', desc: '바다 위에 격자별로 A~E 등급을 색으로 표시. 어디가 좋은지 한눈에 파악.' },
+        { icon: '🌊', title: '시각적 애니메이션 기상 레이어', desc: '조류·파고·너울·바람을 입자 애니메이션으로 흐름 시각화. 보고만 있어도 바다 상태가 읽힙니다.' },
         { icon: '⏱️', title: '시간대별 예보', desc: '3시간 단위로 7일치 예보 + 8~14일 참고 예보까지 제공.' },
-        { icon: '🌊', title: '윈디 스타일 기상 레이어', desc: '조류·파고·큰 너울·교차 너울 입자 애니메이션으로 흐름 시각화.' },
+        { icon: '🗺️', title: '지역 등급 지도', desc: '바다 위에 격자별로 A~E 등급을 색으로 표시. 어디가 좋은지 한눈에 파악.' },
         { icon: '🤿', title: '활동별 맞춤 등급', desc: '해변수영·스노클링·프리다이빙·스쿠버 4가지 활동별로 다른 임계값 적용.' },
         { icon: '📊', title: '하이브리드 채점', desc: 'wave/swell/wind/current/temperature/water quality 종합 평가.' },
         { icon: '🌐', title: '10개 언어', desc: '한국어·영어·일본어·중국어 등 10개 언어로 정보 제공.' },
@@ -76,38 +76,38 @@ const c = {
       connection: '바다에 퐁 떨어지듯 가볍게 들여다보고 안전하게 들어갈 시간을 찾아드리는 앱의 본질을 담았습니다. 자매 앱 "Salpim(살핌)"과 같은 토박이말 패턴입니다.',
     },
     cta: {
-      title: '지금 바로 시야를 살펴보세요',
-      body: '바다 들어가기 전 1분이면 충분합니다. 곧 App Store와 Google Play에서 만나요.',
-      primary: '출시 알림 받기',
+      title: '지금 바로 바다 기상을 살펴보세요',
+      body: '바다 들어가기 전 1분이면 충분합니다. App Store에서 다운로드 가능, Google Play도 곧 출시됩니다.',
+      primary: 'App Store에서 다운로드',
     },
-    footerTagline: '수중 활동 등급 예보',
+    footerTagline: '해양 액티비티 기상 + 시야 예보',
   },
   en: {
-    nav: { features: 'Features', regions: 'Regions', activities: 'Activities', faq: 'FAQ', launch: 'Coming soon' },
+    nav: { features: 'Features', regions: 'Regions', activities: 'Activities', faq: 'FAQ', launch: 'Download on App Store' },
     hero: {
-      badge: 'Coming soon to App Store · Google Play',
-      headline: 'See underwater visibility before you dive',
-      subheadline: 'AI combines waves, swell, current, wind & rain to forecast the best time for diving and snorkeling.',
-      tagline: '"Take a closer look at the water before you go in."',
-      cta1: 'Coming soon to App Store',
+      badge: 'Now on App Store · Google Play coming soon',
+      headline: 'Marine weather + visibility, before you dive',
+      subheadline: 'A full ocean weather forecast for marine activities — waves, swell, current, wind and rain, plus an underwater visibility forecast on top.',
+      tagline: '"Check the weather and the visibility, in one minute, before you go in."',
+      cta1: 'Download on App Store',
       cta2: 'Coming soon to Google Play',
       cta3: 'Learn More',
       pills: [
-        { icon: '🌊', label: 'Live ocean forecast' },
+        { icon: '🌊', label: 'Live ocean weather' },
         { icon: '📍', label: '11 regions' },
         { icon: '🤿', label: '4 activities' },
       ],
     },
     what: {
       title: 'What is Badapong?',
-      body: 'A forecasting tool that gives an objective grade for underwater visibility before you enter the sea. By combining wave, swell, current, wind and rain data, it produces an A~E grade for each grid cell — answering "will I see anything if I go in now?" for snorkelers, freedivers, scuba divers, and beach swimmers.',
+      body: 'Badapong is a full ocean weather forecast app built for marine activities. It visualises wave, swell, current, wind, rain and water temperature across a fine grid — and, on top of that, gives an A~E underwater visibility forecast tailored to beach swim, snorkel, freedive and scuba.',
     },
     features: {
       title: 'Key Features',
       items: [
-        { icon: '🗺️', title: 'Regional grade map', desc: 'A~E color-graded heatmap over the sea. See best spots at a glance.' },
+        { icon: '🌊', title: 'Animated weather layers', desc: 'Particle animations for current, waves, swell and wind — the state of the sea, at a glance.' },
         { icon: '⏱️', title: 'Hourly forecast', desc: '7-day forecast in 3-hour slots, plus 8~14 day reference outlook.' },
-        { icon: '🌊', title: 'Windy-style layers', desc: 'Particle animations for current, waves, large swell and cross swell.' },
+        { icon: '🗺️', title: 'Regional grade map', desc: 'A~E color-graded heatmap over the sea. See best spots at a glance.' },
         { icon: '🤿', title: 'Activity-tuned grades', desc: 'Different thresholds for beach swim / snorkel / freedive / scuba.' },
         { icon: '📊', title: 'Hybrid scoring', desc: 'Composite of wave / swell / wind / current / temperature / water quality.' },
         { icon: '🌐', title: '10 languages', desc: 'Korean, English, Japanese, Chinese and 6 more.' },
@@ -154,13 +154,15 @@ const c = {
       connection: 'Like a droplet plopping in, Badapong lets you peek beneath the surface before you go — finding the right window to dive in safely. It shares the native-Korean pattern with our sister app "Salpim (살핌)".',
     },
     cta: {
-      title: 'Check your visibility now',
-      body: 'A minute before you enter the water can save the trip. Launching soon on App Store and Google Play.',
-      primary: 'Get launch notification',
+      title: 'Check ocean weather now',
+      body: 'A minute before you enter the water can save the trip. Available on the App Store — Google Play coming soon.',
+      primary: 'Download on App Store',
     },
-    footerTagline: 'Underwater activity forecasting',
+    footerTagline: 'Marine weather + visibility forecast',
   },
 } as const
+
+const APP_STORE_URL = 'https://apps.apple.com/app/id6768805465'
 
 export default function BadapongPage() {
   const [lang, setLang] = useState<Lang>('ko')
@@ -193,9 +195,9 @@ export default function BadapongPage() {
               <button onClick={() => setLang('ko')} className={`px-3 py-1 rounded-full transition-all font-medium ${lang === 'ko' ? 'bg-white text-cyan-600 shadow-sm' : 'text-gray-500'}`}>KO</button>
               <button onClick={() => setLang('en')} className={`px-3 py-1 rounded-full transition-all font-medium ${lang === 'en' ? 'bg-white text-cyan-600 shadow-sm' : 'text-gray-500'}`}>EN</button>
             </div>
-            <span aria-disabled="true" className="hidden sm:inline-flex items-center gap-1.5 bg-cyan-600/70 text-white text-sm font-medium px-4 py-2 rounded-full cursor-default">
+            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1.5 bg-cyan-600 text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-cyan-700 transition-colors">
               {t.nav.launch}
-            </span>
+            </a>
           </div>
         </div>
       </nav>
@@ -221,12 +223,12 @@ export default function BadapongPage() {
 
             <div className="flex flex-col items-center gap-4 mt-2">
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <span aria-disabled="true" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-full font-medium opacity-90 cursor-default">
+                <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-full font-medium hover:bg-gray-800 transition-colors">
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
                   </svg>
                   {t.hero.cta1}
-                </span>
+                </a>
                 <span aria-disabled="true" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-full font-medium opacity-90 cursor-default">
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M3.6 2.31c-.36.2-.6.59-.6 1.04v17.3c0 .45.24.84.6 1.04l10.18-9.69L3.6 2.31zm12.06 8.65l-2.36 2.24 2.36 2.25 3.34-1.91c.7-.4.7-1.42 0-1.83l-3.34-1.91-.01.16zm-1.4 3.55l-9.4 5.36 8.45-8.04.95 2.68zm0-7.34l-8.45-8.04 9.4 5.36-.95 2.68z" />
@@ -352,8 +354,11 @@ export default function BadapongPage() {
           <div className="text-5xl mb-6">🌊</div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">{t.cta.title}</h2>
           <p className="text-white/90 text-lg mb-10">{t.cta.body}</p>
-          <a href="mailto:support@browniebase.com?subject=Badapong%20launch%20notification" className="inline-flex items-center justify-center gap-2 bg-white text-cyan-700 px-8 py-4 rounded-full font-medium text-lg hover:bg-gray-50 transition-colors shadow-lg">
-            <span>✉️</span>{t.cta.primary}
+          <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-white text-cyan-700 px-8 py-4 rounded-full font-medium text-lg hover:bg-gray-50 transition-colors shadow-lg">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+            </svg>
+            {t.cta.primary}
           </a>
         </div>
       </section>
