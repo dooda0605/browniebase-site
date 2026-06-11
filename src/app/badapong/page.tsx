@@ -7,12 +7,12 @@ const c = {
   ko: {
     nav: { features: '주요 기능', regions: '지원 지역', activities: '활동', faq: 'FAQ', launch: 'App Store 다운로드' },
     hero: {
-      badge: 'iOS App Store 출시 · Google Play 출시 예정',
+      badge: 'iOS App Store · Google Play 정식 출시',
       headline: '바다 들어가기 전, 기상부터 시야까지',
       subheadline: '해양 액티비티에 필요한 종합 기상 예보 앱. 파고·조류·너울·바람·강수에 더해 수중 시야 예보까지 함께 제공합니다.',
       tagline: '"바다 들어가기 전, 기상과 시야를 한 번에 살펴보세요."',
       cta1: 'App Store에서 다운로드',
-      cta2: 'Google Play 출시 예정',
+      cta2: 'Google Play에서 다운로드',
       cta3: '자세히 알아보기',
       pills: [
         { icon: '🌊', label: '실시간 해양 기상' },
@@ -77,7 +77,7 @@ const c = {
     },
     cta: {
       title: '지금 바로 바다 기상을 살펴보세요',
-      body: '바다 들어가기 전 1분이면 충분합니다. App Store에서 다운로드 가능, Google Play도 곧 출시됩니다.',
+      body: '바다 들어가기 전 1분이면 충분합니다. App Store와 Google Play에서 다운로드할 수 있습니다.',
       primary: 'App Store에서 다운로드',
     },
     footerTagline: '해양 액티비티 기상 + 시야 예보',
@@ -85,12 +85,12 @@ const c = {
   en: {
     nav: { features: 'Features', regions: 'Regions', activities: 'Activities', faq: 'FAQ', launch: 'Download on App Store' },
     hero: {
-      badge: 'Now on App Store · Google Play coming soon',
+      badge: 'Now on App Store & Google Play',
       headline: 'Marine weather + visibility, before you dive',
       subheadline: 'A full ocean weather forecast for marine activities — waves, swell, current, wind and rain, plus an underwater visibility forecast on top.',
       tagline: '"Check the weather and the visibility, in one minute, before you go in."',
       cta1: 'Download on App Store',
-      cta2: 'Coming soon to Google Play',
+      cta2: 'Get it on Google Play',
       cta3: 'Learn More',
       pills: [
         { icon: '🌊', label: 'Live ocean weather' },
@@ -155,7 +155,7 @@ const c = {
     },
     cta: {
       title: 'Check ocean weather now',
-      body: 'A minute before you enter the water can save the trip. Available on the App Store — Google Play coming soon.',
+      body: 'A minute before you enter the water can save the trip. Available on the App Store and Google Play.',
       primary: 'Download on App Store',
     },
     footerTagline: 'Marine weather + visibility forecast',
@@ -163,6 +163,7 @@ const c = {
 } as const
 
 const APP_STORE_URL = 'https://apps.apple.com/app/id6768805465'
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.browniebase.badapong'
 
 export default function BadapongPage() {
   const [lang, setLang] = useState<Lang>('ko')
@@ -229,12 +230,12 @@ export default function BadapongPage() {
                   </svg>
                   {t.hero.cta1}
                 </a>
-                <span aria-disabled="true" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-full font-medium opacity-90 cursor-default">
+                <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-full font-medium hover:bg-gray-800 transition-colors">
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M3.6 2.31c-.36.2-.6.59-.6 1.04v17.3c0 .45.24.84.6 1.04l10.18-9.69L3.6 2.31zm12.06 8.65l-2.36 2.24 2.36 2.25 3.34-1.91c.7-.4.7-1.42 0-1.83l-3.34-1.91-.01.16zm-1.4 3.55l-9.4 5.36 8.45-8.04.95 2.68zm0-7.34l-8.45-8.04 9.4 5.36-.95 2.68z" />
                   </svg>
                   {t.hero.cta2}
-                </span>
+                </a>
               </div>
               <a href="#features" className="inline-flex items-center justify-center gap-1.5 text-cyan-700 text-sm font-medium hover:underline">
                 {t.hero.cta3}
@@ -354,12 +355,20 @@ export default function BadapongPage() {
           <div className="text-5xl mb-6">🌊</div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">{t.cta.title}</h2>
           <p className="text-white/90 text-lg mb-10">{t.cta.body}</p>
-          <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-white text-cyan-700 px-8 py-4 rounded-full font-medium text-lg hover:bg-gray-50 transition-colors shadow-lg">
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-            </svg>
-            {t.cta.primary}
-          </a>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-white text-cyan-700 px-8 py-4 rounded-full font-medium text-lg hover:bg-gray-50 transition-colors shadow-lg">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+              </svg>
+              {t.cta.primary}
+            </a>
+            <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-white text-cyan-700 px-8 py-4 rounded-full font-medium text-lg hover:bg-gray-50 transition-colors shadow-lg">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M3.6 2.31c-.36.2-.6.59-.6 1.04v17.3c0 .45.24.84.6 1.04l10.18-9.69L3.6 2.31zm12.06 8.65l-2.36 2.24 2.36 2.25 3.34-1.91c.7-.4.7-1.42 0-1.83l-3.34-1.91-.01.16zm-1.4 3.55l-9.4 5.36 8.45-8.04.95 2.68zm0-7.34l-8.45-8.04 9.4 5.36-.95 2.68z" />
+              </svg>
+              {t.hero.cta2}
+            </a>
+          </div>
         </div>
       </section>
 
