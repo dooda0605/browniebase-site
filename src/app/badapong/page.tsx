@@ -73,7 +73,7 @@ const c = {
     brand: {
       title: '왜 이름이 "Badapong"인가요?',
       body: '"Badapong(바다퐁)"은 "바다(海)"와 작은 물방울이 떨어지는 의성어 "퐁"이 만난 이름입니다.',
-      connection: '바다에 퐁 떨어지듯 가볍게 들여다보고 안전하게 들어갈 시간을 찾아드리는 앱의 본질을 담았습니다. 자매 앱 "Salpim(살핌)"과 같은 토박이말 패턴입니다.',
+      connection: '바다에 퐁 떨어지듯 가볍게 들여다보고 안전하게 들어갈 시간을 찾아드리는 앱의 본질을 담았습니다.',
     },
     cta: {
       title: '지금 바로 바다 기상을 살펴보세요',
@@ -151,7 +151,7 @@ const c = {
     brand: {
       title: 'Why the name "Badapong"?',
       body: '"Badapong (바다퐁)" combines "Bada" — Korean for "sea" — with "Pong", the playful sound of a droplet plopping into water.',
-      connection: 'Like a droplet plopping in, Badapong lets you peek beneath the surface before you go — finding the right window to dive in safely. It shares the native-Korean pattern with our sister app "Salpim (살핌)".',
+      connection: 'Like a droplet plopping in, Badapong lets you peek beneath the surface before you go — finding the right window to dive in safely.',
     },
     cta: {
       title: 'Check ocean weather now',

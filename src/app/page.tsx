@@ -15,18 +15,7 @@ const t = {
       title: '우리가 만든 앱',
       subtitle: '하나씩, 깊이 있게',
       list: [
-        {
-          slug: 'salpim',
-          icon: 'S',
-          color: 'from-[#7B61FF] to-[#a78bfa]',
-          name: 'Salpim',
-          korean: '살핌',
-          tagline: 'AI 성분 해설 앱',
-          desc: '카메라로 제품 성분표를 스캔하면 AI가 13개 언어로 각 성분을 설명해 드립니다.',
-          status: 'Google Play 정식 출시',
-          statusColor: 'text-green-700 bg-green-50 border-green-200',
-          ctaLabel: '자세히 보기',
-        },
+        // salpim 카드는 홈에서 비노출 처리 (2026-07-04, /salpim/ 직접 URL·정책 문서는 유지)
         {
           slug: 'badapong',
           icon: '🌊',
@@ -35,15 +24,15 @@ const t = {
           korean: '바다퐁',
           tagline: '수중 시야 예보 앱',
           desc: '바다 들어가기 전 시야를 예보합니다. 다이빙·스노클링·프리다이빙·해변수영 활동별 등급(A~E) 제공.',
-          status: 'App Store · Google Play 출시 예정',
-          statusColor: 'text-cyan-700 bg-cyan-50 border-cyan-200',
+          status: 'App Store · Google Play 정식 출시',
+          statusColor: 'text-green-700 bg-green-50 border-green-200',
           ctaLabel: '자세히 보기',
         },
       ],
     },
     about: {
       title: 'Browniebase',
-      body: 'Browniebase(브라우니베이스)는 사람들이 일상의 정보를 더 명확하게 이해할 수 있도록 돕는 디지털 도구를 만듭니다. 한국어 토박이말과 친근한 의성어로 각 앱의 정체성을 담습니다 — Salpim(살핌)은 자세히 살펴봄, Badapong(바다퐁)은 바다에 퐁 떨어지듯 가볍게 들여다봄.',
+      body: 'Browniebase(브라우니베이스)는 사람들이 일상의 정보를 더 명확하게 이해할 수 있도록 돕는 디지털 도구를 만듭니다. 한국어 토박이말과 친근한 의성어로 앱의 정체성을 담습니다 — Badapong(바다퐁)은 바다에 퐁 떨어지듯 가볍게 들여다봄.',
     },
     contact: {
       title: '문의',
@@ -66,18 +55,7 @@ const t = {
       title: 'Our Apps',
       subtitle: 'One at a time, with depth',
       list: [
-        {
-          slug: 'salpim',
-          icon: 'S',
-          color: 'from-[#7B61FF] to-[#a78bfa]',
-          name: 'Salpim',
-          korean: '살핌',
-          tagline: 'AI Ingredient Reader',
-          desc: 'Scan product ingredient labels with your camera. AI explains each ingredient in 13 languages.',
-          status: 'Live on Google Play',
-          statusColor: 'text-green-700 bg-green-50 border-green-200',
-          ctaLabel: 'Learn more',
-        },
+        // salpim card hidden from home (2026-07-04, /salpim/ direct URL & policy docs kept)
         {
           slug: 'badapong',
           icon: '🌊',
@@ -86,15 +64,15 @@ const t = {
           korean: '바다퐁',
           tagline: 'Underwater Visibility Forecast',
           desc: 'Forecast underwater visibility before you enter the sea. A~E grades by activity (dive, snorkel, freedive, swim).',
-          status: 'Coming to App Store · Google Play',
-          statusColor: 'text-cyan-700 bg-cyan-50 border-cyan-200',
+          status: 'Live on App Store · Google Play',
+          statusColor: 'text-green-700 bg-green-50 border-green-200',
           ctaLabel: 'Learn more',
         },
       ],
     },
     about: {
       title: 'Browniebase',
-      body: 'Browniebase builds digital tools that help people understand everyday information more clearly. Each app carries a Korean-rooted name reflecting its identity — Salpim means "looking closely," and Badapong combines "Bada" (sea) with "Pong" (the sound of a droplet plopping into water).',
+      body: 'Browniebase builds digital tools that help people understand everyday information more clearly. Each app carries a Korean-rooted name reflecting its identity — Badapong combines "Bada" (sea) with "Pong" (the sound of a droplet plopping into water).',
     },
     contact: {
       title: 'Contact',
@@ -167,7 +145,7 @@ export default function BrowniebasePage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">{c.apps.title}</h2>
             <p className="text-gray-500">{c.apps.subtitle}</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 max-w-xl mx-auto">
             {c.apps.list.map(app => (
               <a
                 key={app.slug}
@@ -238,10 +216,9 @@ export default function BrowniebasePage() {
             <span className="font-bold">Browniebase</span>
           </div>
           <div className="flex flex-wrap gap-6 text-sm">
-            <a href="/salpim/" className="text-gray-400 hover:text-white transition-colors">Salpim</a>
             <a href="/badapong/" className="text-gray-400 hover:text-white transition-colors">Badapong</a>
-            <a href="/privacy.html" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
-            <a href="/terms.html" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '이용약관' : 'Terms'}</a>
+            <a href="/privacy-badapong.html" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
+            <a href="/terms-badapong.html" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '이용약관' : 'Terms'}</a>
           </div>
           <p className="text-gray-500 text-xs">{c.footer.copy}</p>
         </div>
