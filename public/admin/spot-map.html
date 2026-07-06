@@ -543,6 +543,10 @@ function getFlag(lat, lon) {
   if (!lat || !lon) return '';
   if (lat > 33 && lat < 39 && lon > 124 && lon < 130) return '🇰🇷 한국';
   if (lat > 24 && lat < 46 && lon > 122 && lon < 155) return '🇯🇵 일본';
+  // 마리아나 제도 (괌·사이판, 미국령) — 필리핀 박스보다 먼저 판정
+  if (lat > 12 && lat < 21 && lon > 143 && lon < 147) return '🇺🇸 괌·사이판';
+  // 말레이시아 사바(코타키나발루) — lon>116이라 필리핀 박스에 오분류되던 것 선판정
+  if (lat > 3  && lat < 8  && lon > 115 && lon < 119.5) return '🇲🇾 말레이시아';
   if (lat > 4  && lat < 22 && lon > 116 && lon < 128) return '🇵🇭 필리핀';
   if (lat > -12 && lat < 5 && lon > 105 && lon < 122) return '🇮🇩 인도네시아';
   if (lat > 5  && lat < 22 && lon > 98  && lon < 110) return '🇹🇭 태국';
