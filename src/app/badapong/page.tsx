@@ -8,7 +8,7 @@ const c = {
     nav: { features: '주요 기능', regions: '지원 지역', activities: '활동', faq: 'FAQ', launch: 'App Store 다운로드' },
     hero: {
       badge: 'iOS App Store · Google Play 정식 출시',
-      headline: '바다 들어가기 전, 기상부터 시야까지',
+      headline: '바다 들어가기 전,\n기상부터 시야까지',
       subheadline: '해양 액티비티에 필요한 종합 기상 예보 앱. 파고·조류·너울·바람·강수에 더해 수중 시야 예보까지 함께 제공합니다.',
       tagline: '"바다 들어가기 전, 기상과 시야를 한 번에 살펴보세요."',
       cta1: 'App Store에서 다운로드',
@@ -98,7 +98,7 @@ const c = {
     nav: { features: 'Features', regions: 'Regions', activities: 'Activities', faq: 'FAQ', launch: 'Download on App Store' },
     hero: {
       badge: 'Now on App Store & Google Play',
-      headline: 'Marine weather + visibility, before you dive',
+      headline: 'Marine weather + visibility,\nbefore you dive',
       subheadline: 'A full ocean weather forecast for marine activities — waves, swell, current, wind and rain, plus an underwater visibility forecast on top.',
       tagline: '"Check the weather and the visibility, in one minute, before you go in."',
       cta1: 'Download on App Store',
@@ -240,8 +240,10 @@ export default function BadapongPage() {
               {t.hero.badge}
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight max-w-4xl">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-teal-500">{lang === 'ko' ? 'AI' : 'AI'}</span>{lang === 'ko' ? '로 ' : '-driven '}
-              {t.hero.headline}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-teal-500">AI</span>{lang === 'ko' ? '로 ' : '-driven '}
+              {t.hero.headline.split('\n').map((line, i) => (
+                <span key={i}>{i > 0 && <br />}{line}</span>
+              ))}
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl">{t.hero.subheadline}</p>
             <p className="text-base text-gray-500 italic max-w-xl">{t.hero.tagline}</p>
