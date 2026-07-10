@@ -304,6 +304,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
       <button class="add-btn" id="btn-add-shower" title="기본 미설정이면 기본으로, 이미 있으면 추가 시설로 등록" onclick="toggleAddMode('shower')">🚿 샤워+</button>
       <button class="add-btn" id="btn-add-parking" title="기본 미설정이면 기본으로, 이미 있으면 추가 시설로 등록" onclick="toggleAddMode('parking')">🅿️ 주차+</button>
       <button class="add-btn" id="btn-add-toilet" title="기본 미설정이면 기본으로, 이미 있으면 추가 시설로 등록" onclick="toggleAddMode('toilet')">🚽 화장실+</button>
+      <button class="add-btn" id="btn-add-showertoilet" title="샤워·화장실이 같은 건물일 때 — 클릭 한 번으로 두 시설 좌표를 함께 설정" onclick="toggleAddMode('showertoilet')">🚻 샤워+화장실</button>
     </div>
     <button id="save-btn" disabled onclick="saveChanges()">💾 변경사항 저장</button>
     <button id="undo-btn" onclick="undoChanges()">↩ 변경 취소</button>
@@ -322,6 +323,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
     <div class="legend-item"><div class="legend-dot" style="background:#00796B"></div>샤워 시설</div>
     <div class="legend-item"><div class="legend-dot" style="background:#1565C0"></div>주차장</div>
     <div class="legend-item"><div class="legend-dot" style="background:#9C27B0"></div>화장실</div>
+    <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(135deg,#00796B 49%,#9C27B0 51%)"></div>샤워+화장실 (같은 건물)</div>
     <div class="legend-item" style="margin-top:6px;padding-top:6px;border-top:1px solid #1e3050;font-size:10px;color:#5a7a9a">버튼 한번 더 누르면 추가 시설 (작은 마커)</div>
   </div>
 </div>
@@ -601,12 +603,36 @@ function placeAllMarkers() {
     .forEach(z => addMarker({ type: 'zone-new', id: z.tempId, lat: z.lat, lon: z.lon,
       color: '#bf360c', label: z.zone_code, isZone: true }));
 
-  if (s.shower_lat && s.shower_lon)
-    addMarker({ type: 'shower', id: s.id, lat: s.shower_lat, lon: s.shower_lon, color: '#00796B', label: '🚿', size: 30 });
-  if (s.parking_lat && s.parking_lon)
-    addMarker({ type: 'parking', id: s.id, lat: s.parking_lat, lon: s.parking_lon, color: '#1565C0', label: 'P', size: 30 });
-  if (s.toilet_lat && s.toilet_lon)
-    addMarker({ type: 'toilet', id: s.id, lat: s.toilet_lat, lon: s.toilet_lon, color: '#9C27B0', label: '🚽', size: 30 });
+  refreshFacilityMarkers();
+}
+
+// ── 시설 마커 재구성 ──────────────────────────────────────────────────────
+// pending 반영값(effective) 기준으로 샤워/주차/화장실 + 추가시설 마커만 다시 그림.
+// 샤워·화장실 좌표가 동일하면(같은 건물) 통합 🚻 마커 1개로 표시 — 드래그 시 두 좌표 동시 이동.
+function refreshFacilityMarkers() {
+  const s = selectedSpot;
+  if (!s) return;
+  // 기존 시설 마커만 제거 (spot/zone 마커는 유지)
+  activeMarkers = activeMarkers.filter(m => {
+    const isFac = ['shower', 'parking', 'toilet', 'showertoilet'].includes(m.type) || (m.type && m.type.startsWith('extra-'));
+    if (isFac) m.marker.remove();
+    return !isFac;
+  });
+  const sp = pendingChanges[`spot:${s.id}`] || {};
+  const eff = (f) => Object.prototype.hasOwnProperty.call(sp, f) ? sp[f] : s[f];
+  const shLat = eff('shower_lat'), shLon = eff('shower_lon');
+  const tlLat = eff('toilet_lat'), tlLon = eff('toilet_lon');
+  const pkLat = eff('parking_lat'), pkLon = eff('parking_lon');
+  const combined = shLat != null && shLon != null && shLat === tlLat && shLon === tlLon;
+
+  if (combined) {
+    addMarker({ type: 'showertoilet', id: s.id, lat: shLat, lon: shLon,
+      color: FACILITY_META.showertoilet.color, label: '🚻', size: 30 });
+  } else {
+    if (shLat && shLon) addMarker({ type: 'shower', id: s.id, lat: shLat, lon: shLon, color: '#00796B', label: '🚿', size: 30 });
+    if (tlLat && tlLon) addMarker({ type: 'toilet', id: s.id, lat: tlLat, lon: tlLon, color: '#9C27B0', label: '🚽', size: 30 });
+  }
+  if (pkLat && pkLon) addMarker({ type: 'parking', id: s.id, lat: pkLat, lon: pkLon, color: '#1565C0', label: 'P', size: 30 });
 
   // 추가 시설 (extra_facilities) — pending 포함해서 렌더
   getExtras().forEach(ef => {
@@ -627,6 +653,7 @@ function addMarker({ type, id, lat, lon, color, label, size = 32, isZone = false
     if (type === 'shower')  setPending('spot', id, { shower_lat: r4lat, shower_lon: r4lng });
     if (type === 'parking') setPending('spot', id, { parking_lat: r4lat, parking_lon: r4lng });
     if (type === 'toilet')  setPending('spot', id, { toilet_lat: r4lat, toilet_lon: r4lng });
+    if (type === 'showertoilet') setPending('spot', id, { shower_lat: r4lat, shower_lon: r4lng, toilet_lat: r4lat, toilet_lon: r4lng });
     if (type && type.startsWith('extra-')) {
       _updateExtras(getExtras().map(ef => ef.id === id ? { ...ef, lat: r4lat, lon: r4lng } : ef));
     }
@@ -673,11 +700,34 @@ map.on('click', e => {
     return;
   }
 
+  // 🚻 샤워+화장실 통합 배치 — 같은 건물일 때 클릭 한 번으로 두 시설 좌표 동시 설정
+  if (addMode === 'showertoilet') {
+    const spc = pendingChanges[`spot:${selectedSpot.id}`] || {};
+    const eff = (f) => Object.prototype.hasOwnProperty.call(spc, f) ? spc[f] : selectedSpot[f];
+    const hasShower = eff('shower_lat') != null;
+    const hasToilet = eff('toilet_lat') != null;
+    if (!hasShower && !hasToilet) {
+      // 둘 다 기본 미설정 → 기본 시설로 같은 좌표 세팅 (삭제 예정이던 pending null은 해제)
+      const sp0 = pendingChanges[`spot:${selectedSpot.id}`];
+      if (sp0) ['shower','toilet'].forEach(p => ['_lat','_lon','_info','_fee'].forEach(suf => { if (sp0[p + suf] === null) delete sp0[p + suf]; }));
+      selectedSpot.shower_lat = r4lat; selectedSpot.shower_lon = r4lng;
+      selectedSpot.toilet_lat = r4lat; selectedSpot.toilet_lon = r4lng;
+      setPending('spot', selectedSpot.id, { shower_lat: r4lat, shower_lon: r4lng, toilet_lat: r4lat, toilet_lon: r4lng });
+      refreshFacilityMarkers();
+    } else {
+      // 하나라도 이미 존재 → 통합 추가 시설(extra)로 등록
+      addExtraFacility('showertoilet', r4lat, r4lng);
+    }
+    toggleAddMode(null);
+    updatePanel();
+    return;
+  }
+
   if (addMode === 'shower' || addMode === 'parking' || addMode === 'toilet') {
     const type = addMode;
-    const meta = FACILITY_META[type];
     // 현재 보이는 기본 시설 마커가 있는지로 판정 (삭제 예정이면 마커가 이미 사라진 상태)
-    const hasPrimary = activeMarkers.some(m => m.type === type && m.id === selectedSpot.id);
+    // 통합(🚻) 마커는 shower+toilet 둘 다 의미하므로 함께 체크
+    const hasPrimary = activeMarkers.some(m => (m.type === type || (m.type === 'showertoilet' && (type === 'shower' || type === 'toilet'))) && m.id === selectedSpot.id);
     if (!hasPrimary) {
       // 기본 시설 미설정 → 기본으로 추가
       // 만약 이전에 삭제 예정이었다면 그 pending도 제거
@@ -685,8 +735,8 @@ map.on('click', e => {
       if (sp) ['_lat','_lon','_info','_fee'].forEach(suf => { if (sp[type + suf] === null) delete sp[type + suf]; });
       selectedSpot[type + '_lat'] = r4lat;
       selectedSpot[type + '_lon'] = r4lng;
-      addMarker({ type, id: selectedSpot.id, lat: r4lat, lon: r4lng, color: meta.color, label: meta.icon, size: 30 });
       setPending('spot', selectedSpot.id, { [type + '_lat']: r4lat, [type + '_lon']: r4lng });
+      refreshFacilityMarkers(); // 샤워·화장실이 같은 좌표가 되면 자동으로 통합 마커 표시
     } else {
       // 기본 시설 이미 존재 → extra_facilities 배열에 추가
       addExtraFacility(type, r4lat, r4lng);
@@ -703,10 +753,13 @@ function toggleAddMode(mode) {
   document.getElementById('btn-add-shower').classList.toggle('active', addMode === 'shower');
   document.getElementById('btn-add-parking').classList.toggle('active', addMode === 'parking');
   document.getElementById('btn-add-toilet').classList.toggle('active', addMode === 'toilet');
+  const stBtn = document.getElementById('btn-add-showertoilet');
+  if (stBtn) stBtn.classList.toggle('active', addMode === 'showertoilet');
   const zoneBtn = document.getElementById('btn-add-zone');
   if (zoneBtn) zoneBtn.classList.toggle('active', addMode === 'zone');
   const hint = document.getElementById('map-hint');
   if (addMode === 'zone') hint.textContent = '🖱️ 지도를 클릭해서 Zone 위치를 지정하세요 (ESC 취소)';
+  else if (addMode === 'showertoilet') hint.textContent = '🖱️ 🚻 샤워+화장실(같은 건물) 위치 클릭 — 두 시설 좌표가 함께 설정됩니다 (ESC 취소)';
   else if (addMode === 'shower' || addMode === 'parking' || addMode === 'toilet') {
     const meta = FACILITY_META[addMode];
     const hasPrimary = selectedSpot && activeMarkers.some(m => m.type === addMode && m.id === selectedSpot.id);
@@ -836,6 +889,10 @@ const FACILITY_META = {
   shower:  { label: '샤워',   color: '#00796B', icon: '🚿', cols: ['shower_lat', 'shower_lon', 'shower_info', 'shower_fee'] },
   parking: { label: '주차',   color: '#1565C0', icon: 'P',  cols: ['parking_lat', 'parking_lon', 'parking_info', 'parking_fee'] },
   toilet:  { label: '화장실', color: '#9C27B0', icon: '🚽', cols: ['toilet_lat', 'toilet_lon', 'toilet_info', 'toilet_fee'] },
+  // 샤워+화장실 통합 (같은 건물) — 기본 시설은 shower/toilet 컬럼 양쪽에 같은 좌표로 저장,
+  // 추가 시설(extra_facilities)에서는 type 'showertoilet' 하나로 저장 (앱은 extras 미사용이라 안전)
+  showertoilet: { label: '샤워+화장실', color: 'linear-gradient(135deg,#00796B 49%,#9C27B0 51%)', icon: '🚻',
+                  cols: ['shower_lat', 'shower_lon', 'shower_info', 'shower_fee', 'toilet_lat', 'toilet_lon', 'toilet_info', 'toilet_fee'] },
 };
 
 // ── 추가 시설 (extra_facilities JSONB 배열) ──────────────────────────────
@@ -881,16 +938,11 @@ function removeFacility(type) {
   if (!meta) return;
   if (!confirm(`${selectedSpot.name?.ko || selectedSpot.name?.en}의 ${meta.label} 시설을 제거할까요?\n저장 시 DB에서 좌표·설명·요금이 모두 NULL로 처리됩니다.`)) return;
 
-  // 지도에서 마커 즉시 제거 (저장 전 시각 피드백)
-  const existing = activeMarkers.find(m => m.type === type && m.id === selectedSpot.id);
-  if (existing) {
-    existing.marker.remove();
-    activeMarkers = activeMarkers.filter(m => m !== existing);
-  }
-
   // 관련 컬럼 모두 NULL로 pending 마킹
   const fields = Object.fromEntries(meta.cols.map(c => [c, null]));
   setPending('spot', selectedSpot.id, fields);
+  // 마커 재구성 — 통합(🚻) 상태에서 한쪽만 제거되면 남은 시설이 개별 마커로 표시됨
+  refreshFacilityMarkers();
   updatePanel();
 }
 
@@ -905,12 +957,8 @@ function cancelRemoveFacility(type) {
   meta.cols.forEach(f => delete sp[f]);
   if (Object.keys(sp).length === 0) delete pendingChanges[key];
 
-  // 원본 좌표 있으면 마커 복원 (cols 첫 두 개가 lat/lon)
-  const lat = selectedSpot[meta.cols[0]];
-  const lon = selectedSpot[meta.cols[1]];
-  if (lat && lon) {
-    addMarker({ type, id: selectedSpot.id, lat, lon, color: meta.color, label: meta.icon, size: 30 });
-  }
+  // 마커 재구성 — 복원된 시설이 상대 시설과 같은 좌표면 자동으로 통합(🚻) 마커로 표시
+  refreshFacilityMarkers();
   markDirty();
   updatePanel();
 }
@@ -1006,7 +1054,7 @@ function updatePanel() {
       <div class="facility-fields">
         <label>📝 정보</label>
         <textarea class="facility-textarea${modified(prefix + '_info') ? ' modified' : ''}"
-          placeholder="시설 설명 (위치, 운영시간, 특이사항 등)"
+          placeholder="시설 설명 — 위치, 운영시간, 시즌 운영이면 기간 명시 (예: 7~8월 개장기간만 운영)"
           oninput="onFacilityFieldChange('${prefix}_info', this.value, this)">${escHtml(info)}</textarea>
         <label>💰 요금</label>
         <input type="text" class="facility-input${modified(prefix + '_fee') ? ' modified' : ''}"
@@ -1101,7 +1149,7 @@ function updatePanel() {
       </div>
       <div class="facility-fields">
         <label>📝 정보</label>
-        <textarea class="facility-textarea" placeholder="시설 설명 (위치, 운영시간 등)"
+        <textarea class="facility-textarea" placeholder="시설 설명 — 위치, 운영시간, 시즌 운영이면 기간 명시 (예: 7~8월 개장기간만 운영)"
           oninput="updateExtraField('${ef.id}', 'info', this.value)">${escHtml(ef.info || '')}</textarea>
         <label>💰 요금</label>
         <input type="text" class="facility-input" placeholder="예: 무료 / 500엔 / 유료"
