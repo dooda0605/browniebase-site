@@ -516,7 +516,7 @@ function renderExcelPanel(excelData) {
 // ── 데이터 로드 ───────────────────────────────────────────────────────────
 async function loadData() {
   const [spotsRes, zonesRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,shower_fee,parking_lat,parking_lon,parking_info,parking_fee,toilet_lat,toilet_lon,toilet_info,toilet_fee,extra_facilities&is_active=eq.true&limit=500`, { headers: API_HEADERS }),
+    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,shower_fee,parking_lat,parking_lon,parking_info,parking_fee,toilet_lat,toilet_lon,toilet_info,toilet_fee,entry_fee,entry_fee_detail,entry_fee_who,entry_fee_where,extra_facilities&is_active=eq.true&limit=500`, { headers: API_HEADERS }),
     fetch(`${SUPABASE_URL}/rest/v1/sub_spots?select=id,zone_code,lat,lon,parent_spot_id&is_active=eq.true&limit=1000`, { headers: API_HEADERS })
   ]);
   if (!spotsRes.ok) throw new Error('spots 로드 실패: ' + await spotsRes.text());
@@ -1068,6 +1068,39 @@ function updatePanel() {
     <div class="coord-row">
       <div class="coord-label"><div class="coord-dot" style="background:#1A73E8"></div>스팟 중심${modified('lat') ? badge() : ''}</div>
       <div class="coord-values">${fmt(lat)}<br>${fmt(lon)}</div>
+    </div>`;
+
+  // ── 입장료/입도세/환경비 (스팟 단위 — 앱 상세화면 💰 카드에 표시) ─────────
+  const feeVal = (k) => get(k) ?? '';
+  const feeCls = (k) => modified(k) ? ' modified' : '';
+  const feeFilled = ['entry_fee', 'entry_fee_detail', 'entry_fee_who', 'entry_fee_where'].some(k => (feeVal(k) || '').trim() !== '');
+  html += `
+    <div class="zone-section-header" style="margin-top:6px">
+      <div class="zone-section-label">
+        <div class="coord-dot" style="background:#FFB300;border-radius:2px"></div>
+        💰 입장료·입도세·환경비${feeFilled ? '' : ' <span style="color:#5a7a9a;font-weight:normal">— 없으면 비워두기</span>'}
+      </div>
+    </div>
+    <div class="facility-fields">
+      <label>💰 금액 <span style="color:#5a7a9a">(앱에 크게 표시 — "무료"는 초록색)</span></label>
+      <input type="text" class="facility-input${feeCls('entry_fee')}"
+        placeholder="예: 성인 2,000원 / 500엔 / 무료"
+        value="${escHtml(feeVal('entry_fee'))}"
+        oninput="onFacilityFieldChange('entry_fee', this.value, this)">
+      <label>🏷️ 징수 주체</label>
+      <input type="text" class="facility-input${feeCls('entry_fee_who')}"
+        placeholder="예: 마을회 / 호텔 / 지자체 환경비 / 입도세"
+        value="${escHtml(feeVal('entry_fee_who'))}"
+        oninput="onFacilityFieldChange('entry_fee_who', this.value, this)">
+      <label>📝 상세</label>
+      <textarea class="facility-textarea${feeCls('entry_fee_detail')}"
+        placeholder="감면·기간 등 — 예: 어린이 1,000원, 7~8월 개장기간만 징수"
+        oninput="onFacilityFieldChange('entry_fee_detail', this.value, this)">${escHtml(feeVal('entry_fee_detail'))}</textarea>
+      <label>📍 납부 위치</label>
+      <input type="text" class="facility-input${feeCls('entry_fee_where')}"
+        placeholder="예: 입구 매표소 / 선착장 발권 / 호텔 프런트"
+        value="${escHtml(feeVal('entry_fee_where'))}"
+        oninput="onFacilityFieldChange('entry_fee_where', this.value, this)">
     </div>`;
 
   if (shLat) {
