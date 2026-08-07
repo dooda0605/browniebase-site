@@ -516,7 +516,7 @@ function renderExcelPanel(excelData) {
 // ── 데이터 로드 ───────────────────────────────────────────────────────────
 async function loadData() {
   const [spotsRes, zonesRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,shower_fee,parking_lat,parking_lon,parking_info,parking_fee,toilet_lat,toilet_lon,toilet_info,toilet_fee,entry_fee,entry_fee_detail,entry_fee_who,entry_fee_where,extra_facilities&is_active=eq.true&limit=500`, { headers: API_HEADERS }),
+    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,shower_fee,parking_lat,parking_lon,parking_info,parking_fee,toilet_lat,toilet_lon,toilet_info,toilet_fee,entry_fee,entry_fee_detail,entry_fee_who,entry_fee_where,extra_facilities,surf_beta,face_normal_deg&is_active=eq.true&limit=500`, { headers: API_HEADERS }),
     fetch(`${SUPABASE_URL}/rest/v1/sub_spots?select=id,zone_code,lat,lon,parent_spot_id&is_active=eq.true&limit=1000`, { headers: API_HEADERS })
   ]);
   if (!spotsRes.ok) throw new Error('spots 로드 실패: ' + await spotsRes.text());
@@ -966,6 +966,25 @@ function cancelRemoveFacility(type) {
 // ── 시설 정보 입력 (info/fee) ────────────────────────────────────────────
 // info textarea / fee input 변경 시 호출. 원본과 같으면 pending에서 제거,
 // 다르면 setPending. 패널 재렌더 안 해서 입력 포커스 유지.
+// [2026-08-07] 서핑(베타) 필드 — 체크박스/숫자라 문자열 핸들러를 못 쓴다.
+//   value는 이미 타입이 맞춰진 값(boolean | number | null)으로 들어온다.
+function onSpotTypedFieldChange(field, value) {
+  if (!selectedSpot) return;
+  const orig = selectedSpot[field] ?? null;
+  const key = `spot:${selectedSpot.id}`;
+  if (value === orig) {
+    if (pendingChanges[key]) {
+      delete pendingChanges[key][field];
+      if (Object.keys(pendingChanges[key]).length === 0) delete pendingChanges[key];
+    }
+    if (originalValues[key]) delete originalValues[key][field];
+    markDirty();
+  } else {
+    setPending('spot', selectedSpot.id, { [field]: value });
+  }
+  updatePanel();
+}
+
 function onFacilityFieldChange(field, value, el) {
   if (!selectedSpot) return;
   const orig = selectedSpot[field] ?? '';
@@ -1101,6 +1120,33 @@ function updatePanel() {
         placeholder="예: 입구 매표소 / 선착장 발권 / 호텔 프런트"
         value="${escHtml(feeVal('entry_fee_where'))}"
         oninput="onFacilityFieldChange('entry_fee_where', this.value, this)">
+    </div>`;
+
+  // ── 서핑(베타) — surf_beta 켠 스팟만 서핑 등급이 계산된다 (compute_surf_index) ──
+  //    face_normal_deg = 해변이 바라보는 방위(바다 쪽). 스웰 방향 정합·오프쇼어 판정에 쓰임.
+  const surfOn = !!get('surf_beta');
+  const faceDeg = get('face_normal_deg');
+  html += `
+    <div class="zone-section-header" style="margin-top:6px">
+      <div class="zone-section-label">
+        <div class="coord-dot" style="background:#26C6DA;border-radius:2px"></div>
+        🏄 서핑(베타)${modified('surf_beta') || modified('face_normal_deg') ? badge() : ''}
+      </div>
+    </div>
+    <div class="facility-fields">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" ${surfOn ? 'checked' : ''}
+          onchange="onSpotTypedFieldChange('surf_beta', this.checked)">
+        서핑 스팟으로 표시 <span style="color:#5a7a9a">(끄면 서핑 등급 계산·노출 중단)</span>
+      </label>
+      <label>🧭 해변 방위 face_normal_deg <span style="color:#5a7a9a">(바다를 바라보는 방향, 0=북 90=동 180=남 270=서)</span></label>
+      <input type="number" min="0" max="359" step="1" class="facility-input${modified('face_normal_deg') ? ' modified' : ''}"
+        placeholder="예: 동해안 70~100 / 제주 북쪽 350"
+        value="${faceDeg === null || faceDeg === undefined ? '' : faceDeg}"
+        onchange="onSpotTypedFieldChange('face_normal_deg', this.value === '' ? null : Number(this.value))">
+      ${surfOn && (faceDeg === null || faceDeg === undefined)
+        ? '<div style="color:#FFB300;font-size:11px">⚠ 방위 미입력 — 스웰 방향 정합이 기본값(70°)으로 계산됩니다</div>'
+        : ''}
     </div>`;
 
   if (shLat) {
