@@ -516,7 +516,7 @@ function renderExcelPanel(excelData) {
 // ── 데이터 로드 ───────────────────────────────────────────────────────────
 async function loadData() {
   const [spotsRes, zonesRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,shower_fee,parking_lat,parking_lon,parking_info,parking_fee,toilet_lat,toilet_lon,toilet_info,toilet_fee,entry_fee,entry_fee_detail,entry_fee_who,entry_fee_where,extra_facilities,surf_beta,face_normal_deg,is_active&limit=500`, { headers: API_HEADERS }),
+    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,shower_fee,parking_lat,parking_lon,parking_info,parking_fee,toilet_lat,toilet_lon,toilet_info,toilet_fee,entry_fee,entry_fee_detail,entry_fee_who,entry_fee_where,extra_facilities,surf_beta,face_normal_deg&is_active=eq.true&limit=500`, { headers: API_HEADERS }),
     fetch(`${SUPABASE_URL}/rest/v1/sub_spots?select=id,zone_code,lat,lon,parent_spot_id&is_active=eq.true&limit=1000`, { headers: API_HEADERS })
   ]);
   if (!spotsRes.ok) throw new Error('spots 로드 실패: ' + await spotsRes.text());
@@ -534,14 +534,8 @@ function renderSpotList(spots) {
     const name = s.name?.ko || s.name?.en || '이름없음';
     const flag = getFlag(s.lat, s.lon);
     const excelDot = findExcelData(s) ? '<span style="color:#4CAF50;margin-left:4px;font-size:9px">●</span>' : '';
-    // [2026-08-08] 비활성 스팟도 목록에 보여준다 — 신규 등록 스팟은 좌표를 확정할 때까지
-    //   is_active=false로 두는데, 기존엔 어드민이 is_active=eq.true만 불러서
-    //   정작 좌표를 찍어야 할 스팟이 어드민에 안 보였다(망양휴게소 앞바다 사례).
-    const off = s.is_active === false
-      ? '<span style="color:#FF7043;margin-left:4px;font-size:9px;font-weight:700">● 비활성</span>' : '';
-    return `<div class="spot-item" id="item-${s.id}" onclick="selectSpot('${s.id}')"${
-      s.is_active === false ? ' style="opacity:.62"' : ''}>
-      <div class="spot-name">${name}${excelDot}${off}</div>
+    return `<div class="spot-item" id="item-${s.id}" onclick="selectSpot('${s.id}')">
+      <div class="spot-name">${name}${excelDot}</div>
       <div class="spot-country">${flag}</div>
     </div>`;
   }).join('');
@@ -1126,24 +1120,6 @@ function updatePanel() {
         placeholder="예: 입구 매표소 / 선착장 발권 / 호텔 프런트"
         value="${escHtml(feeVal('entry_fee_where'))}"
         oninput="onFacilityFieldChange('entry_fee_where', this.value, this)">
-    </div>`;
-
-  // ── 활성 여부 — 신규 스팟은 좌표 확정 전까지 비활성으로 두고, 확정 후 여기서 켠다 ──
-  const活 = get('is_active') !== false;
-  html += `
-    <div class="zone-section-header" style="margin-top:6px">
-      <div class="zone-section-label">
-        <div class="coord-dot" style="background:${活 ? '#4CAF50' : '#FF7043'};border-radius:2px"></div>
-        ${活 ? '✅ 활성' : '⛔ 비활성'}${modified('is_active') ? badge() : ''}
-      </div>
-    </div>
-    <div class="facility-fields">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-        <input type="checkbox" ${活 ? 'checked' : ''}
-          onchange="onSpotTypedFieldChange('is_active', this.checked)">
-        앱에 노출 <span style="color:#5a7a9a">(끄면 앱·검색·등급 계산에서 모두 제외)</span>
-      </label>
-      ${活 ? '' : '<div style="color:#FF7043;font-size:11px">좌표·지형 확정 후 켜세요 — 지금은 앱에 안 보입니다</div>'}
     </div>`;
 
   // ── 서핑(베타) — surf_beta 켠 스팟만 서핑 등급이 계산된다 (compute_surf_index) ──
