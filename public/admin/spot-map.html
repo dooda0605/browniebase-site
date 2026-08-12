@@ -3822,7 +3822,7 @@ function renderExcelPanel(excelData) {
 // ── 데이터 로드 ───────────────────────────────────────────────────────────
 async function loadData() {
   const [spotsRes, zonesRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,shower_fee,parking_lat,parking_lon,parking_info,parking_fee,toilet_lat,toilet_lon,toilet_info,toilet_fee,entry_fee,entry_fee_detail,entry_fee_who,entry_fee_where,extra_facilities,surf_beta,face_normal_deg&is_active=eq.true&limit=500`, { headers: API_HEADERS }),
+    fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,shower_fee,parking_lat,parking_lon,parking_info,parking_fee,toilet_lat,toilet_lon,toilet_info,toilet_fee,entry_fee,entry_fee_detail,entry_fee_who,entry_fee_where,extra_facilities,surf_beta,face_normal_deg,is_active&limit=500`, { headers: API_HEADERS }),
     fetch(`${SUPABASE_URL}/rest/v1/sub_spots?select=id,zone_code,lat,lon,parent_spot_id&is_active=eq.true&limit=1000`, { headers: API_HEADERS })
   ]);
   if (!spotsRes.ok) throw new Error('spots 로드 실패: ' + await spotsRes.text());
@@ -3840,8 +3840,11 @@ function renderSpotList(spots) {
     const name = s.name?.ko || s.name?.en || '이름없음';
     const flag = getFlag(s.lat, s.lon);
     const excelDot = findExcelData(s) ? '<span style="color:#4CAF50;margin-left:4px;font-size:9px">●</span>' : '';
-    return `<div class="spot-item" id="item-${s.id}" onclick="selectSpot('${s.id}')">
-      <div class="spot-name">${name}${excelDot}</div>
+    const off = s.is_active === false
+      ? '<span style="color:#FF7043;margin-left:4px;font-size:9px;font-weight:700">● 비활성</span>' : '';
+    const dim = s.is_active === false ? ' style="opacity:.62"' : '';
+    return `<div class="spot-item" id="item-${s.id}" onclick="selectSpot('${s.id}')"${dim}>
+      <div class="spot-name">${name}${excelDot}${off}</div>
       <div class="spot-country">${flag}</div>
     </div>`;
   }).join('');
