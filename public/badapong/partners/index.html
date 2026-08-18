@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>바다퐁 파트너 — 다이브샵·서핑샵 광고</title>
-<meta name="description" content="그 스팟을 보러 온 사람에게만 보이는 다이브샵·서핑샵 광고. 스팟별 주간 조회를 그대로 공개합니다." />
+<meta name="description" content="그 스팟을 보러 온 사람에게만 보이는 다이브샵·서핑샵 광고. 샵별 전용 페이지에서 노출 실적을 확인하세요." />
 <style>
   :root { --blue:#0a6ecc; --deep:#083b66; --bg:#f6f9fc; --ink:#17222c; --sub:#5b6b78; --line:#dde6ee; }
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -89,14 +89,18 @@
 
 <section>
   <div class="wrap">
-    <h2>스팟별 주간 조회 — 있는 그대로 공개합니다</h2>
-    <div class="sub">앱 사용자가 지난 7일간 각 스팟의 컨디션을 확인한 횟수입니다. 매일 갱신됩니다.
-      부풀리지 않습니다 — 우리는 아직 작은 앱이고, 그래서 광고비도 낮습니다.</div>
+    <h2>누가 이 카드를 봅니까</h2>
+    <div class="sub">바다퐁은 "이번 주말 여기 들어갈 수 있나"를 확인하러 오는 앱입니다.
+      지나가는 사람이 아니라, 그 바다에 들어갈 작정을 하고 날짜까지 정한 사람입니다.</div>
     <div class="card">
-      <label for="region-sel" style="margin-top:0">지역</label>
-      <select id="region-sel"></select>
-      <div id="stats" style="margin-top:10px"><div class="muted">불러오는 중…</div></div>
-      <div class="muted" style="margin-top:10px" id="stats-note"></div>
+      <div class="steps">
+        <div class="step"><b>스팟을 고르고 등급을 봅니다.</b> 해변수영 · 스노클링 · 프리다이빙 ·
+          스쿠버 · 서핑 — 활동마다 다른 기준으로 A~E 등급이 매겨집니다.</div>
+        <div class="step"><b>그 화면 아래에 근처 샵이 나옵니다.</b> 스팟에서 가까운 순으로,
+          그 바다를 보러 온 사람에게만 보입니다.</div>
+        <div class="step"><b>내 샵이 몇 번 노출됐는지는 숫자로 확인하실 수 있습니다.</b>
+          다만 앱 조회 데이터는 공개하지 않습니다 — 광고주 페이지에서 <b>내 샵 것만</b> 보여드립니다.</div>
+      </div>
     </div>
   </div>
 </section>
@@ -152,9 +156,21 @@
 
 <section id="apply">
   <div class="wrap">
-    <h2>파트너 신청</h2>
-    <div class="sub">남겨주시면 하루 안에 연락드립니다. 결제 수단을 받지 않으며, 요금이 청구되지 않습니다.</div>
+    <h2>광고주 페이지</h2>
+    <div class="sub">내 샵 성과와 노출 요청은 <b>광고주 페이지</b>에서 처리합니다.
+      샵마다 전용 주소가 따로 있어 다른 사람은 볼 수 없습니다.</div>
+
+    <div class="card" style="margin-bottom:14px">
+      <b>이미 링크를 받으셨다면</b>
+      <p class="muted" style="margin:8px 0 0">
+        카톡·메일·인스타 메시지로 보내드린 주소로 바로 들어가시면 됩니다.
+        별도 비밀번호는 없습니다. 링크를 잃어버리셨으면 아래로 알려주세요.</p>
+    </div>
+
     <div class="card">
+      <b>아직 링크가 없으시다면</b>
+      <p class="muted" style="margin:8px 0 14px">
+        확인 후 전용 주소를 보내드립니다. 결제 수단을 받지 않으며 요금이 청구되지 않습니다.</p>
       <label>샵 이름 *</label>
       <input id="f-shop" maxlength="80" placeholder="예: 해원다이브리조트" />
       <label>연락처 (전화 또는 카톡 ID) *</label>
@@ -164,7 +180,7 @@
       <label>남기실 말</label>
       <textarea id="f-msg" maxlength="500" placeholder="운영 중인 스팟, 궁금한 점 등"></textarea>
       <div style="margin-top:16px">
-        <button class="btn" id="f-send">신청하기</button>
+        <button class="btn" id="f-send">전용 주소 받기</button>
         <span id="f-status" class="muted" style="margin-left:10px"></span>
       </div>
     </div>
@@ -215,7 +231,7 @@
   </div>
   <div class="wrap">
     Browniebase · 바다퐁(Badapong) · 문의는 위 신청 폼으로 남겨주세요.<br/>
-    조회 수치는 앱 실사용 로그 기준이며 매일 갱신됩니다. 현재 광고비를 받지 않습니다. 유료 요금제 도입 시 사전에 안내드립니다.
+    실적 수치는 앱 실사용 로그 기준이며 매일 갱신됩니다. 현재 광고비를 받지 않습니다. 유료 요금제 도입 시 사전에 안내드립니다.
   </div>
 </footer>
 
@@ -225,45 +241,9 @@ const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZi
 const H = { apikey: KEY, Authorization: 'Bearer ' + KEY };
 const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-let spots = [], pop = {}, regions = [];
-
-async function load() {
-  const [rs, ss, ps] = await Promise.all([
-    fetch(`${SB}/regions?select=id,name,slug,is_active&is_active=eq.true`, {headers:H}).then(r=>r.json()),
-    fetch(`${SB}/spots?select=id,name,region_id,is_active&is_active=eq.true&limit=500`, {headers:H}).then(r=>r.json()),
-    fetch(`${SB}/spot_popularity?select=spot_id,views_7d,favorites`, {headers:H}).then(r=>r.json()),
-  ]);
-  spots = ss;
-  ps.forEach(p => pop[p.spot_id] = p);
-  const byRegion = {};
-  ss.forEach(s => { (byRegion[s.region_id] = byRegion[s.region_id] || []).push(s); });
-  regions = rs.map(r => {
-      const sp = byRegion[r.id] || [];
-      return { ...r, spots: sp,
-        total: sp.reduce((a,s)=>a+((pop[s.id]||{}).views_7d||0),0) };
-    })
-    .filter(r => r.spots.length)
-    .sort((a,b) => b.total - a.total);
-  const sel = document.getElementById('region-sel');
-  sel.innerHTML = regions.map((r,i) =>
-    `<option value="${i}">${esc(r.name && r.name.ko || r.slug)} — 주간 ${r.total.toLocaleString()}회</option>`).join('');
-  sel.onchange = () => renderStats(+sel.value);
-  renderStats(0);
-}
-
-function renderStats(i) {
-  const r = regions[i];
-  const rows = r.spots
-    .map(s => ({ name: (s.name && (s.name.ko || s.name.en)) || '',
-                 v: (pop[s.id]||{}).views_7d||0, f:(pop[s.id]||{}).favorites||0 }))
-    .sort((a,b) => b.v - a.v).slice(0, 10);
-  document.getElementById('stats').innerHTML = rows.map(x =>
-    `<div class="stat-row"><span>${esc(x.name)}</span>
-     <span><b>${x.v.toLocaleString()}</b><span class="muted"> 회/주 · ⭐${x.f}</span></span></div>`).join('')
-    || '<div class="muted">아직 조회 데이터가 없습니다.</div>';
-  document.getElementById('stats-note').textContent =
-    `${(r.name && r.name.ko)||''} 스팟 ${r.spots.length}곳 · 주간 합계 ${r.total.toLocaleString()}회 (상위 10곳 표시)`;
-}
+// 앱 조회 데이터는 공개 페이지에서 다루지 않는다 (2026-08-18).
+// 지역별 조회수 로더(load/renderStats)를 제거했다 — 경쟁사가 통째로 받아가고,
+// 전체를 보면 "작은 앱"이라는 인상이 먼저 온다. 숫자는 광고주 페이지에서 내 샵 것만 보여준다.
 
 let shopTimer;
 document.getElementById('shop-q').addEventListener('input', e => {
@@ -281,8 +261,9 @@ document.getElementById('shop-q').addEventListener('input', e => {
       ? hit.map(x => `<div class="stat-row"><span>🤿 ${esc(x.name && x.name.ko)}<br/>
           <span class="muted">${esc(x.address||'')}</span></span>
           <span class="ok">등재됨</span></div>`).join('')
-        + '<div class="muted" style="margin-top:8px">이미 무료로 나오고 있습니다. 상단 고정·전화 버튼도 무료로 열어드립니다.</div>'
-      : '<div class="muted">아직 등재 전입니다 — 아래로 신청해 주시면 무료 등재부터 해드립니다.</div>';
+        + '<div class="muted" style="margin-top:8px">이미 무료로 나오고 있습니다. '
+          + '<a href="#apply">전용 주소를 받으시면</a> 노출 실적을 확인하실 수 있습니다.</div>'
+      : '<div class="muted">아직 등재 전입니다 — <a href="#apply">아래로 알려주시면</a> 무료 등재부터 해드립니다.</div>';
   }, 300);
 });
 
@@ -364,9 +345,6 @@ document.getElementById('r-send').addEventListener('click', async () => {
   } catch (e) { st.textContent = '일시 오류 — 잠시 후 다시 시도해 주세요.'; btn.disabled = false; }
 });
 
-load().catch(() => {
-  document.getElementById('stats').innerHTML = '<div class="muted">지표를 불러오지 못했습니다.</div>';
-});
 </script>
 </body>
 </html>
