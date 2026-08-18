@@ -42,6 +42,13 @@
   .p .v { font-size:1.25rem; font-weight:800; margin:4px 0 6px; }
   .p .d { font-size:.83rem; color:var(--sub); }
   footer { padding:28px 0 44px; color:#9aa8b4; font-size:.78rem; }
+  #wk th { text-align:right; font-weight:600; color:var(--sub); font-size:.78rem;
+           padding:6px 4px; border-bottom:1px solid var(--line); }
+  #wk th:first-child, #wk td:first-child { text-align:left; }
+  #wk td { text-align:right; padding:7px 4px; border-bottom:1px solid #eef2f6;
+           font-variant-numeric:tabular-nums; }
+  #wk tr:last-child td { border-bottom:0; font-weight:700; background:#f4f9ff; }
+  .up { color:#0a7c46; font-size:.78rem; } .dn { color:#b91c1c; font-size:.78rem; }
   #err { display:none; padding:40px 0; text-align:center; color:var(--sub); }
 </style>
 </head>
@@ -93,6 +100,17 @@
       아직 집계된 반응이 없습니다. 버튼 계측은 앱 최신 버전부터 기록되며,
       사용자 기기에 업데이트가 퍼지는 데 보통 1~2주가 걸립니다.
     </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>주 단위 기록</h2>
+    <div class="sub">최근 8주입니다. 한 주의 숫자보다 <b>흐름</b>이 중요합니다.</div>
+    <div class="card" style="overflow-x:auto">
+      <table id="wk" style="width:100%;border-collapse:collapse;font-size:.9rem"></table>
+    </div>
+    <div class="muted" style="margin-top:8px" id="wk-note"></div>
   </div>
 </section>
 
@@ -202,6 +220,28 @@ async function load() {
     document.getElementById(k).textContent = v.toLocaleString();
   }
   if (total === 0) document.getElementById('zero-note').style.display = 'block';
+
+  const wk = d.weekly || [];
+  const delta = (cur, prev) => {
+    if (prev === 0 || prev == null) return '';
+    const p = Math.round((cur - prev) / prev * 100);
+    if (p === 0) return '';
+    return ` <span class="${p>0?'up':'dn'}">${p>0?'▲':'▼'}${Math.abs(p)}%</span>`;
+  };
+  document.getElementById('wk').innerHTML =
+    '<tr><th>주</th><th>스팟 방문</th><th>전화</th><th>문의</th></tr>' +
+    wk.map((w, i) => {
+      const pv = i > 0 ? wk[i-1] : null;
+      const last = i === wk.length - 1;
+      return `<tr><td>${esc(w.week)}${last?' <span class="muted">(이번 주)</span>':''}</td>
+        <td>${w.viewers.toLocaleString()}${pv?delta(w.viewers, pv.viewers):''}</td>
+        <td>${w.phone.toLocaleString()}${pv?delta(w.phone, pv.phone):''}</td>
+        <td>${w.website.toLocaleString()}${pv?delta(w.website, pv.website):''}</td></tr>`;
+    }).join('');
+  const anyData = wk.some(w => w.viewers || w.phone || w.website);
+  document.getElementById('wk-note').textContent = anyData
+    ? '스팟 방문 = 사장님 샵이 표시되는 스팟을 열어본 사람 수(중복 제외).'
+    : '기록은 앱 최신 버전부터 쌓입니다. 업데이트가 퍼지는 데 보통 1~2주 걸립니다.';
 
   if (d.generated_at) {
     const g = new Date(d.generated_at);
