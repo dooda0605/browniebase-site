@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>바다퐁 파트너 — 다이브샵 광고</title>
-<meta name="description" content="그 스팟을 보러 온 사람에게만 보이는 다이브샵 광고. 스팟별 주간 조회를 그대로 공개합니다." />
+<title>바다퐁 파트너 — 다이브샵·서핑샵 광고</title>
+<meta name="description" content="그 스팟을 보러 온 사람에게만 보이는 다이브샵·서핑샵 광고. 스팟별 주간 조회를 그대로 공개합니다." />
 <style>
   :root { --blue:#0a6ecc; --deep:#083b66; --bg:#f6f9fc; --ink:#17222c; --sub:#5b6b78; --line:#dde6ee; }
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -62,7 +62,7 @@
 
 <header>
   <div class="wrap">
-    <div class="tag">바다퐁 × 다이브샵</div>
+    <div class="tag">바다퐁 × 다이브샵 · 서핑샵</div>
     <h1>그 스팟을 보러 온 사람에게만<br/>내 샵을 보여주세요</h1>
     <p>바다퐁은 스팟별 입수 가능 등급을 보여주는 바다 예보 앱입니다.<br/>
        "이번 주말 여기 들어갈 수 있나"를 확인하러 온 사람 — 그게 샵의 손님입니다.</p>
@@ -86,9 +86,9 @@
 <section>
   <div class="wrap">
     <h2>내 샵, 이미 나오고 있을 수 있습니다</h2>
-    <div class="sub">전국 다이브샵 145곳을 스팟 근처 서비스로 무료 등재했습니다. 상호로 확인해 보세요.</div>
+    <div class="sub">전국 다이브샵 145곳 · 서핑샵 147곳을 스팟 근처 서비스로 무료 등재했습니다. 상호로 확인해 보세요.</div>
     <div class="card">
-      <input id="shop-q" placeholder="샵 이름 입력 (예: 해원다이브)" />
+      <input id="shop-q" placeholder="샵 이름 입력 (예: 해원다이브, 히든서프)" />
       <div id="shop-result" style="margin-top:10px"></div>
     </div>
   </div>
@@ -212,7 +212,7 @@ document.getElementById('shop-q').addEventListener('input', e => {
   const q = e.target.value.trim();
   if (q.length < 2) { document.getElementById('shop-result').innerHTML=''; return; }
   shopTimer = setTimeout(async () => {
-    const rows = await fetch(`${SB}/spot_services?service_type=eq.dive_shop&is_active=eq.true`
+    const rows = await fetch(`${SB}/spot_services?service_type=in.(dive_shop,surf_shop)&is_active=eq.true`
       + `&select=name,address,spot_id&limit=400`, {headers:H}).then(r=>r.json());
     const seen = new Set();
     const hit = rows.filter(x => ((x.name && x.name.ko)||'').includes(q))

@@ -270,7 +270,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; d
   <input id="search-box" placeholder="🔍 스팟 검색..." type="text">
   <label style="display:flex;align-items:center;gap:6px;padding:4px 2px;font-size:11px;color:#9fb3c8;cursor:pointer;user-select:none">
     <input type="checkbox" id="shop-toggle" checked onchange="toggleShops(this.checked)">
-    🤿 다이브샵 표시 <span style="color:#607d8b">(읽기 전용)</span>
+    🤿 다이브샵 · 🏄 서핑샵 표시 <span style="color:#607d8b">(읽기 전용)</span>
   </label>
   <div id="spot-list"></div>
 </div>
@@ -3839,8 +3839,8 @@ const API_HEADERS_RETURN = {
 // ── State ─────────────────────────────────────────────────────────────────
 let allSpots = [];
 let allZones = [];
-let allShops = [];          // [2026-08-18] 다이브샵 (spot_services, 읽기 전용)
-let showShops = true;       // 🤿 레이어 토글
+let allShops = [];          // [2026-08-18] 다이브샵 + 서핑샵 (spot_services, 읽기 전용)
+let showShops = true;       // 🤿🏄 레이어 토글
 let selectedSpot = null;
 let activeMarkers = [];
 let pendingChanges = {};   // { 'spot:UUID': {...}, 'zone:UUID': {...} }
@@ -3984,8 +3984,9 @@ async function loadData() {
   const [spotsRes, zonesRes, shopsRes] = await Promise.all([
     fetch(`${SUPABASE_URL}/rest/v1/spots?select=id,name,lat,lon,shower_lat,shower_lon,shower_info,shower_fee,parking_lat,parking_lon,parking_info,parking_fee,toilet_lat,toilet_lon,toilet_info,toilet_fee,entry_fee,entry_fee_detail,entry_fee_who,entry_fee_where,extra_facilities,surf_beta,face_normal_deg,is_active&limit=500`, { headers: API_HEADERS }),
     fetch(`${SUPABASE_URL}/rest/v1/sub_spots?select=id,zone_code,lat,lon,parent_spot_id&is_active=eq.true&limit=1000`, { headers: API_HEADERS }),
-    // [2026-08-18] 다이브샵 — 네이버 수집분. 좌표 편집 대상이 아니라 **읽기 전용**으로만 띄운다.
-    fetch(`${SUPABASE_URL}/rest/v1/spot_services?service_type=eq.dive_shop&is_active=eq.true&select=id,spot_id,name,address,lat,lon,dive_shop_meta&limit=2000`, { headers: API_HEADERS })
+    // [2026-08-18] 다이브샵·서핑샵 — 네이버 수집분. 좌표 편집 대상이 아니라 **읽기 전용**으로만 띄운다.
+    //   service_type을 select에 반드시 포함할 것 — 마커 아이콘/색을 이 값으로 가른다.
+    fetch(`${SUPABASE_URL}/rest/v1/spot_services?service_type=in.(dive_shop,surf_shop)&is_active=eq.true&select=id,spot_id,service_type,name,address,lat,lon,dive_shop_meta&limit=4000`, { headers: API_HEADERS })
   ]);
   if (!spotsRes.ok) throw new Error('spots 로드 실패: ' + await spotsRes.text());
   if (!zonesRes.ok) throw new Error('zones 로드 실패: ' + await zonesRes.text());
@@ -4011,10 +4012,14 @@ function renderSpotList(spots) {
     const off = s.is_active === false
       ? '<span style="color:#FF7043;margin-left:4px;font-size:9px;font-weight:700">● 비활성</span>' : '';
     const dim = s.is_active === false ? ' style="opacity:.62"' : '';
-    // [2026-08-18] 근처 다이브샵 수 — 0곳이면 표시 안 함(영업 공백을 눈으로 찾기 위함)
-    const shopN = allShops.filter(sh => sh.spot_id === s.id).length;
-    const shopBadge = shopN
-      ? `<span style="color:#4DD0E1;margin-left:4px;font-size:9px;font-weight:700">🤿${shopN}</span>` : '';
+    // [2026-08-18] 근처 샵 수 — 0곳이면 표시 안 함(영업 공백을 눈으로 찾기 위함).
+    //   다이브/서핑을 합치면 "어느 쪽이 비었는지"가 안 보여서 종류별로 따로 센다.
+    const near = allShops.filter(sh => sh.spot_id === s.id);
+    const diveN = near.filter(sh => sh.service_type === 'dive_shop').length;
+    const surfN = near.filter(sh => sh.service_type === 'surf_shop').length;
+    const shopBadge =
+        (diveN ? `<span style="color:#4DD0E1;margin-left:4px;font-size:9px;font-weight:700">🤿${diveN}</span>` : '')
+      + (surfN ? `<span style="color:#FFB74D;margin-left:4px;font-size:9px;font-weight:700">🏄${surfN}</span>` : '');
     return `<div class="spot-item" id="item-${s.id}" onclick="selectSpot('${s.id}')"${dim}>
       <div class="spot-name">${name}${excelDot}${shopBadge}${off}</div>
       <div class="spot-country">${flag}</div>
@@ -4088,7 +4093,7 @@ function placeAllMarkers() {
   placeShopMarkers();
 }
 
-// ── 다이브샵 마커 (읽기 전용) ─────────────────────────────────────────────
+// ── 다이브샵·서핑샵 마커 (읽기 전용) ──────────────────────────────────────
 // 드래그 불가 — 네이버에서 받은 좌표라 이 도구의 편집 대상이 아니다.
 // 편집 가능한 마커와 섞이면 실수로 옮기고 저장될 수 있어 커서·테두리를 다르게 뒀다.
 function placeShopMarkers() {
@@ -4096,11 +4101,13 @@ function placeShopMarkers() {
   allShops.filter(sh => sh.spot_id === selectedSpot.id && sh.lat != null && sh.lon != null)
     .forEach(sh => {
       const km = sh.dive_shop_meta?.distance_km;
+      const isSurf = sh.service_type === 'surf_shop';
       const el = document.createElement('div');
-      el.style.cssText = 'width:26px;height:26px;background:#00838F;border:2px dashed white;'
+      el.style.cssText = `width:26px;height:26px;background:${isSurf ? '#EF6C00' : '#00838F'};`
+        + 'border:2px dashed white;'
         + 'border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;'
         + 'cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,0.5);user-select:none;';
-      el.textContent = '🤿';
+      el.textContent = isSurf ? '🏄' : '🤿';
       el.title = `${sh.name?.ko || ''}${km != null ? ` · ${km}km` : ''}
 ${sh.address || ''}`;
       const marker = new mapboxgl.Marker({ element: el, draggable: false })
@@ -4953,7 +4960,7 @@ async function saveChanges() {
 }
 
 // ── 마커 정리 ─────────────────────────────────────────────────────────────
-// [2026-08-18] 🤿 레이어 토글 — 좌표 편집 중 샵 마커가 방해되면 끌 수 있게.
+// [2026-08-18] 🤿🏄 레이어 토글 — 좌표 편집 중 샵 마커가 방해되면 끌 수 있게.
 function toggleShops(on) {
   showShops = on;
   clearMarkers();
