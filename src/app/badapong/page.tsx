@@ -5,7 +5,7 @@ type Lang = 'ko' | 'en'
 
 const c = {
   ko: {
-    nav: { features: '주요 기능', regions: '지원 지역', activities: '활동', faq: 'FAQ', launch: 'App Store 다운로드' },
+    nav: { features: '주요 기능', regions: '지원 지역', activities: '활동', faq: 'FAQ', launch: 'App Store 다운로드', partners: '샵 제휴' },
     hero: {
       badge: 'iOS App Store · Google Play 정식 출시',
       headline: '바다 들어가기 전,\n기상부터 시야까지',
@@ -93,9 +93,14 @@ const c = {
       primary: 'App Store에서 다운로드',
     },
     footerTagline: '해양 액티비티 기상 + 시야 예보',
+    shopBand: {
+      title: '다이브샵 · 서핑샵을 운영하고 계신가요?',
+      body: '전국 292곳을 스팟 근처 서비스로 이미 무료 등재했습니다. 내 샵이 어느 스팟에 나오는지, 그 스팟을 몇 명이 봤는지 확인해 보세요.',
+      cta: '내 샵 확인하기',
+    },
   },
   en: {
-    nav: { features: 'Features', regions: 'Regions', activities: 'Activities', faq: 'FAQ', launch: 'Download on App Store' },
+    nav: { features: 'Features', regions: 'Regions', activities: 'Activities', faq: 'FAQ', launch: 'Download on App Store', partners: 'For Shops' },
     hero: {
       badge: 'Now on App Store & Google Play',
       headline: 'Marine weather + visibility,\nbefore you dive',
@@ -183,6 +188,11 @@ const c = {
       primary: 'Download on App Store',
     },
     footerTagline: 'Marine weather + visibility forecast',
+    shopBand: {
+      title: 'Do you run a dive or surf shop?',
+      body: 'We have already listed 292 Korean shops for free as services near their spots. Check which spots your shop appears on, and how many people viewed them.',
+      cta: 'Find my shop',
+    },
   },
 } as const
 
@@ -199,9 +209,8 @@ export default function BadapongPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
           <a href="/badapong/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-400 flex items-center justify-center shadow-sm">
-              <span className="text-white text-base">🌊</span>
-            </div>
+            <img src="/badapong-icon.png" alt="Badapong" width={32} height={32}
+                 className="w-8 h-8 rounded-xl shadow-sm" />
             <div>
               <span className="font-bold text-gray-900 text-lg leading-none">Badapong</span>
               <span className="block text-[10px] text-gray-400 leading-none">바다퐁 · by Browniebase</span>
@@ -212,6 +221,7 @@ export default function BadapongPage() {
             <a href="#features" className="text-sm text-gray-600 hover:text-cyan-600 transition-colors">{t.nav.features}</a>
             <a href="#activities" className="text-sm text-gray-600 hover:text-cyan-600 transition-colors">{t.nav.activities}</a>
             <a href="#regions" className="text-sm text-gray-600 hover:text-cyan-600 transition-colors">{t.nav.regions}</a>
+            <a href="/partners.html" className="text-sm text-gray-600 hover:text-cyan-600 transition-colors">{t.nav.partners}</a>
             <a href="/salpim/" className="text-sm text-gray-500 hover:text-[#7B61FF] transition-colors">Salpim →</a>
           </div>
 
@@ -235,6 +245,8 @@ export default function BadapongPage() {
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col items-center text-center gap-8">
+            <img src="/badapong-icon.png" alt="Badapong" width={96} height={96}
+                 className="w-24 h-24 rounded-[22px] shadow-lg shadow-cyan-500/20" />
             <div className="inline-flex items-center gap-2 bg-cyan-600/10 text-cyan-700 text-sm font-medium px-4 py-1.5 rounded-full">
               <span className="w-2 h-2 bg-cyan-600 rounded-full" />
               {t.hero.badge}
@@ -378,7 +390,8 @@ export default function BadapongPage() {
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
         </div>
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <div className="text-5xl mb-6">🌊</div>
+          <img src="/badapong-icon.png" alt="Badapong" width={72} height={72}
+               className="w-18 h-18 rounded-2xl mx-auto mb-6 shadow-lg" style={{ width: 72, height: 72 }} />
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">{t.cta.title}</h2>
           <p className="text-white/90 text-lg mb-10">{t.cta.body}</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -398,15 +411,31 @@ export default function BadapongPage() {
         </div>
       </section>
 
+      {/* ── 샵 제휴 배너 ─────────────────────────────────────────── */}
+      <section className="py-14 bg-cyan-50 border-t border-cyan-100">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">{t.shopBand.title}</h2>
+          <p className="text-gray-600 leading-relaxed mb-7">{t.shopBand.body}</p>
+          <a
+            href="/partners.html"
+            className="inline-flex items-center gap-2 bg-cyan-600 text-white px-6 py-3 rounded-full font-medium hover:bg-cyan-700 transition-colors shadow-sm"
+          >
+            {t.shopBand.cta}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </a>
+        </div>
+      </section>
+
       {/* ── Footer ──────────────────────────────────────────────── */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-400 flex items-center justify-center">
-                  <span className="text-white text-base">🌊</span>
-                </div>
+                <img src="/badapong-icon.png" alt="Badapong" width={32} height={32}
+                     className="w-8 h-8 rounded-xl" />
                 <span className="font-bold text-lg">Badapong</span>
                 <span className="text-gray-500 text-sm">/ 바다퐁</span>
               </div>
@@ -415,6 +444,7 @@ export default function BadapongPage() {
             </div>
             <div className="flex flex-wrap gap-6">
               <a href="/" className="text-gray-400 hover:text-white text-sm transition-colors">Browniebase</a>
+              <a href="/partners.html" className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '샵 제휴' : 'For Shops'}</a>
               <a href="/salpim/" className="text-gray-400 hover:text-white text-sm transition-colors">Salpim</a>
               <a href={lang === 'ko' ? '/privacy-badapong.html' : '/privacy-badapong-en.html'} className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
               <a href={lang === 'ko' ? '/terms-badapong.html' : '/terms-badapong-en.html'} className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '이용약관' : 'Terms'}</a>

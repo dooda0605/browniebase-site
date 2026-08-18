@@ -5,7 +5,7 @@ type Lang = 'ko' | 'en'
 
 const t = {
   ko: {
-    nav: { apps: '앱', about: '소개', contact: '문의' },
+    nav: { apps: '앱', about: '소개', contact: '문의', partners: '제휴 문의' },
     hero: {
       badge: '브라우니베이스가 만드는 따뜻한 도구들',
       headline: '일상을 살피는 작은 도구들',
@@ -45,7 +45,7 @@ const t = {
     },
   },
   en: {
-    nav: { apps: 'Apps', about: 'About', contact: 'Contact' },
+    nav: { apps: 'Apps', about: 'About', contact: 'Contact', partners: 'For Business' },
     hero: {
       badge: 'Caring digital tools by Browniebase',
       headline: 'Small tools that look closer at everyday life',
@@ -109,6 +109,7 @@ export default function BrowniebasePage() {
             <a href="#apps" className="text-sm text-gray-600 hover:text-amber-700 transition-colors">{c.nav.apps}</a>
             <a href="#about" className="text-sm text-gray-600 hover:text-amber-700 transition-colors">{c.nav.about}</a>
             <a href="#contact" className="text-sm text-gray-600 hover:text-amber-700 transition-colors">{c.nav.contact}</a>
+            <a href="/partners.html" className="text-sm text-gray-600 hover:text-amber-700 transition-colors">{c.nav.partners}</a>
           </div>
 
           <div className="flex items-center gap-3">
@@ -153,9 +154,13 @@ export default function BrowniebasePage() {
                 className="group block bg-white border border-gray-200 rounded-3xl p-8 hover:shadow-xl hover:-translate-y-1 transition-all"
               >
                 <div className="flex items-start justify-between mb-6">
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${app.color} flex items-center justify-center shadow-md`}>
-                    <span className="text-white text-2xl font-bold">{app.icon}</span>
-                  </div>
+                  <img
+                    src="/badapong-icon.png"
+                    alt={app.name}
+                    width={56}
+                    height={56}
+                    className="w-14 h-14 rounded-2xl shadow-md"
+                  />
                   <span className={`text-xs font-medium px-3 py-1 rounded-full border ${app.statusColor}`}>{app.status}</span>
                 </div>
                 <div className="flex items-baseline gap-2 mb-2">
@@ -217,6 +222,7 @@ export default function BrowniebasePage() {
           </div>
           <div className="flex flex-wrap gap-6 text-sm">
             <a href="/badapong/" className="text-gray-400 hover:text-white transition-colors">Badapong</a>
+            <a href="/partners.html" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '제휴 문의' : 'For Business'}</a>
             <a href="/privacy-badapong.html" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
             <a href="/terms-badapong.html" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '이용약관' : 'Terms'}</a>
           </div>
