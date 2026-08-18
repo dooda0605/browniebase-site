@@ -11,3 +11,14 @@ html {
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
+
+/* ── 한글 줄바꿈 ──────────────────────────────────────────────────────────
+   기본값(break-word)은 한국어에서 어절 중간을 끊어 "…살핍니" / "다" 처럼
+   마지막 한 글자만 다음 줄로 떨어뜨린다. keep-all 로 어절을 보존하고,
+   text-wrap:balance 로 줄 길이를 고르게 맞춘다. 제목·본문 전체에 적용. */
+h1, h2, h3, h4, p, li, blockquote {
+  word-break: keep-all;
+  overflow-wrap: anywhere;   /* 아주 긴 URL 등만 예외적으로 끊는다 */
+}
+h1, h2, h3, h4 { text-wrap: balance; }
+p             { text-wrap: pretty; }

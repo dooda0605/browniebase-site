@@ -9,7 +9,8 @@ const t = {
     hero: {
       badge: '브라우니베이스가 만드는 따뜻한 도구들',
       headline: '일상을 살피는 작은 도구들',
-      subheadline: '복잡한 정보를 누구나 쉽게 이해할 수 있도록, AI와 데이터로 일상의 한 조각을 살핍니다.',
+      subheadline: '복잡한 정보를 누구나 쉽게 이해할 수 있게 만듭니다.',
+      subheadline2: 'AI와 데이터로 일상의 한 조각을 살핍니다.',
     },
     apps: {
       title: '우리가 만든 앱',
@@ -23,7 +24,8 @@ const t = {
           name: 'Badapong',
           korean: '바다퐁',
           tagline: '수중 시야 예보 앱',
-          desc: '바다 들어가기 전 시야를 예보합니다. 다이빙·스노클링·프리다이빙·해변수영 활동별 등급(A~E) 제공.',
+          desc: '바다 들어가기 전 바다 날씨부터 수중 시야까지 종합 등급으로 예보합니다.',
+          desc2: '해변수영 · 스노클링 · 프리다이빙 · 스쿠버다이빙 — 활동별 등급(A~E) 제공',
           status: 'App Store · Google Play 정식 출시',
           statusColor: 'text-green-700 bg-green-50 border-green-200',
           ctaLabel: '자세히 보기',
@@ -49,7 +51,8 @@ const t = {
     hero: {
       badge: 'Caring digital tools by Browniebase',
       headline: 'Small tools that look closer at everyday life',
-      subheadline: 'We use AI and data to help everyone understand complex information — one slice of daily life at a time.',
+      subheadline: 'We make complex information easy for anyone to understand.',
+      subheadline2: 'AI and data, one slice of daily life at a time.',
     },
     apps: {
       title: 'Our Apps',
@@ -63,7 +66,8 @@ const t = {
           name: 'Badapong',
           korean: '바다퐁',
           tagline: 'Underwater Visibility Forecast',
-          desc: 'Forecast underwater visibility before you enter the sea. A~E grades by activity (dive, snorkel, freedive, swim).',
+          desc: 'Ocean weather and underwater visibility, combined into one grade before you get in.',
+          desc2: 'Beach swim · Snorkel · Freedive · Scuba — A~E grades per activity',
           status: 'Live on App Store · Google Play',
           statusColor: 'text-green-700 bg-green-50 border-green-200',
           ctaLabel: 'Learn more',
@@ -107,7 +111,6 @@ export default function BrowniebasePage() {
 
           <div className="hidden md:flex items-center gap-6">
             <a href="#apps" className="text-sm text-gray-600 hover:text-amber-700 transition-colors">{c.nav.apps}</a>
-            <a href="#about" className="text-sm text-gray-600 hover:text-amber-700 transition-colors">{c.nav.about}</a>
             <a href="#contact" className="text-sm text-gray-600 hover:text-amber-700 transition-colors">{c.nav.contact}</a>
             <a href="/badapong/partners/" className="text-sm text-gray-600 hover:text-amber-700 transition-colors">{c.nav.partners}</a>
           </div>
@@ -135,7 +138,10 @@ export default function BrowniebasePage() {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight mb-4">
             {c.hero.headline}
           </h1>
-          <p className="text-base text-gray-600 max-w-xl mx-auto leading-relaxed">{c.hero.subheadline}</p>
+          <p className="text-base text-gray-600 max-w-xl mx-auto leading-relaxed">
+            <span className="block">{c.hero.subheadline}</span>
+            <span className="block">{c.hero.subheadline2}</span>
+          </p>
         </div>
       </section>
 
@@ -168,7 +174,8 @@ export default function BrowniebasePage() {
                   <span className="text-base text-gray-400">{app.korean}</span>
                 </div>
                 <p className="text-sm font-medium text-gray-500 mb-3">{app.tagline}</p>
-                <p className="text-sm text-gray-600 leading-relaxed mb-4">{app.desc}</p>
+                <p className="text-sm text-gray-600 leading-relaxed mb-2">{app.desc}</p>
+                <p className="text-sm text-gray-500 leading-relaxed mb-4">{app.desc2}</p>
                 <div className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-700 group-hover:gap-2.5 transition-all">
                   {app.ctaLabel}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,19 +185,6 @@ export default function BrowniebasePage() {
               </a>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ── About ───────────────────────────────────────────────── */}
-      <section id="about" className="py-14 bg-[#FAF7F2]">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <div className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-700 to-amber-500 flex items-center justify-center shadow-sm">
-              <span className="text-white text-sm font-bold">B</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900">{c.about.title}</span>
-          </div>
-          <p className="text-gray-700 text-lg leading-relaxed">{c.about.body}</p>
         </div>
       </section>
 
