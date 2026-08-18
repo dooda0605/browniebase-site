@@ -221,7 +221,7 @@ export default function BadapongPage() {
             <a href="#features" className="text-sm text-gray-600 hover:text-cyan-600 transition-colors">{t.nav.features}</a>
             <a href="#activities" className="text-sm text-gray-600 hover:text-cyan-600 transition-colors">{t.nav.activities}</a>
             <a href="#regions" className="text-sm text-gray-600 hover:text-cyan-600 transition-colors">{t.nav.regions}</a>
-            <a href="/partners.html" className="text-sm text-gray-600 hover:text-cyan-600 transition-colors">{t.nav.partners}</a>
+            <a href="/badapong/partners/" className="text-sm text-gray-600 hover:text-cyan-600 transition-colors">{t.nav.partners}</a>
             <a href="/salpim/" className="text-sm text-gray-500 hover:text-[#7B61FF] transition-colors">Salpim →</a>
           </div>
 
@@ -417,7 +417,7 @@ export default function BadapongPage() {
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">{t.shopBand.title}</h2>
           <p className="text-gray-600 leading-relaxed mb-7">{t.shopBand.body}</p>
           <a
-            href="/partners.html"
+            href="/badapong/partners/"
             className="inline-flex items-center gap-2 bg-cyan-600 text-white px-6 py-3 rounded-full font-medium hover:bg-cyan-700 transition-colors shadow-sm"
           >
             {t.shopBand.cta}
@@ -444,7 +444,7 @@ export default function BadapongPage() {
             </div>
             <div className="flex flex-wrap gap-6">
               <a href="/" className="text-gray-400 hover:text-white text-sm transition-colors">Browniebase</a>
-              <a href="/partners.html" className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '샵 제휴' : 'For Shops'}</a>
+              <a href="/badapong/partners/" className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '샵 제휴' : 'For Shops'}</a>
               <a href="/salpim/" className="text-gray-400 hover:text-white text-sm transition-colors">Salpim</a>
               <a href={lang === 'ko' ? '/privacy-badapong.html' : '/privacy-badapong-en.html'} className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
               <a href={lang === 'ko' ? '/terms-badapong.html' : '/terms-badapong-en.html'} className="text-gray-400 hover:text-white text-sm transition-colors">{lang === 'ko' ? '이용약관' : 'Terms'}</a>
