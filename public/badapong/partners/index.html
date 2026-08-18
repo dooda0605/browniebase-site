@@ -14,7 +14,15 @@
   header { background:linear-gradient(160deg,var(--deep),var(--blue)); color:#fff; padding:52px 0 44px; }
   header h1 { font-size:1.9rem; line-height:1.3; }
   header .tag { display:inline-block; background:rgba(255,255,255,.16); border-radius:99px;
-                padding:4px 14px; font-size:.82rem; margin-bottom:14px; }
+                padding:5px 14px; font-size:.82rem; white-space:nowrap; }
+  /* 로고와 태그를 한 줄에 세로 중앙으로 맞춘다. 좁은 화면에선 줄바꿈. */
+  header .brand { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
+  header .brand a { display:inline-flex; align-items:center; gap:10px;
+                    text-decoration:none; color:inherit; font-weight:800;
+                    font-size:1.05rem; letter-spacing:-.2px; }
+  header .brand img { width:44px; height:44px; border-radius:12px; display:block;
+                      box-shadow:0 2px 8px rgba(0,0,0,.18); }
+  header .brand .brand-ko { font-weight:500; opacity:.75; }
   header p { margin-top:12px; color:#d9e8f7; font-size:1.02rem; }
   section { padding:36px 0; }
   section + section { border-top:1px solid var(--line); }
@@ -56,20 +64,23 @@
   .ok { color:#0a7c46; font-weight:600; white-space:nowrap; }
   footer { padding:34px 0 46px; color:#9aa8b4; font-size:.8rem; }
   #shop-result .stat-row { border:0; padding:6px 4px; }
+  .req-tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .req-tab { border:1px solid var(--line); background:#fff; color:var(--sub);
+             border-radius:99px; padding:7px 16px; cursor:pointer; font-size:.9rem; }
+  .req-tab.on { background:var(--blue); border-color:var(--blue); color:#fff; font-weight:600; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="wrap">
-    <a href="/badapong/" style="display:inline-flex;align-items:center;gap:10px;
-       text-decoration:none;color:inherit;margin-bottom:18px">
-      <img src="/badapong-icon.png" alt="바다퐁" width="44" height="44"
-           style="width:44px;height:44px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.18)" />
-      <span style="font-weight:800;font-size:1.05rem;letter-spacing:-.2px">Badapong<span
-        style="font-weight:500;opacity:.7"> · 바다퐁</span></span>
-    </a>
-    <div class="tag">바다퐁 × 다이브샵 · 서핑샵</div>
+    <div class="brand">
+      <a href="/badapong/">
+        <img src="/badapong-icon.png" alt="바다퐁" width="44" height="44" />
+        <span>Badapong<span class="brand-ko"> · 바다퐁</span></span>
+      </a>
+      <span class="tag">바다퐁 × 다이브샵 · 서핑샵</span>
+    </div>
     <h1>그 스팟을 보러 온 사람에게만<br/>내 샵을 보여주세요</h1>
     <p>바다퐁은 스팟별 입수 가능 등급을 보여주는 바다 예보 앱입니다.<br/>
        "이번 주말 여기 들어갈 수 있나"를 확인하러 온 사람 — 그게 샵의 손님입니다.</p>
@@ -155,6 +166,42 @@
       <div style="margin-top:16px">
         <button class="btn" id="f-send">신청하기</button>
         <span id="f-status" class="muted" style="margin-left:10px"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 요청 (샵 위치 / 스팟 추가) ───────────────────────────────────────── -->
+<section>
+  <div class="wrap">
+    <h2>안 나오거나, 틀렸거나, 없을 때</h2>
+    <div class="sub">네이버 지도에서 모아온 정보라 빠지거나 어긋난 곳이 있습니다.
+      알려주시면 확인해서 반영합니다. 무료입니다.</div>
+
+    <div class="req-tabs">
+      <button class="req-tab on" data-kind="shop_location">🏪 내 샵 위치</button>
+      <button class="req-tab"    data-kind="spot">🌊 바다 스팟 추가</button>
+    </div>
+
+    <div class="card">
+      <p class="muted" id="r-help" style="margin:0 0 14px">
+        내 샵이 목록에 없거나, 엉뚱한 스팟에 붙어 있거나, 위치가 틀린 경우에 보내주세요.</p>
+
+      <label id="r-title-label">샵 이름 *</label>
+      <input id="r-title" maxlength="80" placeholder="예: 해원다이브리조트" />
+
+      <label id="r-where-label">주소 또는 지도 링크 *</label>
+      <input id="r-where" maxlength="300" placeholder="예: 강원 강릉시 사천면 진리항구1길 15 / 네이버지도 공유링크" />
+
+      <label>연락처 (전화 또는 카톡 ID) *</label>
+      <input id="r-contact" maxlength="60" placeholder="예: 010-1234-5678" />
+
+      <label>설명</label>
+      <textarea id="r-detail" maxlength="500" placeholder="어떻게 틀렸는지, 어떤 곳인지 적어주세요"></textarea>
+
+      <div style="margin-top:16px">
+        <button class="btn" id="r-send">요청 보내기</button>
+        <span id="r-status" class="muted" style="margin-left:10px"></span>
       </div>
     </div>
   </div>
@@ -257,6 +304,63 @@ document.getElementById('f-send').addEventListener('click', async () => {
     const out = await res.json();
     if (out && out.ok) { st.innerHTML = '<span class="ok">접수되었습니다. 하루 안에 연락드리겠습니다.</span>'; }
     else { st.textContent = '입력을 확인해 주세요.'; btn.disabled = false; }
+  } catch (e) { st.textContent = '일시 오류 — 잠시 후 다시 시도해 주세요.'; btn.disabled = false; }
+});
+
+// ── 요청 폼 ──────────────────────────────────────────────────────────────
+// 샵 위치 정정과 스팟 추가를 한 폼으로 받되 라벨·안내만 바꾼다.
+// 위치 단서(주소/지도링크)는 필수 — 좌표 없는 스팟 요청이 백로그에 쌓여 막힌 전례가 있다.
+let reqKind = 'shop_location';
+const REQ_UI = {
+  shop_location: {
+    help:  '내 샵이 목록에 없거나, 엉뚱한 스팟에 붙어 있거나, 위치가 틀린 경우에 보내주세요.',
+    title: '샵 이름 *',  titlePh: '예: 해원다이브리조트',
+    where: '주소 또는 지도 링크 *',
+    wherePh: '예: 강원 강릉시 사천면 진리항구1길 15 / 네이버지도 공유링크',
+    detailPh: '어떻게 틀렸는지 적어주세요',
+  },
+  spot: {
+    help:  '앱에 없는 바다를 알려주세요. 실제로 들어가는 곳이면 등급 예보 대상으로 검토합니다.',
+    title: '스팟 이름 *',  titlePh: '예: 사천진 해변 앞 여',
+    where: '위치 (주소 · 좌표 · 지도 링크) *',
+    wherePh: '예: 37.8123, 128.8567 / 네이버지도 공유링크',
+    detailPh: '어떤 활동을 하는 곳인지, 입수 지점이 어디인지 적어주세요',
+  },
+};
+document.querySelectorAll('.req-tab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.req-tab').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  reqKind = b.dataset.kind;
+  const u = REQ_UI[reqKind];
+  document.getElementById('r-help').textContent = u.help;
+  document.getElementById('r-title-label').textContent = u.title;
+  document.getElementById('r-title').placeholder = u.titlePh;
+  document.getElementById('r-where-label').textContent = u.where;
+  document.getElementById('r-where').placeholder = u.wherePh;
+  document.getElementById('r-detail').placeholder = u.detailPh;
+  document.getElementById('r-status').textContent = '';
+}));
+
+document.getElementById('r-send').addEventListener('click', async () => {
+  const st = document.getElementById('r-status');
+  const btn = document.getElementById('r-send');
+  const title = document.getElementById('r-title').value.trim();
+  const where = document.getElementById('r-where').value.trim();
+  const contact = document.getElementById('r-contact').value.trim();
+  if (title.length < 2)  { st.textContent = '이름을 입력해 주세요.'; return; }
+  if (where.length < 4)  { st.textContent = '주소나 지도 링크를 넣어주세요.'; return; }
+  if (contact.length < 5){ st.textContent = '연락처를 입력해 주세요.'; return; }
+  btn.disabled = true; st.textContent = '보내는 중...';
+  try {
+    const res = await fetch(`${SB}/rpc/submit_partner_request`, {
+      method: 'POST', headers: Object.assign({'Content-Type':'application/json'}, H),
+      body: JSON.stringify({
+        p_kind: reqKind, p_title: title, p_contact: contact, p_where: where,
+        p_detail: document.getElementById('r-detail').value.trim() || null })});
+    const out = await res.json();
+    if (out && out.ok) {
+      st.innerHTML = '<span class="ok">접수되었습니다. 확인 후 연락드리겠습니다.</span>';
+    } else { st.textContent = '입력을 확인해 주세요.'; btn.disabled = false; }
   } catch (e) { st.textContent = '일시 오류 — 잠시 후 다시 시도해 주세요.'; btn.disabled = false; }
 });
 

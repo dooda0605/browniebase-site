@@ -122,38 +122,38 @@ export default function BrowniebasePage() {
       </nav>
 
       {/* ── Hero ────────────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
+      <section className="relative pt-24 pb-10 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#FAF7F2] via-white to-amber-50/40 pointer-events-none" />
         <div className="absolute top-20 right-10 w-96 h-96 bg-amber-100/40 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-10 w-72 h-72 bg-amber-200/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <div className="inline-flex items-center gap-2 bg-amber-700/10 text-amber-800 text-sm font-medium px-4 py-1.5 rounded-full mb-6">
+          <div className="inline-flex items-center gap-2 bg-amber-700/10 text-amber-800 text-xs font-medium px-3 py-1 rounded-full mb-4">
             <span className="w-2 h-2 bg-amber-600 rounded-full"></span>
             {c.hero.badge}
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight mb-4">
             {c.hero.headline}
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">{c.hero.subheadline}</p>
+          <p className="text-base text-gray-600 max-w-xl mx-auto leading-relaxed">{c.hero.subheadline}</p>
         </div>
       </section>
 
       {/* ── Apps ────────────────────────────────────────────────── */}
-      <section id="apps" className="py-20 bg-white">
+      <section id="apps" className="py-12 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">{c.apps.title}</h2>
-            <p className="text-gray-500">{c.apps.subtitle}</p>
+          <div className="text-center mb-7">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1.5">{c.apps.title}</h2>
+            <p className="text-sm text-gray-500">{c.apps.subtitle}</p>
           </div>
           <div className="grid grid-cols-1 gap-6 max-w-xl mx-auto">
             {c.apps.list.map(app => (
               <a
                 key={app.slug}
                 href={`/${app.slug}/`}
-                className="group block bg-white border border-gray-200 rounded-3xl p-8 hover:shadow-xl hover:-translate-y-1 transition-all"
+                className="group block bg-white border border-gray-200 rounded-3xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all"
               >
-                <div className="flex items-start justify-between mb-6">
+                <div className="flex items-start justify-between mb-4">
                   <img
                     src="/badapong-icon.png"
                     alt={app.name}
@@ -167,8 +167,8 @@ export default function BrowniebasePage() {
                   <h3 className="text-2xl font-bold text-gray-900">{app.name}</h3>
                   <span className="text-base text-gray-400">{app.korean}</span>
                 </div>
-                <p className="text-sm font-medium text-gray-500 mb-4">{app.tagline}</p>
-                <p className="text-gray-600 leading-relaxed mb-6">{app.desc}</p>
+                <p className="text-sm font-medium text-gray-500 mb-3">{app.tagline}</p>
+                <p className="text-sm text-gray-600 leading-relaxed mb-4">{app.desc}</p>
                 <div className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-700 group-hover:gap-2.5 transition-all">
                   {app.ctaLabel}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,7 +182,7 @@ export default function BrowniebasePage() {
       </section>
 
       {/* ── About ───────────────────────────────────────────────── */}
-      <section id="about" className="py-20 bg-[#FAF7F2]">
+      <section id="about" className="py-14 bg-[#FAF7F2]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 mb-6">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-700 to-amber-500 flex items-center justify-center shadow-sm">
@@ -195,7 +195,7 @@ export default function BrowniebasePage() {
       </section>
 
       {/* ── Contact ─────────────────────────────────────────────── */}
-      <section id="contact" className="py-20 bg-white">
+      <section id="contact" className="py-14 bg-white">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">{c.contact.title}</h2>
           <p className="text-gray-600 mb-8">{c.contact.body}</p>
