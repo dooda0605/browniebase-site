@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { storeUrl, useDeviceOS } from './store'
+import { storeUrl, useDeviceOS, useSource } from './store'
 
 type Lang = 'ko' | 'en'
 
@@ -208,13 +208,14 @@ export default function BadapongPage() {
   const [lang, setLang] = useState<Lang>('ko')
   const t = c[lang]
   const os = useDeviceOS()
+  const src = useSource()
   // 기기에 맞는 스토어를 1순위로 (미판별 PC는 기존 순서 유지)
   const primary = os === 'android'
-    ? { href: storeUrl('android'), label: t.hero.cta2, icon: 'play' as const }
-    : { href: storeUrl('ios'), label: t.hero.cta1, icon: 'apple' as const }
+    ? { href: storeUrl('android', src), label: t.hero.cta2, icon: 'play' as const }
+    : { href: storeUrl('ios', src), label: t.hero.cta1, icon: 'apple' as const }
   const secondary = os === 'android'
-    ? { href: storeUrl('ios'), label: t.hero.cta1, icon: 'apple' as const }
-    : { href: storeUrl('android'), label: t.hero.cta2, icon: 'play' as const }
+    ? { href: storeUrl('ios', src), label: t.hero.cta1, icon: 'apple' as const }
+    : { href: storeUrl('android', src), label: t.hero.cta2, icon: 'play' as const }
 
   return (
     <main className="min-h-screen bg-white">
@@ -411,13 +412,13 @@ export default function BadapongPage() {
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">{t.cta.title}</h2>
           <p className="text-white/90 text-lg mb-10">{t.cta.body}</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a href={storeUrl('ios')} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-white text-cyan-700 px-8 py-4 rounded-full font-medium text-lg hover:bg-gray-50 transition-colors shadow-lg">
+            <a href={storeUrl('ios', src)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-white text-cyan-700 px-8 py-4 rounded-full font-medium text-lg hover:bg-gray-50 transition-colors shadow-lg">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
               </svg>
               {t.cta.primary}
             </a>
-            <a href={storeUrl('android')} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-white text-cyan-700 px-8 py-4 rounded-full font-medium text-lg hover:bg-gray-50 transition-colors shadow-lg">
+            <a href={storeUrl('android', src)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-white text-cyan-700 px-8 py-4 rounded-full font-medium text-lg hover:bg-gray-50 transition-colors shadow-lg">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M3.6 2.31c-.36.2-.6.59-.6 1.04v17.3c0 .45.24.84.6 1.04l10.18-9.69L3.6 2.31zm12.06 8.65l-2.36 2.24 2.36 2.25 3.34-1.91c.7-.4.7-1.42 0-1.83l-3.34-1.91-.01.16zm-1.4 3.55l-9.4 5.36 8.45-8.04.95 2.68zm0-7.34l-8.45-8.04 9.4 5.36-.95 2.68z" />
               </svg>

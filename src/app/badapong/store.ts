@@ -26,3 +26,17 @@ export function useDeviceOS() {
   }, [])
   return os
 }
+
+/**
+ * URL ?src= 로 들어온 유입 채널명. 없으면 'site'.
+ * 랜딩(/badapong/)과 리다이렉트(/get/) 양쪽에서 같은 값을 스토어 링크에 실어 보낸다.
+ * 예: /badapong/?src=ig_bio → 스토어 링크에 utm_source=ig_bio
+ */
+export function useSource(fallback = 'site') {
+  const [src, setSrc] = useState(fallback)
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get('src')
+    if (v && /^[\w.-]{1,40}$/.test(v)) setSrc(v)
+  }, [fallback])
+  return src
+}
