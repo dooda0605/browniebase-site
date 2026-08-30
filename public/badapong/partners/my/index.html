@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex" />
+<title>바다퐁 파트너</title>
+<!--
+  파트너 포털 v2 (2026-08-30) — PARTNER_PORTAL_V2_MEETUP_2026-08-29.md
+  초대 링크(?t=토큰) → 구글 로그인 → 샵 연결 → STEP1~3 → 모집글 작성/발행.
+  DB 계약: consume_partner_invite · my_partner_account · resubmit_verification ·
+           publish_meetup · cancel_meetup · close_meetup (meetup_01~07 마이그레이션)
+  보안: anon 키만 사용. 사업자·자격번호는 RPC/RLS 뒤에 있고 이 페이지는 본인 것만 다룬다.
+-->
+<style>
+  /* 앱과 같은 바다 팔레트 (AppTheme ocean500/teal500/deep900) */
+  :root { --blue:#1a73e8; --deep:#0b3d91; --teal:#14b8a6; --teal-l:#2dd4bf;
+          --bg:#f0f7ff; --ink:#0f1b2d; --sub:#5f6b7a;
+          --line:#d6e4f0; --ok:#0a7c46; --warn:#c7791b; --bad:#c0392b;
+          --sea: linear-gradient(135deg, #1a73e8, #14b8a6); }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo",sans-serif;
+         color:var(--ink); line-height:1.6;
+         background:var(--bg);
+         background-image:
+           radial-gradient(1100px 380px at 50% -120px, rgba(26,115,232,.10), transparent 70%),
+           radial-gradient(900px 320px at 110% 8%, rgba(20,184,166,.08), transparent 70%);
+         background-attachment:fixed; }
+  .wrap { max-width:760px; margin:0 auto; padding:0 18px 60px; }
+  header { background:linear-gradient(160deg,var(--deep) 0%,var(--blue) 55%,var(--teal) 130%);
+           color:#fff; padding:26px 0 34px; position:relative; overflow:hidden; }
+  /* 헤더 아래 물결 — 앱 아이콘의 파도와 같은 인상 */
+  header::after { content:''; position:absolute; left:0; right:0; bottom:-1px; height:26px;
+    background:var(--bg);
+    -webkit-mask:radial-gradient(28px at 50% 0, transparent 98%, #000) repeat-x 0 0/56px 26px;
+            mask:radial-gradient(28px at 50% 0, transparent 98%, #000) repeat-x 0 0/56px 26px; }
+  header .wrap { padding-bottom:0; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  header img { width:38px; height:38px; border-radius:10px; }
+  header h1 { font-size:1.15rem; }
+  header .who { margin-left:auto; font-size:.82rem; color:#d9e8f7; }
+  header .who a { color:#fff; }
+  h2 { font-size:1.1rem; margin:26px 0 10px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px;
+          margin-bottom:14px; box-shadow:0 2px 10px rgba(11,61,145,.05); }
+  label { display:block; font-size:.84rem; font-weight:600; margin:12px 0 5px; }
+  input,select,textarea,button { font:inherit; }
+  input,select,textarea { width:100%; border:1px solid var(--line); border-radius:8px;
+    padding:9px 11px; background:#fff; }
+  textarea { min-height:70px; resize:vertical; }
+  .btn { display:inline-block; background:var(--sea); color:#fff; border:0; border-radius:11px;
+    padding:11px 22px; font-weight:700; cursor:pointer;
+    box-shadow:0 3px 10px rgba(26,115,232,.28); }
+  .btn:hover { filter:brightness(1.05); }
+  .btn.sec { background:#fff; color:var(--blue); border:1px solid var(--blue); }
+  .btn.warn { background:var(--bad); }
+  .btn:disabled { opacity:.5; cursor:default; }
+  .btn.sm { padding:6px 12px; font-size:.85rem; border-radius:7px; }
+  .muted { color:var(--sub); font-size:.82rem; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .badge { display:inline-block; border-radius:99px; padding:2px 11px; font-size:.78rem; font-weight:700; }
+  .badge.on { background:#e6f5ec; color:var(--ok); }
+  .badge.off { background:#f0f3f6; color:var(--sub); font-weight:500; }
+  .badge.pend { background:#fdf3e4; color:var(--warn); }
+  .badge.rej { background:#fdeaea; color:var(--bad); }
+  .tabs { display:flex; gap:8px; margin:22px 0 4px; flex-wrap:wrap; }
+  .tab { border:1px solid var(--line); background:#fff; color:var(--sub); border-radius:99px;
+         padding:7px 18px; cursor:pointer; font-size:.9rem; }
+  .tab.on { background:var(--sea); border-color:transparent; color:#fff; font-weight:700;
+            box-shadow:0 2px 8px rgba(26,115,232,.25); }
+  .grade { display:inline-flex; width:26px; height:26px; border-radius:7px; color:#fff;
+           font-weight:800; align-items:center; justify-content:center; font-size:.85rem; }
+  .gA{background:#1e9e57}.gB{background:#7fb069}.gC{background:#e2b93b}.gD{background:#e07b39}.gE{background:#c0392b}
+  .gN{background:#aab6c0}
+  .meetup-item { border-top:1px solid var(--line); padding:13px 2px; }
+  .meetup-item:first-child { border-top:0; }
+  .meetup-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .meetup-head b { font-size:.98rem; }
+  .state-chip { font-size:.75rem; border-radius:6px; padding:1px 8px; background:#eef3f8; color:var(--sub); }
+  .slot-row { display:grid; grid-template-columns:1fr 90px 34px; gap:8px; margin-top:8px; }
+  .msg { border-radius:9px; padding:11px 13px; font-size:.88rem; margin:10px 0; display:none; }
+  .msg.ok { background:#e6f5ec; color:var(--ok); display:block; }
+  .msg.err { background:#fdeaea; color:var(--bad); display:block; }
+  .credit-pill { background:rgba(255,255,255,.20); border-radius:99px; padding:4px 14px;
+                 font-size:.85rem; font-weight:700; letter-spacing:-.2px; }
+  details { border:1px solid var(--line); border-radius:10px; padding:10px 14px; margin-top:12px; background:#fbfdff; }
+  details summary { cursor:pointer; font-weight:600; font-size:.9rem; }
+  .hidden { display:none !important; }
+  .center { text-align:center; padding:70px 0; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+  .chips label { display:inline-flex; align-items:center; gap:5px; margin:0; font-weight:500;
+                 border:1px solid var(--line); border-radius:99px; padding:5px 12px; font-size:.85rem; cursor:pointer; }
+  .chips input { width:auto; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <img src="/badapong-icon.png" alt="" />
+    <h1>바다퐁 파트너</h1>
+    <span id="hd-credit" class="credit-pill hidden">🐚 바지락 —</span>
+    <span class="who" id="hd-who"></span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- 0. 로그인 게이트 -->
+  <div id="view-login" class="center hidden">
+    <p style="font-size:1.4rem;margin-bottom:8px">🌊</p>
+    <p style="font-size:1.05rem;margin-bottom:6px"><b>샵 관리자 로그인</b></p>
+    <p class="muted" style="margin-bottom:22px">초대 링크로 받으신 페이지입니다.<br/>구글 계정으로 시작하세요 — 별도 가입이 없습니다.</p>
+    <button class="btn" id="btn-google">Google로 시작하기</button>
+    <p class="muted" style="margin-top:26px">초대 링크가 없으신가요?
+      <a href="/badapong/partners/">파트너 안내 페이지</a>에서 신청해 주세요.</p>
+  </div>
+
+  <!-- 초대 없음 -->
+  <div id="view-noinvite" class="center hidden">
+    <p style="font-size:1.05rem"><b>연결된 샵이 없습니다</b></p>
+    <p class="muted" style="margin:10px 0 22px">이 포털은 초대 링크(1회용)로만 샵과 연결됩니다.<br/>
+      받은 초대 링크를 다시 열거나, 아래에서 신청해 주세요.</p>
+    <a class="btn sec" href="/badapong/partners/">파트너 신청하기</a>
+    <p style="margin-top:18px"><a class="muted" href="#" id="btn-logout2">로그아웃</a></p>
+  </div>
+
+  <!-- 대시보드 -->
+  <div id="view-dash" class="hidden">
+    <div class="card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div>
+        <b id="shop-name" style="font-size:1.08rem">—</b>
+        <div class="muted" id="shop-addr"></div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:6px" id="badge-box"></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab on" data-tab="meetups">모집글</button>
+      <button class="tab" data-tab="verify">인증 · 배지</button>
+      <button class="tab" data-tab="profile">샵 카드</button>
+    </div>
+
+    <!-- ── 탭 1. 모집글 ─────────────────────────── -->
+    <div id="tab-meetups">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px">
+          <h2 style="margin:0">내 모집글</h2>
+          <button class="btn sm" id="btn-new" style="margin-left:auto">+ 새 모집글</button>
+        </div>
+        <div class="muted" style="margin-top:4px">발행 1건 = 🐚 바지락 1개 · 예보 악화로 취소하면 전액 돌려드립니다.</div>
+        <div id="meetup-list" style="margin-top:10px"><span class="muted">불러오는 중…</span></div>
+      </div>
+
+      <!-- 작성 폼 -->
+      <div class="card hidden" id="composer">
+        <h2 style="margin-top:0">모집글 작성</h2>
+        <label>스팟 *</label>
+        <input id="m-spot-q" placeholder="스팟 이름 검색 (예: 갈남항)" autocomplete="off" />
+        <div id="m-spot-result"></div>
+        <input type="hidden" id="m-spot-id" />
+        <div class="row2">
+          <div><label>활동 *</label>
+            <select id="m-activity">
+              <option value="freedive">프리다이빙</option><option value="scuba">스쿠버</option>
+              <option value="snorkel">스노클링</option><option value="beach_swim">해변수영</option>
+              <option value="surf">서핑 (베타 스팟만)</option>
+            </select></div>
+          <div><label>레벨</label>
+            <select id="m-level"><option value="any">누구나</option><option value="beginner">입문</option>
+              <option value="intermediate">중급</option><option value="advanced">상급</option></select></div>
+        </div>
+        <label>제목 *</label>
+        <input id="m-title" maxlength="60" placeholder="예: 일요일 아침 갈남 펀다이빙 (2다이브)" />
+        <label>회차 * <span class="muted" style="font-weight:400">— 같은 글에 시간대 여러 개 가능, 크레딧은 1</span></label>
+        <div id="slot-box"></div>
+        <button class="btn sec sm" id="btn-add-slot" style="margin-top:8px">+ 회차 추가</button>
+        <div class="row2">
+          <div><label>참가비(원)</label><input id="m-price" type="number" min="0" step="1000" placeholder="예: 90000" /></div>
+          <div><label>가격 비고</label><input id="m-price-note" placeholder="예: 장비 풀렌탈 포함" /></div>
+        </div>
+        <label>포함 사항 <span class="muted" style="font-weight:400">(쉼표로 구분)</span></label>
+        <input id="m-includes" placeholder="예: 가이드, 탱크 2개, 웨이트" />
+        <label>집결지</label>
+        <input id="m-meet" placeholder="예: 샵 앞 주차장 05:40" />
+        <label>취소 규정 * <span class="muted" style="font-weight:400">— 카드 하단에 항상 노출됩니다</span></label>
+        <textarea id="m-cancel" placeholder="예: 전날 18시까지 전액 환불, 당일 취소 50%"></textarea>
+        <label>소개</label>
+        <textarea id="m-body" placeholder="일정, 준비물, 수준 안내 등"></textarea>
+        <div class="msg" id="m-msg"></div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn" id="btn-publish">발행 (크레딧 1)</button>
+          <button class="btn sec" id="btn-draft">임시저장</button>
+          <button class="btn sec" id="btn-cancel-compose" style="margin-left:auto">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 탭 2. 인증 ─────────────────────────── -->
+    <div id="tab-verify" class="hidden">
+      <div class="card">
+        <h2 style="margin-top:0">STEP 1 — 사업자 인증 <span id="v-biz-badge"></span></h2>
+        <div class="muted">국세청 조회로 즉시 확인됩니다. 통과하면 🟢 사업자 확인 배지가 붙습니다.</div>
+        <div class="row2">
+          <div><label>사업자등록번호 *</label><input id="v-bizno" placeholder="000-00-00000" inputmode="numeric" /></div>
+          <div><label>대표자명 *</label><input id="v-ceo" placeholder="홍길동" /></div>
+        </div>
+        <div class="row2">
+          <div><label>개업일자 *</label><input id="v-open" type="date" /></div>
+          <div><label>상호(법인명) *</label><input id="v-bizname" /></div>
+        </div>
+        <div class="msg" id="v-biz-msg"></div>
+        <button class="btn" id="btn-verify-biz" style="margin-top:12px">인증하기</button>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-top:0">STEP 2 — 자격 · 보험 <span class="muted" style="font-weight:400">(선택 · 수동 검수)</span></h2>
+        <div class="muted">채우면 배지가 늘고 앱에서 더 잘 보입니다. 며칠 걸려도 괜찮습니다 — 나중에 와서 올리셔도 됩니다.</div>
+
+        <h2 style="font-size:.95rem">강사 자격 <span id="v-cert-badge"></span></h2>
+        <div class="row2">
+          <div><label>발급 단체</label>
+            <select id="v-cert-org"><option>PADI</option><option>SSI</option><option>NAUI</option>
+              <option>SDI</option><option>CMAS</option><option>기타</option></select></div>
+          <div><label>등급</label><input id="v-cert-level" placeholder="예: OWSI" /></div>
+        </div>
+        <div class="row2">
+          <div><label>자격번호</label><input id="v-cert-no" /></div>
+          <div><label>만료일 <span class="muted" style="font-weight:400">(있으면)</span></label><input id="v-cert-exp" type="date" /></div>
+        </div>
+        <label>자격증 사진 *</label>
+        <input id="v-cert-file" type="file" accept="image/*,.pdf" />
+        <div class="msg" id="v-cert-msg"></div>
+        <button class="btn sec" id="btn-verify-cert" style="margin-top:10px">검수 요청</button>
+
+        <h2 style="font-size:.95rem;margin-top:26px">배상책임보험 <span id="v-ins-badge"></span></h2>
+        <div class="row2">
+          <div><label>보험사</label><input id="v-ins-co" /></div>
+          <div><label>만기일 *</label><input id="v-ins-exp" type="date" /></div>
+        </div>
+        <label>증권 사진 *</label>
+        <input id="v-ins-file" type="file" accept="image/*,.pdf" />
+        <div class="msg" id="v-ins-msg"></div>
+        <button class="btn sec" id="btn-verify-ins" style="margin-top:10px">검수 요청</button>
+      </div>
+    </div>
+
+    <!-- ── 탭 3. 샵 카드 ─────────────────────────── -->
+    <div id="tab-profile" class="hidden">
+      <div class="card">
+        <h2 style="margin-top:0">샵 카드</h2>
+        <div class="muted">체크하면 앱 샵 상세에 회색 칩으로 바로 반영됩니다. 필수 3개만 채워도 됩니다.</div>
+
+        <label>대여 범위 *</label>
+        <select id="p-rental"><option value="">선택</option><option value="full">풀세트</option>
+          <option value="partial">부분</option><option value="none">없음</option></select>
+        <label>슈트 사이즈 *</label>
+        <div class="chips" id="p-sizes"></div>
+        <label>사전 예약 필요 *</label>
+        <select id="p-resv"><option value="">선택</option><option value="true">예약 필요</option>
+          <option value="false">워크인 가능</option></select>
+
+        <label style="margin-top:18px">기본 정보</label>
+        <div class="chips">
+          <label><input type="checkbox" id="p-beginner" /> 초보 강습 가능</label>
+        </div>
+        <div class="row2">
+          <div><label>샤워</label><select id="p-shower"><option value="">없음</option>
+            <option value="cold">냉수</option><option value="hot">온수</option></select></div>
+          <div><label>탈의실</label><select id="p-changing"><option value="">없음</option>
+            <option value="shared">공용</option><option value="gendered">남녀 분리</option></select></div>
+        </div>
+        <div class="row2">
+          <div><label>주차</label><select id="p-parking"><option value="">없음</option>
+            <option value="paid">유료</option><option value="free">무료</option></select></div>
+          <div><label>사용 언어</label><input id="p-langs" placeholder="예: ko, en" /></div>
+        </div>
+
+        <details>
+          <summary>더 자세히 (선택)</summary>
+          <label>대여 가격 안내</label>
+          <input id="p-price-note" placeholder="예: 풀세트 3만원, 슈트만 1만원" />
+          <label>자유 소개 (300자)</label>
+          <textarea id="p-free" maxlength="300"></textarea>
+        </details>
+
+        <div class="msg" id="p-msg"></div>
+        <button class="btn" id="btn-save-profile" style="margin-top:14px">저장</button>
+      </div>
+    </div>
+
+    <p style="margin-top:26px"><a class="muted" href="#" id="btn-logout">로그아웃</a></p>
+  </div>
+
+  <div id="view-loading" class="center"><span class="muted">확인 중…</span></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL = 'https://gprgkcouugiwrfnbcsjz.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwcmdrY291dWdpd3JmbmJjc2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTUyMTksImV4cCI6MjA4OTkzMTIxOX0.E9EGnluU7JLqizT6X1CnjumoPzmsflSYnyqttklOgLg';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const show = id => {
+  for (const v of ['view-login','view-noinvite','view-dash','view-loading'])
+    $(v).classList.toggle('hidden', v !== id);
+};
+const msg = (id, text, ok) => { const el=$(id); el.textContent=text; el.className='msg '+(ok?'ok':'err'); };
+const ACT_KO = {beach_swim:'해변수영',snorkel:'스노클링',freedive:'프리다이빙',scuba:'스쿠버',surf:'서핑'};
+const SIZES = ['XS','S','M','L','XL','2XL','3XL'];
+
+let me = null;         // my_partner_account 결과
+let uid = null;
+
+// ── 부팅 ─────────────────────────────────────────────
+init();
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  const token = new URLSearchParams(location.search).get('t');
+
+  if (!session) { show('view-login'); return; }
+  uid = session.user.id;
+  $('hd-who').innerHTML = esc(session.user.email || '');
+
+  // 초대 토큰이 붙어 왔으면 소진 시도 (이미 연결돼 있으면 RPC가 already=true 로 무해하게 응답)
+  if (token) {
+    const { data, error } = await sb.rpc('consume_partner_invite', { p_token: token });
+    if (!error && data && data.ok) {
+      history.replaceState(null, '', location.pathname);   // 토큰을 주소창에서 제거
+    } else if (!error && data && !data.ok && data.reason !== 'already_used') {
+      // already_used 인데 내 계정이 없으면 아래 no_account 분기로 떨어진다
+      console.warn('invite:', data.reason);
+    }
+  }
+
+  const { data, error } = await sb.rpc('my_partner_account');
+  if (error || !data || !data.ok) {
+    show(data && data.reason === 'no_account' ? 'view-noinvite' : 'view-noinvite');
+    return;
+  }
+  me = data;
+  renderDash();
+  show('view-dash');
+  loadMeetups();
+}
+
+$('btn-google').onclick = async () => {
+  await sb.auth.signInWithOAuth({ provider: 'google',
+    options: { redirectTo: location.origin + location.pathname + location.search } });
+};
+const logout = async e => { e.preventDefault(); await sb.auth.signOut(); location.href = location.pathname; };
+$('btn-logout').onclick = logout;
+$('btn-logout2').onclick = logout;
+
+// ── 대시보드 렌더 ────────────────────────────────────
+function renderDash() {
+  $('shop-name').textContent = (me.shop && me.shop.name) || '내 샵';
+  $('shop-addr').textContent = (me.shop && me.shop.address) || '';
+  // 크레딧의 이름은 「바지락」이다 — 갯벌에서 캐 모으는 느낌이라
+  // '충전/차감' 같은 금융 용어보다 부드럽고, 우리 앱의 바다 세계관에 맞는다.
+  $('hd-credit').textContent = '🐚 바지락 ' + me.credits + '개';
+  $('hd-credit').classList.remove('hidden');
+
+  const b = me.badges || {};
+  $('badge-box').innerHTML =
+    `<span class="badge ${b.business?'on':'off'}">${b.business?'✓ ':''}사업자</span>` +
+    `<span class="badge ${b.cert?'on':'off'}">${b.cert?'✓ ':''}자격</span>` +
+    `<span class="badge ${b.insurance?'on':'off'}">${b.insurance?'✓ ':''}보험</span>`;
+
+  // 인증 상태 뱃지
+  const vmap = {};
+  (me.verifications || []).forEach(v => vmap[v.kind] = v);
+  const vbadge = v => !v ? '' :
+    v.state === 'approved' ? '<span class="badge on">✓ 승인</span>' :
+    v.state === 'pending'  ? '<span class="badge pend">검수 중</span>' :
+    `<span class="badge rej">반려${v.reject_reason ? ' — '+esc(v.reject_reason) : ''}</span>`;
+  $('v-biz-badge').innerHTML  = vbadge(vmap.business);
+  $('v-cert-badge').innerHTML = vbadge(vmap.cert);
+  $('v-ins-badge').innerHTML  = vbadge(vmap.insurance);
+
+  // 프로필 채우기
+  const p = me.profile || {};
+  $('p-rental').value = p.rental_scope || '';
+  $('p-resv').value = p.reservation_required === null || p.reservation_required === undefined
+    ? '' : String(p.reservation_required);
+  $('p-beginner').checked = !!p.beginner_ok;
+  $('p-langs').value = (p.languages || []).join(', ');
+  $('p-price-note').value = p.price_note || '';
+  $('p-free').value = p.free_text || '';
+  const f = p.facilities || {};
+  $('p-shower').value = f.shower || ''; $('p-changing').value = f.changing || '';
+  $('p-parking').value = f.parking || '';
+  $('p-sizes').innerHTML = SIZES.map(s =>
+    `<label><input type="checkbox" value="${s}" ${ (p.suit_sizes||[]).includes(s)?'checked':'' }/> ${s}</label>`).join('');
+}
+
+// 탭 전환
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
+  for (const k of ['meetups','verify','profile'])
+    $('tab-'+k).classList.toggle('hidden', t.dataset.tab !== k);
+});
+
+// ── 모집글 목록 ──────────────────────────────────────
+async function loadMeetups() {
+  const { data: rows, error } = await sb.from('meetups')
+    .select('id,title,activity,state,forecast_grade,first_starts_at,cancel_reason')
+    .eq('creator_user_id', uid).order('created_at', { ascending: false }).limit(30);
+  if (error) { $('meetup-list').innerHTML = '<span class="muted">불러오기 실패</span>'; return; }
+  if (!rows.length) { $('meetup-list').innerHTML = '<span class="muted">아직 없습니다. 첫 모집글을 올려보세요.</span>'; return; }
+
+  const ids = rows.map(r => r.id);
+  const { data: slots } = await sb.from('meetup_slots_public')
+    .select('meetup_id,starts_at,capacity,seats_left').in('meetup_id', ids);
+  const slotsBy = {};
+  (slots || []).forEach(s => (slotsBy[s.meetup_id] = slotsBy[s.meetup_id] || []).push(s));
+
+  const stateKo = { draft:'임시저장', published:'모집 중', closed:'마감', cancelled:'취소됨' };
+  $('meetup-list').innerHTML = rows.map(r => {
+    const ss = (slotsBy[r.id] || []).sort((a,b)=>a.starts_at<b.starts_at?-1:1)
+      .map(s => `${fmtDt(s.starts_at)} · 잔여 ${s.seats_left}/${s.capacity}`).join('<br/>');
+    const g = r.forecast_grade;
+    return `<div class="meetup-item">
+      <div class="meetup-head">
+        <span class="grade ${g?'g'+g:'gN'}">${g||'–'}</span>
+        <b>${esc(r.title || '(제목 없음)')}</b>
+        <span class="state-chip">${stateKo[r.state]||r.state}${r.cancel_reason?' · '+r.cancel_reason:''}</span>
+        <span style="margin-left:auto;display:flex;gap:6px">
+          ${r.state==='draft' ? `<button class="btn sm" onclick="publishNow('${r.id}')">발행</button>` : ''}
+          ${r.state==='published' ? `<button class="btn sec sm" onclick="closeNow('${r.id}')">마감</button>
+            <button class="btn warn sm" onclick="cancelNow('${r.id}')">취소</button>` : ''}
+        </span>
+      </div>
+      <div class="muted">${ACT_KO[r.activity]||r.activity}${ss?'<br/>'+ss:''}</div>
+    </div>`;
+  }).join('');
+}
+const fmtDt = iso => { const d = new Date(iso);
+  return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+
+// 발행 결과 사유 → 한국어
+const PUB_REASON = {
+  no_credit:'🐚 바지락이 부족합니다. 충전 문의: 카톡 채널', no_slot:'회차를 1개 이상 넣어주세요.',
+  past_slot:'지난 시각의 회차가 있습니다.', cancel_policy_required:'취소 규정은 필수입니다.',
+  spot_inactive:'해당 스팟은 현재 비활성 상태입니다.', surf_not_supported:'서핑 베타 스팟이 아닙니다.',
+  activity_not_supported:'이 스팟이 지원하지 않는 활동입니다.',
+  activity_shop_kind_mismatch:'서핑샵은 스쿠버 모집을 올릴 수 없습니다.',
+  partner_suspended:'계정 상태를 확인해 주세요.', not_draft:'이미 발행된 글입니다.' };
+
+window.publishNow = async id => {
+  const { data, error } = await sb.rpc('publish_meetup', { p_meetup: id });
+  if (error || !data.ok) { alert(PUB_REASON[data && data.reason] || '발행 실패: ' + ((data&&data.reason)||error.message)); return; }
+  let m = '발행 완료! 현재 예보 등급: ' + (data.forecast_grade || '없음');
+  if (data.interested > 0) m += `\n이 날짜에 관심을 눌러둔 사용자 ${data.interested}명에게 노출됩니다.`;
+  alert(m); refreshAll();
+};
+window.closeNow = async id => {
+  if (!confirm('모집을 마감할까요? (바지락은 소진됩니다)')) return;
+  await sb.rpc('close_meetup', { p_meetup: id }); refreshAll();
+};
+window.cancelNow = async id => {
+  const r = prompt('취소 사유를 입력하세요:\n1 = 기상 악화 (예보가 나빠졌으면 바지락 전액 반환)\n2 = 인원 미달\n3 = 샵 사정\n4 = 자진 취소(24h 내·신청 0명이면 반환)', '1');
+  const map = {1:'weather',2:'shortfall',3:'shop',4:'self'};
+  if (!map[r]) return;
+  const { data, error } = await sb.rpc('cancel_meetup', { p_meetup: id, p_reason: map[r] });
+  if (error || !data.ok) { alert('취소 실패: ' + ((data&&data.reason)||error.message)); return; }
+  alert(data.refunded ? '취소 완료 — 🐚 바지락 1개를 돌려드렸습니다.' : '취소 완료 (바지락 반환 없음)');
+  refreshAll();
+};
+async function refreshAll() {
+  const { data } = await sb.rpc('my_partner_account');
+  if (data && data.ok) { me = data; renderDash(); }
+  loadMeetups();
+}
+
+// ── 작성 폼 ─────────────────────────────────────────
+$('btn-new').onclick = () => { $('composer').classList.remove('hidden'); addSlotRow(); window.scrollTo({top:$('composer').offsetTop-20,behavior:'smooth'}); };
+$('btn-cancel-compose').onclick = () => { $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; };
+$('btn-add-slot').onclick = addSlotRow;
+function addSlotRow() {
+  const div = document.createElement('div');
+  div.className = 'slot-row';
+  div.innerHTML = `<input type="datetime-local" class="s-dt" />
+    <input type="number" class="s-cap" min="1" max="40" placeholder="좌석" />
+    <button class="btn sec sm" onclick="this.parentElement.remove()">✕</button>`;
+  $('slot-box').appendChild(div);
+}
+
+// 스팟 검색 (spots 는 anon 공개 읽기)
+let spotTimer;
+$('m-spot-q').addEventListener('input', e => {
+  clearTimeout(spotTimer);
+  const q = e.target.value.trim();
+  $('m-spot-id').value = '';
+  if (q.length < 2) { $('m-spot-result').innerHTML=''; return; }
+  spotTimer = setTimeout(async () => {
+    const { data } = await sb.from('spots').select('id,name,activities,surf_beta')
+      .eq('is_active', true).ilike('name->>ko', `%${q}%`).limit(6);
+    $('m-spot-result').innerHTML = (data||[]).map(s =>
+      `<div class="stat-row" style="cursor:pointer;padding:7px 4px;border-bottom:1px solid var(--line)"
+         onclick="pickSpot('${s.id}', '${esc(s.name && s.name.ko)}')">📍 ${esc(s.name && s.name.ko)}</div>`).join('')
+      || '<div class="muted">검색 결과 없음</div>';
+  }, 250);
+});
+window.pickSpot = (id, name) => {
+  $('m-spot-id').value = id; $('m-spot-q').value = name; $('m-spot-result').innerHTML = '';
+};
+
+async function saveDraft() {
+  const spot = $('m-spot-id').value;
+  if (!spot) { msg('m-msg','스팟을 선택해 주세요.',false); return null; }
+  if (!$('m-title').value.trim()) { msg('m-msg','제목을 입력해 주세요.',false); return null; }
+  const slots = [...document.querySelectorAll('.slot-row')].map(r => ({
+    starts_at: r.querySelector('.s-dt').value, capacity: +r.querySelector('.s-cap').value || 0 }))
+    .filter(s => s.starts_at && s.capacity > 0);
+  if (!slots.length) { msg('m-msg','회차(시각·좌석)를 1개 이상 넣어주세요.',false); return null; }
+
+  const { data: mrow, error } = await sb.from('meetups').insert({
+    host_kind: 'shop', partner_id: me.partner_id, creator_user_id: uid,
+    spot_id: spot, activity: $('m-activity').value,
+    title: $('m-title').value.trim(), body: $('m-body').value.trim() || null,
+    level: $('m-level').value, price: +$('m-price').value || null,
+    price_note: $('m-price-note').value.trim() || null,
+    includes: $('m-includes').value.split(',').map(s=>s.trim()).filter(Boolean),
+    meet_point: $('m-meet').value.trim() || null,
+    cancel_policy: $('m-cancel').value.trim() || null,
+  }).select('id').single();
+  if (error) { msg('m-msg','저장 실패: '+error.message,false); return null; }
+
+  const { error: se } = await sb.from('meetup_slots').insert(slots.map(s => ({
+    meetup_id: mrow.id, starts_at: new Date(s.starts_at).toISOString(), capacity: s.capacity })));
+  if (se) { msg('m-msg', se.message.includes('personal') ? '정원 범위를 확인해 주세요.' : '회차 저장 실패: '+se.message, false); return null; }
+  return mrow.id;
+}
+$('btn-draft').onclick = async () => {
+  const id = await saveDraft();
+  if (id) { msg('m-msg','임시저장 완료. 목록에서 [발행]을 누르면 게시됩니다.',true); refreshAll(); }
+};
+$('btn-publish').onclick = async () => {
+  if (!$('m-cancel').value.trim()) { msg('m-msg','취소 규정은 필수입니다 — 발행 전에 채워주세요.',false); return; }
+  const id = await saveDraft();
+  if (!id) return;
+  const { data, error } = await sb.rpc('publish_meetup', { p_meetup: id });
+  if (error || !data.ok) { msg('m-msg', PUB_REASON[data && data.reason] || '발행 실패: '+((data&&data.reason)||error.message), false); return; }
+  let m = '발행 완료! 현재 예보 등급: ' + (data.forecast_grade || '없음 (예보 없는 기간)');
+  if (data.interested > 0) m += ` · 관심 사용자 ${data.interested}명에게 알림 대상`;
+  msg('m-msg', m, true);
+  $('composer').classList.add('hidden'); $('slot-box').innerHTML='';
+  refreshAll();
+};
+
+// ── STEP 1 사업자 인증 ───────────────────────────────
+$('btn-verify-biz').onclick = async () => {
+  const bizno = $('v-bizno').value.replace(/\D/g,'');
+  const payload = { biz_no: bizno, ceo: $('v-ceo').value.trim(),
+                    open_date: $('v-open').value, name: $('v-bizname').value.trim() };
+  if (bizno.length !== 10 || !payload.ceo || !payload.open_date) {
+    msg('v-biz-msg','사업자번호 10자리·대표자명·개업일자를 확인해 주세요.',false); return;
+  }
+  $('btn-verify-biz').disabled = true;
+  msg('v-biz-msg','국세청에 확인 중…',true);
+  try {
+    const { data, error } = await sb.functions.invoke('verify-business', { body: payload });
+    if (error) throw error;
+    if (data.ok) {
+      msg('v-biz-msg','✓ 인증 완료 — 사업자 확인 배지가 붙었습니다.',true);
+      refreshAll();
+    } else {
+      msg('v-biz-msg', (data.message || '확인되지 않았습니다.') + ' 수동 검수로 접수했습니다 — 확인 후 연락드립니다.', false);
+      await sb.rpc('resubmit_verification', { p_kind:'business', p_payload: payload });
+    }
+  } catch (e) {
+    // edge function 미배포/장애 → 수동 검수 경로로 접수만 해 둔다
+    await sb.rpc('resubmit_verification', { p_kind:'business', p_payload: payload });
+    msg('v-biz-msg','자동 확인이 지금 불가하여 수동 검수로 접수했습니다. 영업일 1일 내 처리됩니다.',true);
+  }
+  $('btn-verify-biz').disabled = false;
+};
+
+// ── STEP 2 자격 · 보험 ───────────────────────────────
+async function uploadEvidence(kind, file) {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const path = `${uid}/${kind}-${Date.now()}.${ext}`;
+  const { error } = await sb.storage.from('partner-evidence').upload(path, file, { upsert: true });
+  if (error) throw error;
+  return path;
+}
+$('btn-verify-cert').onclick = async () => {
+  const file = $('v-cert-file').files[0];
+  if (!file) { msg('v-cert-msg','자격증 사진을 올려주세요.',false); return; }
+  try {
+    const path = await uploadEvidence('cert', file);
+    const exp = $('v-cert-exp').value || null;
+    const { data } = await sb.rpc('resubmit_verification', { p_kind:'cert',
+      p_payload: { org: $('v-cert-org').value, level: $('v-cert-level').value.trim(),
+                   no: $('v-cert-no').value.trim(), expires: exp },
+      p_evidence_url: path });
+    msg('v-cert-msg', data && data.ok ? '접수 완료 — 검수 후 배지가 붙습니다.' : '접수 실패: '+(data&&data.reason), !!(data&&data.ok));
+    refreshAll();
+  } catch (e) { msg('v-cert-msg','업로드 실패: '+e.message,false); }
+};
+$('btn-verify-ins').onclick = async () => {
+  const file = $('v-ins-file').files[0];
+  if (!file || !$('v-ins-exp').value) { msg('v-ins-msg','증권 사진과 만기일을 넣어주세요.',false); return; }
+  try {
+    const path = await uploadEvidence('insurance', file);
+    const { data } = await sb.rpc('resubmit_verification', { p_kind:'insurance',
+      p_payload: { insurer: $('v-ins-co').value.trim(), expires: $('v-ins-exp').value },
+      p_evidence_url: path });
+    msg('v-ins-msg', data && data.ok ? '접수 완료 — 검수 후 배지가 붙습니다.' : '접수 실패: '+(data&&data.reason), !!(data&&data.ok));
+    refreshAll();
+  } catch (e) { msg('v-ins-msg','업로드 실패: '+e.message,false); }
+};
+
+// ── STEP 3 샵 카드 저장 ──────────────────────────────
+$('btn-save-profile').onclick = async () => {
+  const sizes = [...document.querySelectorAll('#p-sizes input:checked')].map(i => i.value);
+  const facilities = Object.assign({}, (me.profile && me.profile.facilities) || {});
+  for (const [k, el] of [['shower','p-shower'],['changing','p-changing'],['parking','p-parking']]) {
+    const v = $(el).value; if (v) facilities[k] = v; else delete facilities[k];
+  }
+  const patch = {
+    partner_id: me.partner_id,
+    rental_scope: $('p-rental').value || null,
+    suit_sizes: sizes,
+    reservation_required: $('p-resv').value === '' ? null : $('p-resv').value === 'true',
+    beginner_ok: $('p-beginner').checked,
+    languages: $('p-langs').value.split(',').map(s=>s.trim()).filter(Boolean),
+    price_note: $('p-price-note').value.trim() || null,
+    free_text: $('p-free').value.trim() || null,
+    facilities, updated_at: new Date().toISOString(),
+  };
+  const { error } = await sb.from('partner_profiles').upsert(patch);
+  msg('p-msg', error ? '저장 실패: '+error.message : '저장 완료 — 앱에 바로 반영됩니다.', !error);
+  if (!error) refreshAll();
+};
+</script>
+</body>
+</html>
