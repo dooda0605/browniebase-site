@@ -169,6 +169,16 @@
             <select id="m-level"><option value="any">누구나</option><option value="beginner">입문</option>
               <option value="intermediate">중급</option><option value="advanced">상급</option></select></div>
         </div>
+        <div class="row2">
+          <div><label>모임 유형</label>
+            <select id="m-type">
+              <option value="normal">일반</option>
+              <option value="lesson">강습</option>
+              <option value="trial">체험</option>
+            </select></div>
+          <div><label>대표 사진 <span class="muted" style="font-weight:400">— 목록 카드에 걸립니다</span></label>
+            <input id="m-thumb" type="file" accept="image/*" /></div>
+        </div>
         <label>제목 *</label>
         <input id="m-title" maxlength="60" placeholder="예: 일요일 아침 갈남 펀다이빙 (2다이브)" />
         <label>회차 * <span class="muted" style="font-weight:400">— 같은 글에 시간대 여러 개 가능, 크레딧은 1</span></label>
@@ -182,13 +192,13 @@
         <input id="m-includes" placeholder="예: 가이드, 탱크 2개, 웨이트" />
         <label>집결지</label>
         <input id="m-meet" placeholder="예: 샵 앞 주차장 05:40" />
-        <label>취소 규정 * <span class="muted" style="font-weight:400">— 카드 하단에 항상 노출됩니다</span></label>
+        <label>취소 규정 <span class="muted" style="font-weight:400" id="m-cancel-note">— 참가비를 받으면 필수입니다. 카드 하단에 항상 노출됩니다</span></label>
         <textarea id="m-cancel" placeholder="예: 전날 18시까지 전액 환불, 당일 취소 50%"></textarea>
         <label>소개</label>
         <textarea id="m-body" placeholder="일정, 준비물, 수준 안내 등"></textarea>
         <div class="msg" id="m-msg"></div>
         <div style="display:flex;gap:8px;margin-top:14px">
-          <button class="btn" id="btn-publish">발행 (크레딧 1)</button>
+          <button class="btn" id="btn-publish">발행 (🦪 1개)</button>
           <button class="btn sec" id="btn-draft">임시저장</button>
           <button class="btn sec" id="btn-cancel-compose" style="margin-left:auto">닫기</button>
         </div>
@@ -476,7 +486,7 @@ async function refreshAll() {
 
 // ── 작성 폼 ─────────────────────────────────────────
 $('btn-new').onclick = () => { $('composer').classList.remove('hidden'); addSlotRow(); window.scrollTo({top:$('composer').offsetTop-20,behavior:'smooth'}); };
-$('btn-cancel-compose').onclick = () => { $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; };
+$('btn-cancel-compose').onclick = () => { $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; $('m-thumb').value=''; };
 $('btn-add-slot').onclick = addSlotRow;
 function addSlotRow() {
   const div = document.createElement('div');
@@ -516,15 +526,30 @@ async function saveDraft() {
     .filter(s => s.starts_at && s.capacity > 0);
   if (!slots.length) { msg('m-msg','회차(시각·좌석)를 1개 이상 넣어주세요.',false); return null; }
 
+  // 대표 사진은 글 행을 만들기 전에 올린다 — 실패하면 아예 저장하지 않는다.
+  let images = [];
+  const file = $('m-thumb').files && $('m-thumb').files[0];
+  if (file) {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    // 경로 첫 칸이 uid 여야 스토리지 정책(meetup_images_own_write)을 통과한다.
+    const path = `${uid}/meetup/new/${Date.now()}.${ext}`;
+    const up = await sb.storage.from('meetup-images')
+      .upload(path, file, { contentType: file.type || 'image/jpeg' });
+    if (up.error) { msg('m-msg','사진 업로드 실패: '+up.error.message,false); return null; }
+    images = [sb.storage.from('meetup-images').getPublicUrl(path).data.publicUrl];
+  }
+
   const { data: mrow, error } = await sb.from('meetups').insert({
     host_kind: 'shop', partner_id: me.partner_id, creator_user_id: uid,
     spot_id: spot, activity: $('m-activity').value,
     title: $('m-title').value.trim(), body: $('m-body').value.trim() || null,
     level: $('m-level').value, price: +$('m-price').value || null,
+    meetup_type: $('m-type').value,
     price_note: $('m-price-note').value.trim() || null,
     includes: $('m-includes').value.split(',').map(s=>s.trim()).filter(Boolean),
     meet_point: $('m-meet').value.trim() || null,
     cancel_policy: $('m-cancel').value.trim() || null,
+    images,
   }).select('id').single();
   if (error) { msg('m-msg','저장 실패: '+error.message,false); return null; }
 
@@ -538,7 +563,10 @@ $('btn-draft').onclick = async () => {
   if (id) { msg('m-msg','임시저장 완료. 목록에서 [발행]을 누르면 게시됩니다.',true); refreshAll(); }
 };
 $('btn-publish').onclick = async () => {
-  if (!$('m-cancel').value.trim()) { msg('m-msg','취소 규정은 필수입니다 — 발행 전에 채워주세요.',false); return; }
+  // 서버(publish_meetup)와 같은 규칙: 돈을 받을 때만 취소 규정을 요구한다.
+  if ((+$('m-price').value || 0) > 0 && !$('m-cancel').value.trim()) {
+    msg('m-msg','참가비를 받는 모집은 취소 규정이 필수입니다 — 발행 전에 채워주세요.',false); return;
+  }
   const id = await saveDraft();
   if (!id) return;
   const { data, error } = await sb.rpc('publish_meetup', { p_meetup: id });
@@ -546,7 +574,7 @@ $('btn-publish').onclick = async () => {
   let m = '발행 완료! 현재 예보 등급: ' + (data.forecast_grade || '없음 (예보 없는 기간)');
   if (data.interested > 0) m += ` · 관심 사용자 ${data.interested}명에게 알림 대상`;
   msg('m-msg', m, true);
-  $('composer').classList.add('hidden'); $('slot-box').innerHTML='';
+  $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; $('m-thumb').value='';
   refreshAll();
 };
 
