@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>바다퐁 파트너 — 다이브샵·서핑샵 모임 모집</title>
-<meta name="description" content="바다 예보 등급이 같이 붙는 모집글. 다이브샵·서핑샵이 스팟·날짜별로 손님을 모으고, 바다가 나빠지면 🦪 바지락을 전액 돌려받습니다." />
+<meta name="description" content="바다 예보 등급이 같이 붙는 모집글. 다이브샵·서핑샵이 스팟·날짜별로 손님을 모으고, 바다가 나빠지면 🎫 바지락을 전액 돌려받습니다." />
 <style>
   /* 앱·포털과 같은 바다 팔레트 (AppTheme ocean500/teal500/deep900) */
   :root { --blue:#1a73e8; --deep:#0b3d91; --teal:#14b8a6; --bg:#f0f7ff;
@@ -57,11 +57,15 @@
   .tier { background:#fff; border:1px solid var(--line); border-radius:16px; padding:22px 18px;
           position:relative; box-shadow:0 2px 10px rgba(11,61,145,.05); }
   .tier.hot { border:2px solid var(--blue); box-shadow:0 6px 20px rgba(26,115,232,.14); }
-  .tier .clam { font-size:1.6rem; line-height:1; margin-bottom:4px; }
+  .tier .clam { font-size:1.5rem; line-height:1; margin-bottom:4px; }
+  /* 수량은 숫자로 읽혀야 한다 — 아이콘 개수로는 5·10·20 이 구분되지 않는다 */
+  .tier .clam .qty { font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+                     font-weight:800; font-variant-numeric:tabular-nums;
+                     color:var(--ocean); }
   /* "개당 6,000원"이 줄바꿈되면서 '원'만 아래로 떨어지던 것 방지 */
   .tier .price small { white-space:nowrap; display:inline-block; margin-top:2px; }
   .badge3 { display:inline-flex; align-items:center; gap:3px; background:rgba(10,124,70,.12);
-            color:#0a7c46; border-radius:99px; padding:3px 10px; font-size:.78rem; font-weight:800; }
+            color:#34D399; border-radius:99px; padding:3px 10px; font-size:.78rem; font-weight:800; }
   .tier .badge { position:absolute; top:-11px; left:16px; background:var(--sea); color:#fff;
     font-size:.72rem; font-weight:700; border-radius:99px; padding:2px 10px; }
   .tier h3 { font-size:1.02rem; }
@@ -82,7 +86,7 @@
   .step::before { counter-increment:s; content:counter(s); position:absolute; left:16px; top:13px;
     width:24px; height:24px; border-radius:50%; background:var(--deep); color:#fff;
     font-size:.8rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
-  .ok { color:#0a7c46; font-weight:600; white-space:nowrap; }
+  .ok { color:#34D399; font-weight:600; white-space:nowrap; }
   footer { padding:34px 0 46px; color:#9aa8b4; font-size:.8rem; }
   #shop-result .stat-row { border:0; padding:6px 4px; }
   .req-tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
@@ -100,7 +104,7 @@
         <img src="/badapong-icon.png" alt="바다퐁" width="44" height="44" />
         <span>Badapong<span class="brand-ko"> · 바다퐁</span></span>
       </a>
-      <span class="tag">🦪 바다퐁 파트너 · 다이브샵 · 서핑샵</span>
+      <span class="tag">🎫 바다퐁 파트너 · 다이브샵 · 서핑샵</span>
     </div>
     <h1>바다 상태를 아는 곳에서<br/>손님을 모으세요</h1>
     <p>카톡 오픈방은 사람을 모을 수 있지만 <b>바다를 모릅니다.</b><br/>
@@ -119,7 +123,7 @@
           그 시각 그 스팟의 A~E 등급이 카드에 그대로 나옵니다. 손님이 "갈 만한 날인지"를 보고 신청합니다.</div>
         <div class="step"><b>이미 그 바다를 보러 온 사람에게 보입니다.</b> 지나가는 사람이 아니라
           날짜까지 정하고 컨디션을 확인하러 들어온 사람입니다.</div>
-        <div class="step"><b>바다가 나빠져 취소하면 🦪 바지락을 전액 돌려드립니다.</b>
+        <div class="step"><b>바다가 나빠져 취소하면 🎫 바지락을 전액 돌려드립니다.</b>
           예보가 2등급 이상 떨어지거나 D·E로 들어가면 <b>자동 판정</b>입니다 —
           신고하실 필요가 없습니다. 무리해서 강행할 이유를 없애려고 만든 규칙입니다.</div>
       </div>
@@ -168,7 +172,7 @@
         <div class="step"><b>사업자 인증 5분.</b> 사업자등록번호·대표자명·개업일자만 넣으면
           국세청 조회로 즉시 확인됩니다. 여기까지만 해도 모집글을 쓸 수 있습니다.</div>
         <div class="step"><b>모집글을 올립니다.</b> 스팟·날짜·시간대·좌석·참가비를 넣으면 끝입니다.
-          같은 날 오전/오후 두 회차를 한 글에 넣어도 🦪 바지락은 1개만 나갑니다.</div>
+          같은 날 오전/오후 두 회차를 한 글에 넣어도 🎫 바지락은 1개만 나갑니다.</div>
         <div class="step"><b>앱 안에서 대화합니다.</b> 신청하면 채팅방이 열립니다.
           전화번호를 받지 않으므로 개인정보 동의 절차가 없습니다.</div>
       </div>
@@ -178,25 +182,25 @@
 
 <section>
   <div class="wrap">
-    <h2>🦪 바지락</h2>
+    <h2>🎫 바지락</h2>
     <div class="sub"><b>모집글 1건 발행 = 바지락 1개.</b> 신청이 0명이든 10명이든 같습니다 —
       몇 명이 올지 모르는데 비용이 달라지면 예산을 세울 수 없으니까요.</div>
 
     <div class="tiers">
       <div class="tier">
-        <div class="clam">🦪</div>
-        <h3>5개</h3>
+        <div class="clam"><span class="qty">5</span> 🎫</div>
+        <h3>바지락 5개</h3>
         <div class="price">30,000원<br><small>개당 6,000원</small></div>
       </div>
       <div class="tier hot">
         <div class="badge">추천</div>
-        <div class="clam">🦪🦪</div>
-        <h3>10개</h3>
+        <div class="clam"><span class="qty">10</span> 🎫</div>
+        <h3>바지락 10개</h3>
         <div class="price">50,000원<br><small>개당 5,000원</small></div>
       </div>
       <div class="tier">
-        <div class="clam">🦪🦪🦪</div>
-        <h3>20개</h3>
+        <div class="clam"><span class="qty">20</span> 🎫</div>
+        <h3>바지락 20개</h3>
         <div class="price">80,000원<br><small>개당 4,000원</small></div>
       </div>
     </div>
@@ -224,7 +228,7 @@
 <section id="apply">
   <div class="wrap">
     <h2>파일럿 신청</h2>
-    <div class="sub">모집글 발행·신청자 관리·🦪 바지락은 <b>내 샵 페이지</b>에서 처리합니다.
+    <div class="sub">모집글 발행·신청자 관리·🎫 바지락은 <b>내 샵 페이지</b>에서 처리합니다.
       샵마다 전용 주소가 따로 있어 다른 사람은 볼 수 없습니다.</div>
 
     <div class="card" style="margin-bottom:14px">
@@ -299,7 +303,7 @@
   <div class="wrap">
     Browniebase · 바다퐁(Badapong) · 문의는 위 신청 폼으로 남겨주세요.<br/>
     실적 수치는 앱 실사용 로그 기준이며 매일 갱신됩니다.
-    🦪 바지락은 파일럿 기간 무료이며 결제 창구를 아직 열지 않았습니다 — 유료 전환 시 사전에 안내드립니다.
+    🎫 바지락은 파일럿 기간 무료이며 결제 창구를 아직 열지 않았습니다 — 유료 전환 시 사전에 안내드립니다.
   </div>
 </footer>
 
