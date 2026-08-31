@@ -1,10 +1,20 @@
 'use client'
 import { useState } from 'react'
 import { storeUrl, useDeviceOS, useSource } from './store'
+import { REGION_MAP } from './regionMap'
 
 type Lang = 'ko' | 'en'
 
 /** 등급색 — 앱 theme.dart 의 다크 값 그대로. 여기서 새로 고르지 않는다. */
+const COUNTRY_COUNTS = [
+  { code: 'KR', name: { ko: '한국', en: 'Korea' }, n: 6 },
+  { code: 'JP', name: { ko: '일본', en: 'Japan' }, n: 3 },
+  { code: 'PH', name: { ko: '필리핀', en: 'Philippines' }, n: 4 },
+  { code: 'TH', name: { ko: '태국', en: 'Thailand' }, n: 3 },
+  { code: 'ID', name: { ko: '인도네시아', en: 'Indonesia' }, n: 4 },
+  { code: 'US', name: { ko: '서태평양', en: 'W. Pacific' }, n: 2 },
+] as const
+
 const GRADE_TONE: Record<string, string> = {
   A: '#69F0AE', B: '#B2FF59', C: '#FFD84D', D: '#FFB266', E: '#FF7B7B',
 }
@@ -31,16 +41,24 @@ const c = {
       body: '해양 액티비티에 필요한 종합 기상 예보 앱입니다. 파고·조류·스웰·바람·강수·수온 등 핵심 해양 데이터를 격자별로 시각화하고, 다이빙·스노클링·프리다이빙·해변수영 활동별로 수중 시야 예보(A~E 등급)까지 함께 제공합니다.',
     },
     features: {
-      title: '주요 기능',
+      title: '보여드리면 설명이 필요 없습니다',
+      hero: [
+        { img: '/badapong/shots/map.jpg',
+          title: '움직이는 기상 레이어',
+          desc: '조류 · 파고 · 너울 · 바람을 입자 애니메이션으로. 보고만 있어도 바다 상태가 읽힙니다.' },
+        { img: '/badapong/shots/table.jpg',
+          title: '3시간 단위 · 7일치',
+          desc: '시각을 누르면 등급과 수치가 함께 움직입니다. 갈 시각을 고르는 화면.' },
+        { img: '/badapong/shots/warning.jpg',
+          title: '잔잔해 보여도 위험한 구간',
+          desc: '이안류 · 너울성 파도 · 낙뢰를 시간대별로 경고합니다. 등급만으로는 안 보이는 것.' },
+      ],
       items: [
-        { icon: '🌊', title: '시각적 애니메이션 기상 레이어', desc: '조류·파고·너울·바람을 입자 애니메이션으로 흐름 시각화. 보고만 있어도 바다 상태가 읽힙니다.' },
-        { icon: '🤿', title: '활동별 맞춤 시야 등급', desc: '해변수영·스노클링·프리다이빙·스쿠버 4가지 활동별로 다른 임계값의 A~E 수중 시야 등급.' },
-        { icon: '⏱️', title: '시간대별 예보', desc: '3시간 단위로 7일치 등급·기상을 한눈에.' },
-        { icon: '⚠️', title: '안전 경고', desc: '이안류와 너울성 파도 위험을 시간대별로 경고. 잔잔해 보여도 위험한 구간을 미리 표시.' },
-        { icon: '🌙', title: '조석 · 일출일몰', desc: '만조/간조 시각과 슬랙 워터, 일출·일몰 기준 야간 시간대 자동 가드.' },
-        { icon: '💬', title: '스팟 리뷰 & 커뮤니티', desc: '다녀온 사람들의 실제 후기 — 작성·좋아요순 정렬·10개 언어 자동 번역.' },
-        { icon: '📊', title: '하이브리드 채점', desc: '파고·너울·바람·조류·수온·수질에 36방향 지형 차폐(zone shielding)까지 종합 평가.' },
-        { icon: '🌐', title: '10개 언어', desc: '한국어·영어·일본어·중국어 등 10개 언어로 정보 제공.' },
+        { icon: '🌙', title: '조석 · 일출일몰', desc: '만조 · 간조와 슬랙 워터, 야간 자동 가드' },
+        { icon: '💬', title: '스팟 후기', desc: '다녀온 사람의 실제 기록 · 10개 언어 자동 번역' },
+        { icon: '👥', title: '같이 가기', desc: '같은 날 같은 스팟 가는 사람 찾기' },
+        { icon: '📊', title: '지형 차폐 채점', desc: '36방향 차폐까지 반영 — 방파제 안쪽은 다르게 봅니다' },
+        { icon: '🌐', title: '10개 언어', desc: '한국어 · 영어 · 일본어 · 중국어 외' },
       ],
     },
     activities: {
@@ -119,8 +137,10 @@ const c = {
     },
     footerTagline: '해양 액티비티 기상 + 시야 예보',
     shopBand: {
-      title: '다이브샵 · 서핑샵을 운영하고 계신가요?',
-      body: '전국 292곳을 스팟 근처 서비스로 이미 무료 등재했습니다. 내 샵이 어느 스팟에 나오는지, 그 스팟을 몇 명이 봤는지 확인해 보세요.',
+      n: '292',
+      nLabel: '이미 등재된 국내 다이브샵 · 서핑샵',
+      title: '내 샵도 이 안에 있을 지 모릅니다',
+      body: '신청도 비용도 없이 스팟 근처 서비스로 먼저 올려두었습니다. 내 샵이 어느 스팟에 나오는지, 그 스팟을 몇 명이 봤는지 확인해 보세요.',
       cta: '내 샵 확인하기',
     },
   },
@@ -145,16 +165,24 @@ const c = {
       body: 'Badapong is a full ocean weather forecast app built for marine activities. It visualises wave, swell, current, wind, rain and water temperature across a fine grid — and, on top of that, gives an A~E underwater visibility forecast tailored to beach swim, snorkel, freedive and scuba.',
     },
     features: {
-      title: 'Key Features',
+      title: 'Shown, not told',
+      hero: [
+        { img: '/badapong/shots/map.jpg',
+          title: 'Live weather layers',
+          desc: 'Current, waves, swell and wind as particle animation. You read the sea just by looking.' },
+        { img: '/badapong/shots/table.jpg',
+          title: '3-hour steps, 7 days out',
+          desc: 'Tap a time and the grade moves with the numbers. The screen for picking when to go.' },
+        { img: '/badapong/shots/warning.jpg',
+          title: 'Calm-looking, still risky',
+          desc: 'Rip current, swell and lightning flagged per time slot — what a grade alone cannot show.' },
+      ],
       items: [
-        { icon: '🌊', title: 'Animated weather layers', desc: 'Particle animations for current, waves, swell and wind — the state of the sea, at a glance.' },
-        { icon: '🤿', title: 'Activity-tuned visibility grades', desc: 'A~E underwater visibility grades with distinct thresholds for beach swim / snorkel / freedive / scuba.' },
-        { icon: '⏱️', title: 'Hourly forecast', desc: 'Grades and weather in 3-hour slots, 7 days ahead.' },
-        { icon: '⚠️', title: 'Safety alerts', desc: 'Time-slot warnings for rip currents and swell surge — dangers that look calm but strike without warning.' },
-        { icon: '🌙', title: 'Tide & daylight', desc: 'High/low tide times with slack water, plus automatic night-time guards from sunrise and sunset.' },
-        { icon: '💬', title: 'Spot reviews & community', desc: 'Real visitor reviews — write, sort by likes, with automatic translation across 10 languages.' },
-        { icon: '📊', title: 'Hybrid scoring', desc: 'Wave, swell, wind, current, temperature and water quality, plus 36-direction terrain shielding.' },
-        { icon: '🌐', title: '10 languages', desc: 'Korean, English, Japanese, Chinese and 6 more.' },
+        { icon: '🌙', title: 'Tide & daylight', desc: 'High/low tide, slack water, automatic night guard' },
+        { icon: '💬', title: 'Spot reviews', desc: 'Real visitor records, auto-translated across 10 languages' },
+        { icon: '👥', title: 'Go together', desc: 'Find people heading to the same spot that day' },
+        { icon: '📊', title: 'Terrain shielding', desc: '36-direction shielding — inside a breakwater scores differently' },
+        { icon: '🌐', title: '10 languages', desc: 'Korean, English, Japanese, Chinese and 6 more' },
       ],
     },
     activities: {
@@ -231,8 +259,10 @@ const c = {
     },
     footerTagline: 'Marine weather + visibility forecast',
     shopBand: {
-      title: 'Do you run a dive or surf shop?',
-      body: 'We have already listed 292 Korean shops for free as services near their spots. Check which spots your shop appears on, and how many people viewed them.',
+      n: '292',
+      nLabel: 'Korean dive and surf shops already listed',
+      title: 'Yours may already be one of them',
+      body: 'No application, no fee — we listed them as services near their spots. Check which spots your shop appears on, and how many people viewed them.',
       cta: 'Find my shop',
     },
   },
@@ -340,12 +370,6 @@ export default function BadapongPage() {
                   </a>
                 ))}
               </div>
-              <a href="#features" className="inline-flex items-center justify-center gap-1.5 text-[#7DBDFF] text-sm font-medium hover:underline">
-                {t.hero.cta3}
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </a>
             </div>
 
             <div className="flex flex-wrap gap-3 mt-4 justify-center">
@@ -416,15 +440,34 @@ export default function BadapongPage() {
       {/* ── Features ────────────────────────────────────────────── */}
       <section id="features" className="py-20 bg-[#0E1729]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#F0F4F8]">{t.features.title}</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-10">{t.features.title}</h2>
+
+          {/* 큰 증거 3개 -- 실제 앱 화면. 말로 설명하는 것보다 한 장이 빠르다. */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            {t.features.hero.map(f => (
+              <div key={f.title} className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden flex flex-col">
+                {/* 세 컷은 1:1 로 맞춰 구웠다 -- 높이가 제각각이면 3단 행에서
+                    본문 시작선이 어긋난다. warning 컷의 위아래 여백은
+                    이 프레임 색(#0D1627)과 같아서 보이지 않는다. */}
+                <div className="bg-[#0D1627] px-4 pt-4">
+                  <img src={f.img} alt={f.title} loading="lazy" width={760} height={760}
+                       className="w-full rounded-t-xl border border-b-0 border-white/[0.06] block" />
+                </div>
+                <div className="p-6 pt-5">
+                  <h3 className="text-lg font-bold mb-2">{f.title}</h3>
+                  <p className="text-[#A9BCD0] text-sm leading-relaxed">{f.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          {/* 나머지는 한 줄로 압축 -- 여덟 장이 다 같은 무게면 무엇이 중요한지 안 보인다 */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {t.features.items.map(f => (
-              <div key={f.title} className="bg-white/[0.04] rounded-2xl p-6 shadow-sm border border-white/10 hover:shadow-md hover:-translate-y-0.5 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-teal-400/20 flex items-center justify-center text-2xl mb-4">{f.icon}</div>
-                <h3 className="text-lg font-semibold text-[#F0F4F8] mb-2">{f.title}</h3>
-                <p className="text-[#A9BCD0] text-sm leading-relaxed">{f.desc}</p>
+              <div key={f.title} className="bg-white/[0.03] rounded-2xl p-5 border border-white/10">
+                <div className="text-xl mb-2">{f.icon}</div>
+                <h3 className="font-bold text-sm mb-1">{f.title}</h3>
+                <p className="text-[#A9BCD0] text-xs leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -470,14 +513,33 @@ export default function BadapongPage() {
 
       {/* ── Regions ─────────────────────────────────────────────── */}
       <section id="regions" className="py-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#F0F4F8] mb-4">{t.regions.title}</h2>
-          <p className="text-[#A9BCD0] max-w-2xl mx-auto mb-12">{t.regions.body}</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {t.regions.list.map(r => (
-              <div key={r.name} className="flex items-center gap-2 bg-white/[0.04] border border-white/10 rounded-xl px-3 py-3 hover:border-[#7DBDFF]/40 transition-colors">
-                <span className="text-xl">{r.flag}</span>
-                <span className="text-sm font-medium text-[#C3D3E4]">{r.name}</span>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-3">{t.regions.title}</h2>
+          <p className="text-[#A9BCD0] text-center max-w-2xl mx-auto mb-10">{t.regions.body}</p>
+
+          {/* 국기 칩 21개는 "21개"라는 사실만 반복했다. 어디인지가 안 보인다.
+              해안선은 앱 지도 레이어가 쓰는 world_land.json 에서 구웠다 —
+              같은 데이터라 앱과 육지 모양이 어긋나지 않는다. */}
+          <div className="rounded-3xl border border-white/10 bg-[#0A1628] p-4 sm:p-6 overflow-hidden">
+            <svg viewBox={REGION_MAP.viewBox} className="w-full h-auto" role="img"
+                 aria-label={t.regions.title}>
+              <path d={REGION_MAP.land} fill="#16233A" stroke="#24344F" strokeWidth="1" />
+              {REGION_MAP.markers.map((m) => (
+                <g key={m.name}>
+                  <circle cx={m.x} cy={m.y} r="9" fill="#2DD4BF" opacity="0.16" />
+                  <circle cx={m.x} cy={m.y} r="3.4" fill="#2DD4BF" />
+                </g>
+              ))}
+            </svg>
+          </div>
+
+          {/* 국가별 개수 — 칩 목록에서 실제로 쓸모 있던 정보는 이것뿐이다. */}
+          <div className="flex flex-wrap justify-center gap-x-7 gap-y-3 mt-7">
+            {COUNTRY_COUNTS.map((c) => (
+              <div key={c.code} className="flex items-baseline gap-2">
+                <span className="text-xs font-bold text-[#6B8AA8]">{c.code}</span>
+                <span className="text-sm text-[#C3D3E4]">{c.name[lang]}</span>
+                <span className="text-sm font-bold tabular-nums text-[#2DD4BF]">{c.n}</span>
               </div>
             ))}
           </div>
@@ -504,37 +566,48 @@ export default function BadapongPage() {
                className="w-18 h-18 rounded-2xl mx-auto mb-6 shadow-lg" style={{ width: 72, height: 72 }} />
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">{t.cta.title}</h2>
           <p className="text-[#A9BCD0] text-lg mb-10">{t.cta.body}</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a href={storeUrl('ios', src)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#1A73E8] to-[#14B8A6] text-white px-8 py-4 rounded-full font-semibold text-lg hover:brightness-110 transition shadow-lg shadow-[#1A73E8]/25">
+          {/* 히어로와 같은 요청을 두 번 하지 않는다 -- 기기에 맞는 버튼 하나,
+              나머지 스토어는 작은 링크로. */}
+          <div className="flex flex-col items-center gap-4">
+            <a href={primary.href} target="_blank" rel="noopener noreferrer"
+               className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#1A73E8] to-[#14B8A6] text-white px-8 py-4 rounded-full font-semibold text-lg hover:brightness-110 transition shadow-lg shadow-[#1A73E8]/25">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                {primary.icon === 'apple' ? APPLE_PATH : PLAY_PATH}
               </svg>
-              {t.cta.primary}
+              {primary.label}
             </a>
-            <a href={storeUrl('android', src)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#1A73E8] to-[#14B8A6] text-white px-8 py-4 rounded-full font-semibold text-lg hover:brightness-110 transition shadow-lg shadow-[#1A73E8]/25">
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M3.6 2.31c-.36.2-.6.59-.6 1.04v17.3c0 .45.24.84.6 1.04l10.18-9.69L3.6 2.31zm12.06 8.65l-2.36 2.24 2.36 2.25 3.34-1.91c.7-.4.7-1.42 0-1.83l-3.34-1.91-.01.16zm-1.4 3.55l-9.4 5.36 8.45-8.04.95 2.68zm0-7.34l-8.45-8.04 9.4 5.36-.95 2.68z" />
-              </svg>
-              {t.hero.cta2}
+            <a href={secondary.href} target="_blank" rel="noopener noreferrer"
+               className="text-sm text-[#6B8AA8] hover:text-[#7DBDFF] transition-colors">
+              {secondary.label}
             </a>
           </div>
         </div>
       </section>
 
-      {/* ── 샵 제휴 배너 ─────────────────────────────────────────── */}
-      <section className="py-14 bg-[#0E1729] border-t border-white/10">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#F0F4F8] mb-3">{t.shopBand.title}</h2>
-          <p className="text-[#A9BCD0] leading-relaxed mb-7">{t.shopBand.body}</p>
-          <a
-            href="/badapong/partners/"
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-[#1A73E8] to-[#14B8A6] text-white px-6 py-3 rounded-full font-semibold hover:brightness-110 transition shadow-sm"
-          >
-            {t.shopBand.cta}
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </a>
+      {/* ── 샵 제휴 배너 ─────────────────────────────────────────
+          292 는 이 페이지에서 유일하게 "이미 해놨다"를 증명하는 숫자다.
+          문장 속에 묻어두면 아무도 안 읽는다. 앞으로 꺼낸다. */}
+      <section className="py-16 bg-[#0E1729] border-t border-white/10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col md:flex-row md:items-center gap-8 md:gap-12">
+            <div className="shrink-0 text-center md:text-left">
+              <div className="text-6xl sm:text-7xl font-black tabular-nums leading-none text-transparent bg-clip-text bg-gradient-to-br from-[#69F0AE] to-[#2DD4BF]">
+                {t.shopBand.n}
+              </div>
+              <p className="text-xs text-[#6B8AA8] mt-2 max-w-[13rem] leading-relaxed">{t.shopBand.nLabel}</p>
+            </div>
+            <div className="flex-1 text-center md:text-left">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3">{t.shopBand.title}</h2>
+              <p className="text-[#A9BCD0] leading-relaxed mb-6">{t.shopBand.body}</p>
+              <a href="/badapong/partners/"
+                 className="inline-flex items-center gap-2 bg-white/5 border border-white/12 text-[#F0F4F8] px-6 py-3 rounded-full font-semibold hover:bg-white/10 transition">
+                {t.shopBand.cta}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
