@@ -6,93 +6,186 @@
 <title>바다퐁 파트너 — 다이브샵·서핑샵 모임 모집</title>
 <meta name="description" content="바다 예보 등급이 같이 붙는 모집글. 다이브샵·서핑샵이 스팟·날짜별로 손님을 모으고, 바다가 나빠지면 🎫 발행권을 전액 돌려받습니다." />
 <style>
-  /* 앱·포털과 같은 바다 팔레트 (AppTheme ocean500/teal500/deep900) */
-  :root { --blue:#1a73e8; --deep:#0b3d91; --teal:#14b8a6; --bg:#f0f7ff;
-          --ink:#0f1b2d; --sub:#5f6b7a; --line:#d6e4f0;
-          --sea: linear-gradient(135deg,#1a73e8,#14b8a6); }
+  /* 앱·랜딩과 같은 심해 팔레트 (AppTheme deep950/ocean500/teal500).
+     흰 배경 버전이 따로 굴러다니면 "다른 서비스"로 읽힌다. */
+  :root {
+    --bg:#0B1220; --panel2:#0D1627;
+    --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.06);
+    --ink:#F0F4F8; --body:#A9BCD0; --strong:#C3D3E4;
+    /* 3차 텍스트. #4A667F 는 이 배경에서 3.0:1 로 WCAG AA(4.5:1) 미달이었다.
+       결제 조건 고지가 이 색으로 쓰여 있어 특히 중요하다. */
+    --sub:#6B8AA8;
+    --blue:#1A73E8; --teal:#14B8A6; --sea:linear-gradient(135deg,#1A73E8,#14B8A6);
+    /* 검증 배지 — 앱 모임 카드와 같은 값이라야 "같은 배지"로 읽힌다.
+       #0a7c46 은 흰 배경 전용이라 다크에서 안 읽혔다. */
+    --ok:#34D399; --gradeA:#69F0AE;
+  }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo",sans-serif;
          color:var(--ink); line-height:1.6; background:var(--bg);
          background-image:
-           radial-gradient(1100px 380px at 50% -140px, rgba(26,115,232,.10), transparent 70%),
-           radial-gradient(900px 320px at 110% 6%, rgba(20,184,166,.08), transparent 70%);
-         background-attachment:fixed; }
-  .wrap { max-width:720px; margin:0 auto; padding:0 18px; }
-  header { background:linear-gradient(160deg,var(--deep) 0%,var(--blue) 55%,var(--teal) 135%);
-           color:#fff; padding:52px 0 56px; position:relative; overflow:hidden; }
-  header::after { content:''; position:absolute; left:0; right:0; bottom:-1px; height:26px;
-    background:var(--bg);
-    -webkit-mask:radial-gradient(28px at 50% 0, transparent 98%, #000) repeat-x 0 0/56px 26px;
-            mask:radial-gradient(28px at 50% 0, transparent 98%, #000) repeat-x 0 0/56px 26px; }
-  header h1 { font-size:1.9rem; line-height:1.3; }
-  header .tag { display:inline-block; background:rgba(255,255,255,.16); border-radius:99px;
-                padding:5px 14px; font-size:.82rem; white-space:nowrap; }
-  /* 로고와 태그를 한 줄에 세로 중앙으로 맞춘다. 좁은 화면에선 줄바꿈. */
-  header .brand { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
-  header .brand a { display:inline-flex; align-items:center; gap:10px;
-                    text-decoration:none; color:inherit; font-weight:800;
-                    font-size:1.05rem; letter-spacing:-.2px; }
-  header .brand img { width:44px; height:44px; border-radius:12px; display:block;
-                      box-shadow:0 2px 8px rgba(0,0,0,.18); }
-  header .brand .brand-ko { font-weight:500; opacity:.75; }
-  header p { margin-top:12px; color:#d9e8f7; font-size:1.02rem; }
-  section { padding:36px 0; }
+           radial-gradient(1100px 420px at 50% -160px, rgba(26,115,232,.16), transparent 70%),
+           radial-gradient(900px 340px at 108% 4%, rgba(20,184,166,.10), transparent 70%);
+         background-attachment:fixed; -webkit-font-smoothing:antialiased; }
+
+  /* 720px 1열에 섹션 7개 + 폼 2개가 세로로 쌓여 스크롤이 길었다.
+     860 으로 넓히고 데스크톱에서는 제목/본문을 좌우로 가른다. */
+  .wrap { max-width:860px; margin:0 auto; padding:0 20px; }
+  section { padding:44px 0; }
   section + section { border-top:1px solid var(--line); }
-  h2 { font-size:1.25rem; margin-bottom:6px; }
-  .sub { color:var(--sub); font-size:.92rem; margin-bottom:18px; }
-  .card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px;
-          box-shadow:0 2px 10px rgba(11,61,145,.05); }
+
+  /* 2열: 왼쪽 제목·설명, 오른쪽 내용. 모바일에서는 그대로 1열로 접힌다. */
+  .two { display:grid; gap:22px; }
+  @media (min-width:900px){ .two { grid-template-columns:300px 1fr; gap:40px; align-items:start; } }
+  .eyebrow { font-size:.8rem; font-weight:800; color:var(--teal); letter-spacing:.2px; margin-bottom:6px; }
+  h2 { font-size:1.35rem; font-weight:800; letter-spacing:-.4px; margin-bottom:8px; }
+  .sub { color:var(--body); font-size:.93rem; }
+
+  .card { background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:18px; padding:20px; }
+  .muted { color:var(--sub); font-size:.82rem; }
+  .ok { color:var(--ok); font-weight:700; white-space:nowrap; }
+
+  /* ── 헤더 ─────────────────────────────────────────────────── */
+  header { padding:34px 0 46px; }
+  header .brand { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:26px; }
+  header .brand a { display:inline-flex; align-items:center; gap:10px; text-decoration:none;
+                    color:inherit; font-weight:800; font-size:1.05rem; letter-spacing:-.2px; }
+  header .brand img { width:40px; height:40px; border-radius:12px; display:block; }
+  header .brand .brand-ko { font-weight:500; color:var(--body); }
+  .tag { display:inline-block; background:rgba(255,255,255,.06); border:1px solid var(--line);
+         border-radius:99px; padding:5px 14px; font-size:.8rem; color:var(--strong); white-space:nowrap; }
+  header h1 { font-size:2.25rem; font-weight:900; letter-spacing:-1.1px; line-height:1.18; }
+  header h1 .g { background:linear-gradient(90deg,var(--gradeA),#2DD4BF);
+                 -webkit-background-clip:text; background-clip:text; color:transparent; }
+  header .lead { margin-top:14px; color:var(--body); font-size:1rem; }
+  header .lead b { color:var(--ink); }
+  .hero { display:grid; gap:28px; }
+  @media (min-width:900px){ .hero { grid-template-columns:1fr 340px; gap:44px; align-items:center; } }
+  .hero-cta { display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+
+  .btn { display:inline-block; background:var(--sea); color:#fff; border:0; border-radius:99px;
+         padding:12px 24px; font-weight:700; cursor:pointer; text-decoration:none;
+         box-shadow:0 4px 16px rgba(26,115,232,.30); }
+  .btn:hover { filter:brightness(1.08); }
+  .btn:disabled { opacity:.55; cursor:default; box-shadow:none; }
+  .btn.ghost { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
+               color:var(--strong); box-shadow:none; }
+
+  /* ── 히어로의 실제 모집 카드 ────────────────────────────────
+     이 페이지의 주장은 "모집글에 예보 등급이 붙는다" 하나뿐인데
+     지금까지 글로만 세 번 설명했다. 한 장을 보여준다. */
+  .demo-label { font-size:.78rem; color:var(--sub); margin-bottom:8px; text-align:center; }
+  .meetup { position:relative; background:var(--panel2); border:1px solid var(--line);
+            border-radius:18px; padding:16px 16px 16px 19px; overflow:hidden; }
+  .meetup::before { content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px;
+                    border-radius:0 3px 3px 0; background:var(--gradeA);
+                    box-shadow:0 0 12px rgba(105,240,174,.55); }
+  .meetup .top { display:flex; align-items:flex-start; gap:12px; }
+  .meetup .when { flex:0 0 auto; text-align:center; }
+  .meetup .when .t { font-size:1.05rem; font-weight:900; font-variant-numeric:tabular-nums;
+                     letter-spacing:-.5px; }
+  .meetup .when .d { font-size:.68rem; color:var(--sub); }
+  .meetup .mid { flex:1; min-width:0; }
+  .meetup .mid .where { font-size:.79rem; color:var(--body); }
+  .meetup .mid .title { font-weight:700; font-size:.95rem; letter-spacing:-.3px;
+                        overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* 등급 오브 — 앱 grade_badge 와 같은 문법(링 + 옅은 채움 + 발광) */
+  .orb { flex:0 0 auto; width:38px; height:38px; border-radius:50%; display:grid; place-items:center;
+         font-weight:900; font-size:1rem; color:var(--gradeA);
+         border:2px solid var(--gradeA); background:rgba(105,240,174,.12);
+         box-shadow:0 0 14px rgba(105,240,174,.30); }
+  .meetup .shop { display:flex; align-items:center; gap:7px; margin-top:13px; font-size:.84rem;
+                  flex-wrap:wrap; }
+  .meetup .shop .nm { font-weight:700; }
+  .badge3 { display:inline-flex; align-items:center; gap:4px; background:rgba(52,211,153,.14);
+            color:var(--ok); border-radius:99px; padding:3px 9px; font-size:.72rem; font-weight:800; }
+  .meetup .bot { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; }
+  .meetup .price { font-weight:800; font-variant-numeric:tabular-nums; }
+  .seats { flex:1; max-width:130px; }
+  .seats .bar { height:5px; border-radius:99px; background:rgba(255,255,255,.08); overflow:hidden; }
+  .seats .bar i { display:block; height:100%; width:25%; border-radius:99px; background:var(--sea); }
+  .seats .n { font-size:.72rem; color:var(--sub); margin-top:4px; text-align:right;
+              font-variant-numeric:tabular-nums; }
+  .demo-note { display:flex; align-items:center; gap:9px; margin-top:12px; font-size:.78rem;
+               color:var(--body); }
+  .demo-note .o { width:20px; height:20px; border-radius:50%; display:grid; place-items:center;
+                  font-size:.68rem; font-weight:900; color:var(--gradeA);
+                  border:1.5px solid var(--gradeA); background:rgba(105,240,174,.12); flex:0 0 auto; }
+
+  /* ── 292 + 검색 ────────────────────────────────────────────── */
+  .bignum { display:flex; align-items:center; gap:20px; margin-bottom:18px; flex-wrap:wrap; }
+  .bignum .n { font-size:3.4rem; font-weight:900; line-height:1; font-variant-numeric:tabular-nums;
+               background:linear-gradient(135deg,var(--gradeA),#2DD4BF);
+               -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .bignum .n small { display:block; font-size:.72rem; font-weight:600; color:var(--sub);
+                     -webkit-text-fill-color:var(--sub); margin-top:4px; letter-spacing:0; }
+  .bignum .t { flex:1; min-width:240px; }
+
   select,input,textarea,button { font:inherit; }
-  select,input,textarea { width:100%; border:1px solid var(--line); border-radius:8px;
-    padding:10px 12px; background:#fff; }
-  textarea { min-height:80px; resize:vertical; }
-  label { display:block; font-size:.85rem; font-weight:600; margin:14px 0 6px; }
+  select,input,textarea { width:100%; border:1px solid var(--line); border-radius:12px;
+    padding:11px 14px; background:rgba(255,255,255,.04); color:var(--ink); }
+  input::placeholder,textarea::placeholder { color:var(--sub); }
+  input:focus,textarea:focus,select:focus { outline:none; border-color:rgba(26,115,232,.6); }
+  textarea { min-height:84px; resize:vertical; }
+  label { display:block; font-size:.83rem; font-weight:700; color:var(--strong); margin:15px 0 6px; }
+  .fields2 { display:grid; }
+  @media (min-width:640px){ .fields2 { grid-template-columns:1fr 1fr; gap:0 16px; } }
+
   .stat-row { display:flex; justify-content:space-between; align-items:center; gap:10px;
-    padding:10px 4px; border-bottom:1px solid var(--line); font-size:.95rem; }
+    padding:10px 2px; border-bottom:1px solid var(--line2); font-size:.92rem; color:var(--strong); }
   .stat-row:last-child { border-bottom:0; }
-  .stat-row b { font-variant-numeric:tabular-nums; }
-  .muted { color:var(--sub); font-size:.8rem; }
-  .tiers { display:grid; gap:14px; margin-top:16px; }
+  .stat-row b { font-variant-numeric:tabular-nums; color:var(--ink); }
+
+  /* ── 근거 3개 ─────────────────────────────────────────────── */
+  .reasons { display:grid; gap:12px; }
+  .reason { background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:16px;
+            padding:16px 18px; }
+  .reason h3 { font-size:.98rem; font-weight:800; margin-bottom:5px; }
+  .reason p { font-size:.89rem; color:var(--body); }
+  .reason .ic { display:inline-grid; place-items:center; width:30px; height:30px; border-radius:10px;
+                background:rgba(26,115,232,.14); font-size:.95rem; margin-bottom:9px; }
+
+  /* ── 무료 배너 · 발행권 ────────────────────────────────────── */
+  .freebar { display:flex; gap:16px; align-items:flex-start;
+             background:linear-gradient(135deg,rgba(26,115,232,.16),rgba(20,184,166,.12));
+             border:1px solid rgba(45,212,191,.35); border-radius:18px; padding:20px; }
+  .freebar .tk { font-size:1.8rem; line-height:1; flex:0 0 auto; }
+  .freebar h3 { font-size:1.08rem; font-weight:900; margin-bottom:6px; }
+  .freebar p { font-size:.86rem; color:var(--strong); }
+  .tiers { display:grid; gap:12px; margin-top:14px; }
   @media (min-width:640px){ .tiers { grid-template-columns:1fr 1fr 1fr; } }
-  .tier { background:#fff; border:1px solid var(--line); border-radius:16px; padding:22px 18px;
-          position:relative; box-shadow:0 2px 10px rgba(11,61,145,.05); }
-  .tier.hot { border:2px solid var(--blue); box-shadow:0 6px 20px rgba(26,115,232,.14); }
-  .tier .clam { font-size:1.5rem; line-height:1; margin-bottom:4px; }
-  /* 수량은 숫자로 읽혀야 한다 — 아이콘 개수로는 5·10·20 이 구분되지 않는다 */
-  .tier .clam .qty { font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-                     font-weight:800; font-variant-numeric:tabular-nums;
-                     color:var(--ocean); }
-  /* "개당 6,000원"이 줄바꿈되면서 '원'만 아래로 떨어지던 것 방지 */
-  .tier .price small { white-space:nowrap; display:inline-block; margin-top:2px; }
-  .badge3 { display:inline-flex; align-items:center; gap:3px; background:rgba(10,124,70,.12);
-            color:#34D399; border-radius:99px; padding:3px 10px; font-size:.78rem; font-weight:800; }
-  .tier .badge { position:absolute; top:-11px; left:16px; background:var(--sea); color:#fff;
-    font-size:.72rem; font-weight:700; border-radius:99px; padding:2px 10px; }
-  .tier h3 { font-size:1.02rem; }
-  .tier .price { font-size:1.5rem; font-weight:800; margin:6px 0 10px; }
-  .tier .price small { font-size:.8rem; font-weight:500; color:var(--sub); }
-  .tier ul { list-style:none; font-size:.87rem; color:#33434f; }
-  .tier li { padding:3px 0 3px 20px; position:relative; }
-  .tier li::before { content:"✓"; position:absolute; left:2px; color:var(--blue); font-weight:700; }
-  .tier li.no::before { content:"—"; color:#b6c2cc; }
-  .btn { display:inline-block; background:var(--sea); color:#fff; border:0; border-radius:11px;
-    padding:13px 28px; font-weight:700; cursor:pointer; text-decoration:none;
-    box-shadow:0 3px 12px rgba(26,115,232,.28); }
-  .btn:hover { filter:brightness(1.05); }
-  .btn:disabled { opacity:.55; cursor:default; }
-  .steps { counter-reset:s; display:grid; gap:10px; margin-top:14px; }
-  .step { background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px 16px 14px 52px;
-    position:relative; font-size:.93rem; }
-  .step::before { counter-increment:s; content:counter(s); position:absolute; left:16px; top:13px;
-    width:24px; height:24px; border-radius:50%; background:var(--deep); color:#fff;
-    font-size:.8rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
-  .ok { color:#34D399; font-weight:600; white-space:nowrap; }
-  footer { padding:34px 0 46px; color:#9aa8b4; font-size:.8rem; }
-  #shop-result .stat-row { border:0; padding:6px 4px; }
+  .tier { background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:16px;
+          padding:18px 16px; position:relative; }
+  .tier.hot { border-color:rgba(26,115,232,.55); background:rgba(26,115,232,.07); }
+  .tier .badge { position:absolute; top:-10px; left:14px; background:var(--sea); color:#fff;
+    font-size:.7rem; font-weight:800; border-radius:99px; padding:2px 10px; }
+  /* 수량은 숫자로 읽혀야 한다 — 🎫🎫🎫 로는 5·10·20 이 구분되지 않는다 */
+  .tier .qty { font-size:1.7rem; font-weight:900; font-variant-numeric:tabular-nums;
+               letter-spacing:-1px; line-height:1; }
+  .tier .qty span { font-size:.85rem; font-weight:700; color:var(--body); letter-spacing:0; }
+  .tier .price { margin-top:10px; font-size:1.12rem; font-weight:800; font-variant-numeric:tabular-nums; }
+  .tier .price small { display:block; font-size:.76rem; font-weight:500; color:var(--sub);
+                       white-space:nowrap; margin-top:2px; }
+
+  /* ── 단계 ─────────────────────────────────────────────────── */
+  .steps { counter-reset:s; display:grid; gap:9px; }
+  .step { background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:12px;
+    padding:13px 15px 13px 48px; position:relative; font-size:.89rem; color:var(--strong); }
+  .step b { color:var(--ink); }
+  .step::before { counter-increment:s; content:counter(s); position:absolute; left:14px; top:13px;
+    width:22px; height:22px; border-radius:50%; background:rgba(26,115,232,.9); color:#fff;
+    font-size:.75rem; font-weight:800; display:flex; align-items:center; justify-content:center; }
+
   .req-tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
-  .req-tab { border:1px solid var(--line); background:#fff; color:var(--sub);
-             border-radius:99px; padding:7px 16px; cursor:pointer; font-size:.9rem; }
-  .req-tab.on { background:var(--blue); border-color:var(--blue); color:#fff; font-weight:600; }
+  .req-tab { border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--body);
+             border-radius:99px; padding:7px 16px; cursor:pointer; font-size:.88rem; }
+  .req-tab.on { background:var(--sea); border-color:transparent; color:#fff; font-weight:700; }
+
+  footer { padding:36px 0 52px; color:var(--sub); font-size:.79rem; border-top:1px solid var(--line); }
+  footer a { color:var(--body); text-decoration:none; }
+  #shop-result .stat-row { border:0; padding:6px 2px; }
+  /* 검색 결과·안내문 안의 링크. 기본 파랑은 이 배경에서 안 읽힌다. */
+  .muted a, .sub a { color:var(--teal); }
 </style>
 </head>
 <body>
@@ -101,60 +194,70 @@
   <div class="wrap">
     <div class="brand">
       <a href="/badapong/">
-        <img src="/badapong-icon.png" alt="바다퐁" width="44" height="44" />
+        <img src="/badapong-icon.png" alt="바다퐁" width="40" height="40" />
         <span>Badapong<span class="brand-ko"> · 바다퐁</span></span>
       </a>
       <span class="tag">🎫 바다퐁 파트너 · 다이브샵 · 서핑샵</span>
     </div>
-    <h1>바다 상태를 아는 곳에서<br/>손님을 모으세요</h1>
-    <p>카톡 오픈방은 사람을 모을 수 있지만 <b>바다를 모릅니다.</b><br/>
-       바다퐁은 반대입니다 — 모집글에 <b>그날 그 시각의 예보 등급</b>이 자동으로 붙습니다.</p>
+
+    <div class="hero">
+      <div>
+        <h1>바다 상태를 아는 곳에서<br/><span class="g">손님을 모으세요</span></h1>
+        <p class="lead">카톡 오픈방은 사람을 모을 수 있지만 <b>바다를 모릅니다.</b><br/>
+           바다퐁은 반대입니다 — 모집글에 <b>그날 그 시각의 예보 등급</b>이 자동으로 붙습니다.</p>
+        <div class="hero-cta">
+          <a class="btn" href="#apply">파일럿 신청 →</a>
+          <a class="btn ghost" href="#find">내 샵 찾기</a>
+        </div>
+      </div>
+
+      <!-- 말로 세 번 설명하는 대신 한 장을 보여준다.
+           A 오브 · 검증 배지 · 좌석 미터가 앱 모임 카드와 같은 문법이다. -->
+      <div>
+        <div class="demo-label">앱에 이렇게 올라갑니다</div>
+        <div class="meetup">
+          <div class="top">
+            <div class="when"><div class="t">06:00</div><div class="d">보트 2회</div></div>
+            <div class="mid">
+              <div class="where">갈남항 · 프리다이빙</div>
+              <div class="title">일요일 아침 펀다이빙 · 초급 환영</div>
+            </div>
+            <div class="orb">A</div>
+          </div>
+          <div class="shop">
+            <span class="nm">🏪 제주블루다이브</span>
+            <span class="badge3">✓ 사업자·자격·보험</span>
+          </div>
+          <div class="bot">
+            <div class="price">₩120,000</div>
+            <div class="seats">
+              <div class="bar"><i></i></div>
+              <div class="n">2/8석</div>
+            </div>
+          </div>
+        </div>
+        <div class="demo-note">
+          <span class="o">A</span>
+          <span>이 등급은 <b>저희가 채점</b>합니다. 샵이 쓰는 게 아닙니다.</span>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
-<section>
+<!-- ── 292 + 검색 ─────────────────────────────────────────────
+     "내 샵이 이미 나온다"가 이 페이지에서 가장 강한 훅인데
+     지금까지 중간 본문에 묻혀 있었다. 히어로 바로 다음으로 올린다. -->
+<section id="find">
   <div class="wrap">
-    <h2>왜 여기서 모집합니까</h2>
-    <div class="sub">모집은 어디서나 할 수 있습니다. 다른 점은 <b>바다 상태가 같이 붙는다</b>는 것뿐이고,
-      그게 전부이자 유일한 이유입니다.</div>
-    <div class="card">
-      <div class="steps">
-        <div class="step"><b>모집글에 예보 등급이 붙습니다.</b> 8/31(일) 06:00 갈남항 · 프리다이빙이면
-          그 시각 그 스팟의 A~E 등급이 카드에 그대로 나옵니다. 손님이 "갈 만한 날인지"를 보고 신청합니다.</div>
-        <div class="step"><b>이미 그 바다를 보러 온 사람에게 보입니다.</b> 지나가는 사람이 아니라
-          날짜까지 정하고 컨디션을 확인하러 들어온 사람입니다.</div>
-        <div class="step"><b>바다가 나빠져 취소하면 🎫 발행권을 전액 돌려드립니다.</b>
-          예보가 2등급 이상 떨어지거나 D·E로 들어가면 <b>자동 판정</b>입니다 —
-          신고하실 필요가 없습니다. 무리해서 강행할 이유를 없애려고 만든 규칙입니다.</div>
+    <div class="bignum">
+      <div class="n">292<small>무료 등재 완료</small></div>
+      <div class="t">
+        <h2>내 샵, 이미 나오고 있을 수 있습니다</h2>
+        <div class="sub">전국 다이브샵 145곳 · 서핑샵 147곳을 스팟 근처 서비스로 무료 등재했습니다.
+          상호로 확인해 보세요.</div>
       </div>
     </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <h2>🟢 배지 세 개</h2>
-    <div class="sub">배지는 <b>저희가 확인한 것</b>만 붙습니다. 장비·시설을 아무리 많이 적어도 배지는 생기지 않습니다 —
-      그래야 배지가 의미를 갖습니다.</div>
-    <div class="card">
-      <div class="stat-row"><span><span class="badge3">✓ 사업자</span>
-        &nbsp;사업자등록번호·대표자명·개업일자</span><span class="ok">국세청 자동 조회</span></div>
-      <div class="stat-row"><span><span class="badge3">✓ 자격</span>
-        &nbsp;강사 자격증 (다이브마스터 이상)</span><span class="muted">서류 검수 · 만료 관리</span></div>
-      <div class="stat-row"><span><span class="badge3">✓ 보험</span>
-        &nbsp;배상책임보험 증권</span><span class="muted">서류 검수 · 만료 관리</span></div>
-      <div class="muted" style="margin-top:12px">
-        사업자 인증은 번호를 넣으면 <b>즉시</b> 끝납니다. 자격·보험은 사진을 올려주시면 검수 후 붙습니다.
-        만료되면 배지는 자동으로 내려갑니다.
-      </div>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <h2>내 샵, 이미 나오고 있을 수 있습니다</h2>
-    <div class="sub">전국 다이브샵 145곳 · 서핑샵 147곳을 스팟 근처 서비스로 무료 등재했습니다. 상호로 확인해 보세요.</div>
     <div class="card">
       <input id="shop-q" placeholder="샵 이름 입력 (예: 해원다이브, 히든서프)" />
       <div id="shop-result" style="margin-top:10px"></div>
@@ -163,132 +266,186 @@
 </section>
 
 <section>
-  <div class="wrap">
-    <h2>이렇게 시작합니다</h2>
-    <div class="card">
-      <div class="steps">
-        <div class="step"><b>초대 링크를 받습니다.</b> 아래로 신청해 주시면 샵 전용 링크를 보내드립니다.
-          구글 계정으로 열면 바로 내 샵 페이지가 됩니다 — 별도 가입이 없습니다.</div>
-        <div class="step"><b>사업자 인증 5분.</b> 사업자등록번호·대표자명·개업일자만 넣으면
-          국세청 조회로 즉시 확인됩니다. 여기까지만 해도 모집글을 쓸 수 있습니다.</div>
-        <div class="step"><b>모집글을 올립니다.</b> 스팟·날짜·시간대·좌석·참가비를 넣으면 끝입니다.
-          같은 날 오전/오후 두 회차를 한 글에 넣어도 🎫 발행권은 1개만 나갑니다.</div>
-        <div class="step"><b>앱 안에서 대화합니다.</b> 신청하면 채팅방이 열립니다.
-          전화번호를 받지 않으므로 개인정보 동의 절차가 없습니다.</div>
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow">왜 여기서 모집합니까</div>
+      <h2>다른 점은 하나뿐입니다</h2>
+      <div class="sub">모집은 어디서나 할 수 있습니다. 바다 상태가 같이 붙는다는 것,
+        그게 전부이자 유일한 이유입니다.</div>
+    </div>
+    <div class="reasons">
+      <div class="reason">
+        <div class="ic">🅰️</div>
+        <h3>예보 등급이 붙습니다</h3>
+        <p>8/31(일) 06:00 갈남항 · 프리다이빙이면 그 시각 그 스팟의 A~E 등급이 카드에 그대로 나옵니다.
+          손님이 "갈 만한 날인지"를 보고 신청합니다.</p>
+      </div>
+      <div class="reason">
+        <div class="ic">🔎</div>
+        <h3>이미 그 바다를 보러 온 사람</h3>
+        <p>지나가는 사람이 아니라 날짜까지 정하고 컨디션을 확인하러 들어온 사람에게 보입니다.</p>
+      </div>
+      <div class="reason">
+        <div class="ic">↩️</div>
+        <h3>나빠지면 전액 돌려드립니다</h3>
+        <p>예보가 2등급 이상 떨어지거나 D·E로 들어가면 <b>자동 판정</b>입니다 — 신고하실 필요가 없습니다.
+          무리해서 강행할 이유를 없애려고 만든 규칙입니다.</p>
       </div>
     </div>
   </div>
 </section>
 
 <section>
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow">검증 배지</div>
+      <h2>확인한 것만 붙습니다</h2>
+      <div class="sub">장비·시설을 아무리 많이 적어도 배지는 생기지 않습니다 — 그래야 배지가 의미를 갖습니다.
+        만료되면 자동으로 내려갑니다.</div>
+    </div>
+    <div class="card">
+      <div class="stat-row"><span><span class="badge3">✓ 사업자</span>
+        &nbsp;사업자등록번호 · 대표자명 · 개업일자</span><span class="ok">국세청 자동 조회</span></div>
+      <div class="stat-row"><span><span class="badge3">✓ 자격</span>
+        &nbsp;강사 자격증 (다이브마스터 이상)</span><span class="muted">서류 검수 · 만료 관리</span></div>
+      <div class="stat-row"><span><span class="badge3">✓ 보험</span>
+        &nbsp;배상책임보험 증권</span><span class="muted">서류 검수 · 만료 관리</span></div>
+      <div class="muted" style="margin-top:12px">
+        사업자 인증은 번호를 넣으면 <b>즉시</b> 끝납니다. 자격·보험은 사진을 올려주시면 검수 후 붙습니다.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 발행권 ────────────────────────────────────────────────
+     가격 카드 3장을 먼저 보고 그 아래에서 "파일럿이라 무료"를 알게 되는
+     순서는 거꾸로였다. 무료를 위로, 가격은 「유료 전환 시 (예정)」으로. -->
+<section>
   <div class="wrap">
-    <h2>🎫 발행권</h2>
-    <div class="sub"><b>모집글 1건 발행 = 발행권 1개.</b> 신청이 0명이든 10명이든 같습니다 —
-      몇 명이 올지 모르는데 비용이 달라지면 예산을 세울 수 없으니까요.</div>
-
-    <div class="tiers">
-      <div class="tier">
-        <div class="clam"><span class="qty">5</span> 🎫</div>
-        <h3>발행권 5개</h3>
-        <div class="price">30,000원<br><small>개당 6,000원</small></div>
-      </div>
-      <div class="tier hot">
-        <div class="badge">추천</div>
-        <div class="clam"><span class="qty">10</span> 🎫</div>
-        <h3>발행권 10개</h3>
-        <div class="price">50,000원<br><small>개당 5,000원</small></div>
-      </div>
-      <div class="tier">
-        <div class="clam"><span class="qty">20</span> 🎫</div>
-        <h3>발행권 20개</h3>
-        <div class="price">80,000원<br><small>개당 4,000원</small></div>
+    <div class="freebar">
+      <div class="tk">🎫</div>
+      <div>
+        <h3>지금은 파일럿 기간이라 무료입니다</h3>
+        <p>먼저 함께할 샵 몇 곳에 발행권을 무료로 드리고, 실제로 손님이 오는지부터 확인합니다.
+          성과가 나오지 않으면 요금을 받을 이유가 없습니다.
+          결제는 그 뒤에 열며, 열기 전에 미리 안내드립니다 — 모르는 사이에 청구되는 일은 없습니다.</p>
       </div>
     </div>
 
-    <div class="card" style="margin-top:18px">
-      <div class="stat-row"><span>임시저장</span><span class="ok">0개</span></div>
-      <div class="stat-row"><span>발행</span><span><b>1개</b></span></div>
-      <div class="stat-row"><span>발행 후 내용 수정</span><span class="ok">0개</span></div>
-      <div class="stat-row"><span>같은 날 오전·오후 2회차</span><span><b>1개</b></span></div>
-      <div class="stat-row"><span>예보 악화로 취소</span><span class="ok">전액 반환</span></div>
-      <div class="stat-row"><span>24시간 내 · 신청 0명 취소</span><span class="ok">전액 반환</span></div>
-    </div>
-
-    <div class="card" style="margin-top:14px;border:2px solid var(--blue)">
-      <b>지금은 파일럿 기간이라 무료입니다.</b>
-      <div class="muted" style="margin-top:6px">
-        먼저 함께할 샵 몇 곳에 발행권을 무료로 드리고, 실제로 손님이 오는지부터 확인합니다.
-        성과가 나오지 않으면 요금을 받을 이유가 없습니다.
-        결제는 그 뒤에 열며, 열기 전에 미리 안내드립니다 — 모르는 사이에 청구되는 일은 없습니다.
+    <div class="two" style="margin-top:24px">
+      <div>
+        <h2>발행권 1개 = 모집글 1건</h2>
+        <div class="sub">신청이 0명이든 10명이든 같습니다 — 몇 명이 올지 모르는데 비용이 달라지면
+          예산을 세울 수 없으니까요.</div>
+        <div class="card" style="margin-top:14px">
+          <div class="stat-row"><span>임시저장</span><span class="ok">0개</span></div>
+          <div class="stat-row"><span>발행</span><span><b>1개</b></span></div>
+          <div class="stat-row"><span>발행 후 내용 수정</span><span class="ok">0개</span></div>
+          <div class="stat-row"><span>같은 날 오전·오후 2회차</span><span><b>1개</b></span></div>
+          <div class="stat-row"><span>예보 악화로 취소</span><span class="ok">전액 반환</span></div>
+          <div class="stat-row"><span>24시간 내 · 신청 0명 취소</span><span class="ok">전액 반환</span></div>
+        </div>
+      </div>
+      <div>
+        <h2>유료 전환 시 가격 (예정)</h2>
+        <div class="sub">지금 결제하시는 게 아닙니다. 나중에 이 구조로 열립니다.</div>
+        <div class="tiers">
+          <div class="tier">
+            <div class="qty">5<span> 개</span></div>
+            <div class="price">30,000원<small>개당 6,000원</small></div>
+          </div>
+          <div class="tier hot">
+            <div class="badge">추천</div>
+            <div class="qty">10<span> 개</span></div>
+            <div class="price">50,000원<small>개당 5,000원</small></div>
+          </div>
+          <div class="tier">
+            <div class="qty">20<span> 개</span></div>
+            <div class="price">80,000원<small>개당 4,000원</small></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
 <section id="apply">
-  <div class="wrap">
-    <h2>파일럿 신청</h2>
-    <div class="sub">모집글 발행·신청자 관리·🎫 발행권은 <b>내 샵 페이지</b>에서 처리합니다.
-      샵마다 전용 주소가 따로 있어 다른 사람은 볼 수 없습니다.</div>
-
-    <div class="card" style="margin-bottom:14px">
-      <b>이미 링크를 받으셨다면</b>
-      <p class="muted" style="margin:8px 0 0">
-        카톡·메일·인스타 메시지로 보내드린 주소로 바로 들어가시면 됩니다.
-        별도 비밀번호는 없습니다. 링크를 잃어버리셨으면 아래로 알려주세요.</p>
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow">파일럿 신청</div>
+      <h2>4단계면 첫 모집글</h2>
+      <div class="steps" style="margin-top:14px">
+        <div class="step"><b>초대 링크를 받습니다.</b> 구글 계정으로 열면 바로 내 샵 페이지가 됩니다 —
+          별도 가입이 없습니다.</div>
+        <div class="step"><b>사업자 인증 5분.</b> 사업자등록번호·대표자명·개업일자만 넣으면
+          국세청 조회로 즉시 확인됩니다.</div>
+        <div class="step"><b>모집글을 올립니다.</b> 스팟·날짜·시간대·좌석·참가비를 넣으면 끝입니다.
+          같은 날 오전/오후 두 회차를 한 글에 넣어도 🎫 발행권은 1개만 나갑니다.</div>
+        <div class="step"><b>앱 안에서 대화합니다.</b> 전화번호를 받지 않으므로
+          개인정보 동의 절차가 없습니다.</div>
+      </div>
     </div>
-
     <div class="card">
-      <b>아직 링크가 없으시다면</b>
-      <p class="muted" style="margin:8px 0 14px">
-        확인 후 전용 주소를 보내드립니다. 결제 수단을 받지 않으며 요금이 청구되지 않습니다.</p>
-      <label>샵 이름 *</label>
-      <input id="f-shop" maxlength="80" placeholder="예: 해원다이브리조트" />
-      <label>연락처 (전화 또는 카톡 ID) *</label>
-      <input id="f-contact" maxlength="60" placeholder="예: 010-1234-5678" />
+      <p class="muted">확인 후 전용 주소를 보내드립니다. 결제 수단을 받지 않으며 요금이 청구되지 않습니다.</p>
+      <div class="fields2">
+        <div>
+          <label>샵 이름 *</label>
+          <input id="f-shop" maxlength="80" placeholder="예: 해원다이브리조트" />
+        </div>
+        <div>
+          <label>연락처 (전화 또는 카톡 ID) *</label>
+          <input id="f-contact" maxlength="60" placeholder="예: 010-1234-5678" />
+        </div>
+      </div>
       <label>활동 지역</label>
       <input id="f-region" maxlength="60" placeholder="예: 강릉 사천 / 서귀포" />
       <label>남기실 말</label>
       <textarea id="f-msg" maxlength="500" placeholder="운영 중인 스팟, 궁금한 점 등"></textarea>
-      <div style="margin-top:16px">
+      <div style="margin-top:18px">
         <button class="btn" id="f-send">초대 링크 받기</button>
         <span id="f-status" class="muted" style="margin-left:10px"></span>
       </div>
+      <p class="muted" style="margin-top:12px">
+        이미 링크를 받으셨다면 그 주소로 바로 들어가시면 됩니다. 별도 비밀번호는 없습니다.</p>
     </div>
   </div>
 </section>
 
 <!-- ── 요청 (샵 위치 / 스팟 추가) ───────────────────────────────────────── -->
 <section>
-  <div class="wrap">
-    <h2>안 나오거나, 틀렸거나, 없을 때</h2>
-    <div class="sub">네이버 지도에서 모아온 정보라 빠지거나 어긋난 곳이 있습니다.
-      알려주시면 확인해서 반영합니다. 무료입니다.</div>
-
-    <div class="req-tabs">
-      <button class="req-tab on" data-kind="shop_location">🏪 내 샵 위치</button>
-      <button class="req-tab"    data-kind="spot">🌊 바다 스팟 추가</button>
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow">정정 요청</div>
+      <h2>안 나오거나, 틀렸거나, 없을 때</h2>
+      <div class="sub">네이버 지도에서 모아온 정보라 빠지거나 어긋난 곳이 있습니다.
+        알려주시면 확인해서 반영합니다. 무료입니다.</div>
     </div>
-
-    <div class="card">
-      <p class="muted" id="r-help" style="margin:0 0 14px">
-        내 샵이 목록에 없거나, 엉뚱한 스팟에 붙어 있거나, 위치가 틀린 경우에 보내주세요.</p>
-
-      <label id="r-title-label">샵 이름 *</label>
-      <input id="r-title" maxlength="80" placeholder="예: 해원다이브리조트" />
-
-      <label id="r-where-label">주소 또는 지도 링크 *</label>
-      <input id="r-where" maxlength="300" placeholder="예: 강원 강릉시 사천면 진리항구1길 15 / 네이버지도 공유링크" />
-
-      <label>연락처 (전화 또는 카톡 ID) *</label>
-      <input id="r-contact" maxlength="60" placeholder="예: 010-1234-5678" />
-
-      <label>설명</label>
-      <textarea id="r-detail" maxlength="500" placeholder="어떻게 틀렸는지, 어떤 곳인지 적어주세요"></textarea>
-
-      <div style="margin-top:16px">
-        <button class="btn" id="r-send">요청 보내기</button>
-        <span id="r-status" class="muted" style="margin-left:10px"></span>
+    <div>
+      <div class="req-tabs">
+        <button class="req-tab on" data-kind="shop_location">🏪 내 샵 위치</button>
+        <button class="req-tab"    data-kind="spot">🌊 바다 스팟 추가</button>
+      </div>
+      <div class="card">
+        <p class="muted" id="r-help" style="margin:0">
+          내 샵이 목록에 없거나, 엉뚱한 스팟에 붙어 있거나, 위치가 틀린 경우에 보내주세요.</p>
+        <div class="fields2">
+          <div>
+            <label id="r-title-label">샵 이름 *</label>
+            <input id="r-title" maxlength="80" placeholder="예: 해원다이브리조트" />
+          </div>
+          <div>
+            <label>연락처 (전화 또는 카톡 ID) *</label>
+            <input id="r-contact" maxlength="60" placeholder="예: 010-1234-5678" />
+          </div>
+        </div>
+        <label id="r-where-label">주소 또는 지도 링크 *</label>
+        <input id="r-where" maxlength="300" placeholder="예: 강원 강릉시 사천면 진리항구1길 15 / 네이버지도 공유링크" />
+        <label>설명</label>
+        <textarea id="r-detail" maxlength="500" placeholder="어떻게 틀렸는지, 어떤 곳인지 적어주세요"></textarea>
+        <div style="margin-top:18px">
+          <button class="btn" id="r-send">요청 보내기</button>
+          <span id="r-status" class="muted" style="margin-left:10px"></span>
+        </div>
       </div>
     </div>
   </div>
@@ -296,9 +453,9 @@
 
 <footer>
   <div class="wrap" style="margin-bottom:10px">
-    <a href="/" style="color:#5b6b7a;text-decoration:none">Browniebase</a> ·
-    <a href="/badapong/" style="color:#5b6b7a;text-decoration:none">바다퐁 소개</a> ·
-    <a href="mailto:support@browniebase.com" style="color:#5b6b7a;text-decoration:none">support@browniebase.com</a>
+    <a href="/">Browniebase</a> ·
+    <a href="/badapong/">바다퐁 소개</a> ·
+    <a href="mailto:support@browniebase.com">support@browniebase.com</a>
   </div>
   <div class="wrap">
     Browniebase · 바다퐁(Badapong) · 문의는 위 신청 폼으로 남겨주세요.<br/>
