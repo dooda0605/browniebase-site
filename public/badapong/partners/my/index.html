@@ -286,6 +286,13 @@
           <div><label>사용 언어</label><input id="p-langs" placeholder="예: ko, en" /></div>
         </div>
 
+        <label style="margin-top:14px">슈트 두께</label>
+        <div class="chips" id="p-mm"></div>
+        <label>스쿠버 장비 대여</label>
+        <div class="chips" id="p-gear"></div>
+        <label>서핑 보드 종류</label>
+        <div class="chips" id="p-boards"></div>
+
         <details>
           <summary>더 자세히 (선택)</summary>
           <label>대여 가격 안내</label>
@@ -320,6 +327,13 @@ const show = id => {
 const msg = (id, text, ok) => { const el=$(id); el.textContent=text; el.className='msg '+(ok?'ok':'err'); };
 const ACT_KO = {beach_swim:'해변수영',snorkel:'스노클링',freedive:'프리다이빙',scuba:'스쿠버',surf:'서핑'};
 const SIZES = ['XS','S','M','L','XL','2XL','3XL'];
+// 2026-09-03 equipment jsonb — 값(key)은 앱 ProfileScreen 과 같아야 한다.
+const SUIT_MM = ['2','3','5','7'];
+const GEAR = {bcd:'BCD',regulator:'호흡기',computer:'다이브 컴퓨터',tank:'탱크',weights:'웨이트',mask_fins:'마스크·핀',torch:'수중 랜턴'};
+const BOARDS = {soft:'소프트보드',long:'롱보드',fun:'펀보드',short:'숏보드',bodyboard:'바디보드',sup:'SUP'};
+const chipsHtml = (id, items, sel) => Object.entries(items).map(([k,v]) =>
+  `<label><input type="checkbox" value="${k}" ${ (sel||[]).includes(k)?'checked':'' }/> ${v}</label>`).join('');
+const checked = id => [...document.querySelectorAll('#'+id+' input:checked')].map(i => i.value);
 
 let me = null;         // my_partner_account 결과
 let uid = null;
@@ -404,6 +418,10 @@ function renderDash() {
   $('p-parking').value = f.parking || '';
   $('p-sizes').innerHTML = SIZES.map(s =>
     `<label><input type="checkbox" value="${s}" ${ (p.suit_sizes||[]).includes(s)?'checked':'' }/> ${s}</label>`).join('');
+  const eq = p.equipment || {};
+  $('p-mm').innerHTML = chipsHtml('p-mm', Object.fromEntries(SUIT_MM.map(m => [m, m+'mm'])), eq.suit_mm);
+  $('p-gear').innerHTML = chipsHtml('p-gear', GEAR, eq.scuba_gear);
+  $('p-boards').innerHTML = chipsHtml('p-boards', BOARDS, eq.surf_boards);
 }
 
 // 탭 전환
@@ -660,7 +678,9 @@ $('btn-save-profile').onclick = async () => {
     languages: $('p-langs').value.split(',').map(s=>s.trim()).filter(Boolean),
     price_note: $('p-price-note').value.trim() || null,
     free_text: $('p-free').value.trim() || null,
-    facilities, updated_at: new Date().toISOString(),
+    facilities,
+    equipment: { suit_mm: checked('p-mm'), scuba_gear: checked('p-gear'), surf_boards: checked('p-boards') },
+    updated_at: new Date().toISOString(),
   };
   const { error } = await sb.from('partner_profiles').upsert(patch);
   msg('p-msg', error ? '저장 실패: '+error.message : '저장 완료 — 앱에 바로 반영됩니다.', !error);
