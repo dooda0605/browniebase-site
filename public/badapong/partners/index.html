@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>바다퐁 파트너 — 다이브샵·서핑샵 모임 모집</title>
-<meta name="description" content="바다 예보 등급이 같이 붙는 모집글. 다이브샵·서핑샵이 스팟·날짜별로 손님을 모으고, 바다가 나빠지면 참가자에게 자동으로 알림이 갑니다. 참가비는 샵이 직접 받습니다." />
+<title>바다퐁 파트너 — 바다 날씨 보러 온 사람에게 내 샵 알리기</title>
+<meta name="description" content="이번 주말 어느 바다가 좋은지 확인하러 온 사람들에게 내 샵의 모집글을 보여주세요. 예보 등급이 같이 붙고, 바다가 나빠지면 참가자에게 자동으로 알림이 갑니다. 참가비는 샵이 직접 받습니다." />
 <style>
   /* 앱·랜딩과 같은 심해 팔레트 (AppTheme deep950/ocean500/teal500).
      흰 배경 버전이 따로 굴러다니면 "다른 서비스"로 읽힌다. */
   :root {
     --bg:#0B1220; --panel2:#0D1627;
-    --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.06);
+    /* .10 은 폰 OLED 에서 칸이 안 보였다(2026-09-02 사용자 실측). 카드 .16 · 입력칸 .32 */
+    --line:rgba(255,255,255,.16); --line2:rgba(255,255,255,.08); --line-input:rgba(255,255,255,.32);
     --ink:#F0F4F8; --body:#A9BCD0; --strong:#C3D3E4;
     /* 3차 텍스트. #4A667F 는 이 배경에서 3.0:1 로 WCAG AA(4.5:1) 미달이었다.
        결제 조건 고지가 이 색으로 쓰여 있어 특히 중요하다. */
@@ -122,7 +123,12 @@
   .bignum .t { flex:1; min-width:240px; }
 
   select,input,textarea,button { font:inherit; }
-  select,input,textarea { width:100%; border:1px solid var(--line); border-radius:12px;
+  select,input,textarea { width:100%; border:1px solid var(--line-input); border-radius:12px;
+    background:rgba(255,255,255,.06); color:var(--ink); }
+  select:focus,input:focus,textarea:focus { outline:none; border-color:var(--blue);
+    box-shadow:0 0 0 3px rgba(26,115,232,.25); }
+  input::placeholder,textarea::placeholder { color:var(--sub); opacity:1; }
+  select,input,textarea { width:100%;
     padding:11px 14px; background:rgba(255,255,255,.04); color:var(--ink); }
   input::placeholder,textarea::placeholder { color:var(--sub); }
   input:focus,textarea:focus,select:focus { outline:none; border-color:rgba(26,115,232,.6); }
@@ -199,14 +205,15 @@
         <img src="/badapong-icon.png" alt="바다퐁" width="40" height="40" />
         <span>Badapong<span class="brand-ko"> · 바다퐁</span></span>
       </a>
-      <span class="tag">🎫 바다퐁 파트너 · 다이브샵 · 서핑샵</span>
+      <span class="tag">🎫 바다퐁 파트너 · 바다 액티비티 샵</span>
     </div>
 
     <div class="hero">
       <div>
-        <h1>바다 상태를 아는 곳에서<br/><span class="g">손님을 모으세요</span></h1>
-        <p class="lead">카톡 오픈방은 사람을 모을 수 있지만 <b>바다를 모릅니다.</b><br/>
-           바다퐁은 반대입니다 — 모집글에 <b>그날 그 시각의 예보 등급</b>이 자동으로 붙습니다.</p>
+        <h1>바다 날씨를 보러 온 사람에게<br/><span class="g">내 샵을 보여주세요</span></h1>
+        <p class="lead">바다퐁에는 <b>이번 주말 어느 바다가 좋은지</b> 확인하러 오는 사람들이 있습니다.
+           날짜와 스팟을 정한 그 사람들 앞에 샵 모집글이 <b>예보 등급과 함께</b> 놓입니다.<br/>
+           지나가는 광고가 아니라, 갈 곳을 고르는 순간에 보입니다.</p>
         <div class="hero-cta">
           <a class="btn" href="#apply">파일럿 신청 →</a>
           <a class="btn ghost" href="#find">내 샵 찾기</a>
