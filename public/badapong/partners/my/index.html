@@ -107,6 +107,15 @@
   .sso.kakao { background:#FEE500; color:rgba(0,0,0,.85); }
   .sso.apple { background:#000; color:#fff; border:1px solid var(--line-input); }
   .sso svg { width:18px; height:18px; }
+  /* 자격증·강습 행 편집기 (2026-09-03) */
+  .rows { display:flex; flex-direction:column; gap:6px; margin-top:6px; }
+  .rows .r { display:grid; gap:6px; align-items:center; }
+  .rows .r.cert { grid-template-columns:1fr 1fr 1fr 1.4fr 30px; }
+  .rows .r.course { grid-template-columns:1.6fr 1fr 1fr 30px; }
+  .rows .r input { padding:8px 10px; font-size:.88rem; }
+  .rows .r button { background:transparent; border:1px solid var(--line-input); color:var(--sub);
+                    border-radius:8px; height:34px; cursor:pointer; }
+  @media (max-width:640px){ .rows .r.cert, .rows .r.course { grid-template-columns:1fr 1fr 30px; } }
   /* 홍보 사진 — 업로드 즉시 미리보기, ×로 제거 후 저장 (2026-09-03) */
   .photos { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
   .photos figure { position:relative; width:96px; height:96px; border-radius:12px; overflow:hidden;
@@ -337,6 +346,15 @@
         <label>서핑 보드 종류</label>
         <div class="chips" id="p-boards"></div>
 
+        <label style="margin-top:18px">보유 자격증
+          <span class="muted" style="font-weight:400">— 샵이 직접 적는 목록입니다. 「자격」 배지와는 별개로 앱에 그대로 보입니다</span></label>
+        <div id="p-certs" class="rows"></div>
+        <button type="button" class="btn sec sm" id="btn-add-cert" style="margin-top:6px">+ 자격증 추가</button>
+
+        <label style="margin-top:18px">강습 · 프로그램</label>
+        <div id="p-courses" class="rows"></div>
+        <button type="button" class="btn sec sm" id="btn-add-course" style="margin-top:6px">+ 강습 추가</button>
+
         <label style="margin-top:18px">홍보 사진 <span class="muted" style="font-weight:400">— 앱 샵 정보 화면에 보입니다 · 최대 6장</span></label>
         <div id="p-photos" class="photos"></div>
         <input id="p-photo-file" type="file" accept="image/*" multiple style="margin-top:8px" />
@@ -381,6 +399,25 @@ const SUIT_MM = ['2','3','5','7'];
 const GEAR = {bcd:'BCD',regulator:'호흡기',computer:'다이브 컴퓨터',tank:'탱크',weights:'웨이트',mask_fins:'마스크·핀',torch:'수중 랜턴'};
 const BOARDS = {soft:'소프트보드',long:'롱보드',fun:'펀보드',short:'숏보드',bodyboard:'바디보드',sup:'SUP'};
 let photos = [];   // partner_profiles.photos (공개 URL 배열)
+let certs = [], courses = [];   // 앱 ProfileScreen 과 같은 키
+const CERT_F   = [['org','발급 단체'],['level','등급'],['no','자격번호'],['url','인증 조회 URL']];
+const COURSE_F = [['name','강습명'],['hours','소요 시간'],['price','가격']];
+function renderRows(id, list, fields, cls) {
+  const el = $(id);
+  el.innerHTML = list.map((row, i) =>
+    `<div class="r ${cls}">` +
+    fields.map(([k, ph]) =>
+      `<input data-i="${i}" data-k="${k}" placeholder="${ph}" value="${(row[k]||'').replace(/"/g,'&quot;')}" />`).join('') +
+    `<button type="button" data-del="${i}">×</button></div>`).join('');
+  [...el.querySelectorAll('input')].forEach(inp => {
+    inp.oninput = () => { list[+inp.dataset.i][inp.dataset.k] = inp.value; };
+  });
+  [...el.querySelectorAll('button[data-del]')].forEach(b => {
+    b.onclick = () => { list.splice(+b.dataset.del, 1); renderRows(id, list, fields, cls); };
+  });
+}
+const renderCerts   = () => renderRows('p-certs', certs, CERT_F, 'cert');
+const renderCourses = () => renderRows('p-courses', courses, COURSE_F, 'course');
 const renderPhotos = () => {
   $('p-photos').innerHTML = photos.map((u, i) =>
     `<figure><img src="${u}" alt="" /><button type="button" data-i="${i}">×</button></figure>`).join('');
@@ -494,7 +531,13 @@ function renderDash() {
   $('p-boards').innerHTML = chipsHtml('p-boards', BOARDS, eq.surf_boards);
   photos = (p.photos || []).slice();
   renderPhotos();
+  certs = Array.isArray(p.certs) ? p.certs.map(o => Object.assign({}, o)) : [];
+  courses = Array.isArray(p.courses) ? p.courses.map(o => Object.assign({}, o)) : [];
+  renderCerts(); renderCourses();
 }
+
+$('btn-add-cert').onclick = () => { certs.push({}); renderCerts(); };
+$('btn-add-course').onclick = () => { courses.push({}); renderCourses(); };
 
 // 홍보 사진 업로드 — meetup-images 버킷 재사용(공개 읽기 · 경로 첫 칸이 uid 인 정책).
 // 새 버킷을 만들면 정책 2개를 또 써야 하고 얻는 게 없다. 경로 앞에 shop/ 을 붙여 구분한다.
@@ -781,6 +824,11 @@ $('btn-save-profile').onclick = async () => {
     free_text: $('p-free').value.trim() || null,
     facilities,
     photos,
+    // 빈 줄은 버린다 — 추가만 눌러 둔 행이 공개 카드에 뜨면 안 된다.
+    certs: certs.filter(c => (c.org||'').trim() || (c.level||'').trim())
+                .map(c => Object.fromEntries(Object.entries(c).filter(([, v]) => (v||'').trim()))),
+    courses: courses.filter(c => (c.name||'').trim())
+                .map(c => Object.fromEntries(Object.entries(c).filter(([, v]) => (v||'').trim()))),
     equipment: { suit_mm: checked('p-mm'), scuba_gear: checked('p-gear'), surf_boards: checked('p-boards') },
     updated_at: new Date().toISOString(),
   };
