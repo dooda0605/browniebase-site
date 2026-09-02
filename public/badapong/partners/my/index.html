@@ -13,83 +13,102 @@
   보안: anon 키만 사용. 사업자·자격번호는 RPC/RLS 뒤에 있고 이 페이지는 본인 것만 다룬다.
 -->
 <style>
-  /* 앱과 같은 바다 팔레트 (AppTheme ocean500/teal500/deep900) */
-  :root { --blue:#1a73e8; --deep:#0b3d91; --teal:#14b8a6; --teal-l:#2dd4bf;
-          --bg:#f0f7ff; --ink:#0f1b2d; --sub:#5f6b7a;
-          --line:#d6e4f0; --ok:#34D399; --warn:#c7791b; --bad:#c0392b;
-          --sea: linear-gradient(135deg, #1a73e8, #14b8a6); }
+  /* 랜딩(partners/index.html)·앱과 같은 심해 팔레트. 예전 흰 배경 + 물결 헤더는
+     "다른 서비스"로 읽혀 폐기(2026-09-03 사용자). */
+  :root {
+    --bg:#0B1220; --panel:rgba(255,255,255,.03); --panel2:#0D1627;
+    --line:rgba(255,255,255,.16); --line2:rgba(255,255,255,.08); --line-input:rgba(255,255,255,.32);
+    --ink:#F0F4F8; --body:#A9BCD0; --strong:#C3D3E4; --sub:#6B8AA8;
+    --blue:#1A73E8; --teal:#14B8A6; --teal-l:#2DD4BF; --sea:linear-gradient(135deg,#1A73E8,#14B8A6);
+    --ok:#34D399; --warn:#F5B75C; --bad:#F87171;
+  }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo",sans-serif;
-         color:var(--ink); line-height:1.6;
-         background:var(--bg);
+         color:var(--ink); line-height:1.6; background:var(--bg);
          background-image:
-           radial-gradient(1100px 380px at 50% -120px, rgba(26,115,232,.10), transparent 70%),
-           radial-gradient(900px 320px at 110% 8%, rgba(20,184,166,.08), transparent 70%);
-         background-attachment:fixed; }
+           radial-gradient(1100px 420px at 50% -160px, rgba(26,115,232,.16), transparent 70%),
+           radial-gradient(900px 340px at 108% 4%, rgba(20,184,166,.10), transparent 70%);
+         background-attachment:fixed; -webkit-font-smoothing:antialiased; }
+  a { color:var(--teal-l); }
   .wrap { max-width:760px; margin:0 auto; padding:0 18px 60px; }
-  header { background:linear-gradient(160deg,var(--deep) 0%,var(--blue) 55%,var(--teal) 130%);
-           color:#fff; padding:26px 0 34px; position:relative; overflow:hidden; }
-  /* 헤더 아래 물결 — 앱 아이콘의 파도와 같은 인상 */
-  header::after { content:''; position:absolute; left:0; right:0; bottom:-1px; height:26px;
-    background:var(--bg);
-    -webkit-mask:radial-gradient(28px at 50% 0, transparent 98%, #000) repeat-x 0 0/56px 26px;
-            mask:radial-gradient(28px at 50% 0, transparent 98%, #000) repeat-x 0 0/56px 26px; }
+  header { padding:22px 0 8px; }
   header .wrap { padding-bottom:0; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-  header img { width:38px; height:38px; border-radius:10px; }
-  header h1 { font-size:1.15rem; }
-  header .who { margin-left:auto; font-size:.82rem; color:#d9e8f7; }
-  header .who a { color:#fff; }
-  h2 { font-size:1.1rem; margin:26px 0 10px; }
-  .card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px;
-          margin-bottom:14px; box-shadow:0 2px 10px rgba(11,61,145,.05); }
-  label { display:block; font-size:.84rem; font-weight:600; margin:12px 0 5px; }
+  header img { width:38px; height:38px; border-radius:11px; }
+  header h1 { font-size:1.05rem; font-weight:800; letter-spacing:-.2px; }
+  header h1 span { font-weight:500; color:var(--body); }
+  header .who { margin-left:auto; font-size:.8rem; color:var(--sub); }
+  header .who a { color:var(--strong); }
+  h2 { font-size:1.08rem; font-weight:800; letter-spacing:-.3px; margin:26px 0 10px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:20px;
+          margin-bottom:14px; }
+  label { display:block; font-size:.84rem; font-weight:700; color:var(--strong); margin:12px 0 5px; }
   input,select,textarea,button { font:inherit; }
-  input,select,textarea { width:100%; border:1px solid var(--line); border-radius:8px;
-    padding:9px 11px; background:#fff; }
+  input,select,textarea { width:100%; border:1px solid var(--line-input); border-radius:10px;
+    padding:10px 12px; background:rgba(255,255,255,.04); color:var(--ink); }
+  input::placeholder,textarea::placeholder { color:var(--sub); }
+  input:focus,select:focus,textarea:focus { outline:none; border-color:var(--teal); }
+  select option { background:var(--panel2); color:var(--ink); }
+  input[type=date]::-webkit-calendar-picker-indicator { filter:invert(.8); }
   textarea { min-height:70px; resize:vertical; }
-  .btn { display:inline-block; background:var(--sea); color:#fff; border:0; border-radius:11px;
-    padding:11px 22px; font-weight:700; cursor:pointer;
-    box-shadow:0 3px 10px rgba(26,115,232,.28); }
-  .btn:hover { filter:brightness(1.05); }
-  .btn.sec { background:#fff; color:var(--blue); border:1px solid var(--blue); }
+  .btn { display:inline-block; background:var(--sea); color:#fff; border:0; border-radius:12px;
+    padding:11px 22px; font-weight:800; cursor:pointer; box-shadow:0 4px 14px rgba(26,115,232,.28); }
+  .btn:hover { filter:brightness(1.06); }
+  .btn.sec { background:transparent; color:var(--strong); border:1px solid var(--line-input); box-shadow:none; }
   .btn.warn { background:var(--bad); }
-  .btn:disabled { opacity:.5; cursor:default; }
-  .btn.sm { padding:6px 12px; font-size:.85rem; border-radius:7px; }
+  .btn:disabled { opacity:.45; cursor:default; }
+  .btn.sm { padding:6px 12px; font-size:.85rem; border-radius:8px; }
   .muted { color:var(--sub); font-size:.82rem; }
   .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .badge { display:inline-block; border-radius:99px; padding:2px 11px; font-size:.78rem; font-weight:700; }
-  .badge.on { background:#e6f5ec; color:var(--ok); }
-  .badge.off { background:#f0f3f6; color:var(--sub); font-weight:500; }
-  .badge.pend { background:#fdf3e4; color:var(--warn); }
-  .badge.rej { background:#fdeaea; color:var(--bad); }
+  .badge.on { background:rgba(52,211,153,.14); color:var(--ok); }
+  .badge.off { background:rgba(255,255,255,.06); color:var(--sub); font-weight:500; }
+  .badge.pend { background:rgba(245,183,92,.14); color:var(--warn); }
+  .badge.rej { background:rgba(248,113,113,.14); color:var(--bad); }
   .tabs { display:flex; gap:8px; margin:22px 0 4px; flex-wrap:wrap; }
-  .tab { border:1px solid var(--line); background:#fff; color:var(--sub); border-radius:99px;
+  .tab { border:1px solid var(--line); background:transparent; color:var(--body); border-radius:99px;
          padding:7px 18px; cursor:pointer; font-size:.9rem; }
-  .tab.on { background:var(--sea); border-color:transparent; color:#fff; font-weight:700;
-            box-shadow:0 2px 8px rgba(26,115,232,.25); }
-  .grade { display:inline-flex; width:26px; height:26px; border-radius:7px; color:#fff;
-           font-weight:800; align-items:center; justify-content:center; font-size:.85rem; }
-  .gA{background:#1e9e57}.gB{background:#7fb069}.gC{background:#e2b93b}.gD{background:#e07b39}.gE{background:#c0392b}
-  .gN{background:#aab6c0}
-  .meetup-item { border-top:1px solid var(--line); padding:13px 2px; }
+  .tab.on { background:var(--sea); border-color:transparent; color:#fff; font-weight:800;
+            box-shadow:0 3px 10px rgba(26,115,232,.28); }
+  /* 등급 — 앱의 링 오브와 같은 문법(테두리 + 옅은 채움) */
+  .grade { display:inline-flex; width:28px; height:28px; border-radius:50%; font-weight:900;
+           align-items:center; justify-content:center; font-size:.85rem; border:1.5px solid currentColor; }
+  .gA{color:#69F0AE;background:rgba(105,240,174,.12)} .gB{color:#B9F26B;background:rgba(185,242,107,.12)}
+  .gC{color:#FFD54F;background:rgba(255,213,79,.12)} .gD{color:#FFA55C;background:rgba(255,165,92,.12)}
+  .gE{color:#FF6B6B;background:rgba(255,107,107,.12)} .gN{color:var(--sub);background:rgba(255,255,255,.05)}
+  .meetup-item { border-top:1px solid var(--line2); padding:13px 2px; }
   .meetup-item:first-child { border-top:0; }
   .meetup-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .meetup-head b { font-size:.98rem; }
-  .state-chip { font-size:.75rem; border-radius:6px; padding:1px 8px; background:#eef3f8; color:var(--sub); }
+  .state-chip { font-size:.75rem; border-radius:6px; padding:1px 8px; background:rgba(255,255,255,.06); color:var(--body); }
   .slot-row { display:grid; grid-template-columns:1fr 90px 34px; gap:8px; margin-top:8px; }
-  .msg { border-radius:9px; padding:11px 13px; font-size:.88rem; margin:10px 0; display:none; }
-  .msg.ok { background:#e6f5ec; color:var(--ok); display:block; }
-  .msg.err { background:#fdeaea; color:var(--bad); display:block; }
-  .credit-pill { background:rgba(255,255,255,.20); border-radius:99px; padding:4px 14px;
-                 font-size:.85rem; font-weight:700; letter-spacing:-.2px; }
-  details { border:1px solid var(--line); border-radius:10px; padding:10px 14px; margin-top:12px; background:#fbfdff; }
-  details summary { cursor:pointer; font-weight:600; font-size:.9rem; }
+  .msg { border-radius:10px; padding:11px 13px; font-size:.88rem; margin:10px 0; display:none; }
+  .msg.ok { background:rgba(52,211,153,.12); color:var(--ok); display:block; }
+  .msg.err { background:rgba(248,113,113,.12); color:var(--bad); display:block; }
+  .credit-pill { background:rgba(224,165,92,.14); border:1px solid rgba(224,165,92,.35); color:#E0A55C;
+                 border-radius:99px; padding:4px 14px; font-size:.85rem; font-weight:800; letter-spacing:-.2px; }
+  details { border:1px solid var(--line); border-radius:12px; padding:10px 14px; margin-top:12px; background:rgba(255,255,255,.02); }
+  details summary { cursor:pointer; font-weight:700; font-size:.9rem; color:var(--strong); }
   .hidden { display:none !important; }
-  .center { text-align:center; padding:70px 0; }
+  .center { text-align:center; padding:50px 0; }
   .chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
-  .chips label { display:inline-flex; align-items:center; gap:5px; margin:0; font-weight:500;
+  .chips label { display:inline-flex; align-items:center; gap:5px; margin:0; font-weight:500; color:var(--body);
                  border:1px solid var(--line); border-radius:99px; padding:5px 12px; font-size:.85rem; cursor:pointer; }
-  .chips input { width:auto; }
+  .chips input { width:auto; accent-color:var(--teal); }
+  /* 로그인 카드 — 앱 로그인 시트와 같은 3종 버튼 */
+  .login { max-width:420px; margin:26px auto 0; text-align:left; }
+  .login .orb { width:56px; height:56px; border-radius:50%; margin:0 auto 14px; display:flex; align-items:center;
+                justify-content:center; font-size:26px; background:rgba(26,115,232,.14); border:1.5px solid rgba(26,115,232,.5);
+                box-shadow:0 0 22px rgba(26,115,232,.35); }
+  .login h2 { text-align:center; margin:0 0 6px; }
+  .login .sub { text-align:center; color:var(--body); font-size:.9rem; margin-bottom:18px; }
+  .sso { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; border:0; border-radius:12px;
+         padding:12px 16px; font-weight:800; cursor:pointer; margin-top:10px; font-size:.95rem; }
+  .sso.google { background:#fff; color:#1f1f1f; }
+  .sso.kakao { background:#FEE500; color:rgba(0,0,0,.85); }
+  .sso.apple { background:#000; color:#fff; border:1px solid var(--line-input); }
+  .sso svg { width:18px; height:18px; }
+  .note { margin-top:16px; padding:12px 14px; border-radius:12px; background:rgba(20,184,166,.10);
+          border:1px solid rgba(20,184,166,.35); color:var(--strong); font-size:.85rem; line-height:1.55; }
 </style>
 </head>
 <body>
@@ -97,7 +116,7 @@
 <header>
   <div class="wrap">
     <img src="/badapong-icon.png" alt="" />
-    <h1>바다퐁 파트너</h1>
+    <h1>바다퐁 파트너 <span>· 샵 관리자</span></h1>
     <span id="hd-credit" class="credit-pill hidden">🎫 발행권 —</span>
     <span class="who" id="hd-who"></span>
   </div>
@@ -106,24 +125,39 @@
 <div class="wrap">
 
   <!-- 0. 로그인 게이트 -->
-  <div id="view-login" class="center hidden">
-    <p style="font-size:1.4rem;margin-bottom:8px">🌊</p>
-    <p style="font-size:1.05rem;margin-bottom:6px"><b>샵 관리자 로그인</b></p>
-    <p class="muted" style="margin-bottom:22px">초대 링크로 받으신 페이지입니다.<br/>구글 계정으로 시작하세요 — 별도 가입이 없습니다.</p>
-    <button class="btn" id="btn-google">Google로 시작하기</button>
-    <p class="muted" style="margin-top:26px">초대 링크가 없으신가요?
-      <a href="/badapong/partners/">파트너 안내 페이지</a>에서 신청해 주세요.</p>
+  <div id="view-login" class="hidden">
+    <div class="card login">
+      <div class="orb">🏪</div>
+      <h2>샵 관리자 로그인</h2>
+      <p class="sub">초대 링크로 받으신 페이지입니다.<br/>앱과 같은 계정으로 시작하세요 — 별도 가입이 없습니다.</p>
+      <button class="sso google" id="btn-google">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.5 30.2 0 24 0 14.6 0 6.5 5.4 2.5 13.3l7.8 6C12.2 13.6 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.3 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C.9 16.5 0 20.1 0 24s.9 7.5 2.5 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.6-2 15.4-5.6l-7.5-5.8c-2.1 1.4-4.8 2.3-7.9 2.3-6.4 0-11.8-4.1-13.7-9.8l-7.8 6C6.5 42.6 14.6 48 24 48z"/></svg>
+        Google로 시작하기
+      </button>
+      <button class="sso kakao" id="btn-kakao">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.9c-.1.3.3.6.6.4l4.5-3c.4 0 .8.1 1.2.1 5.5 0 10-3.6 10-8.1S17.5 3 12 3z"/></svg>
+        카카오로 시작하기
+      </button>
+      <button class="sso apple" id="btn-apple">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8 0 0-2.5-1-2.6-3.8zM14 5.4c.7-.8 1.1-2 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4z"/></svg>
+        Apple로 시작하기
+      </button>
+      <div class="note">연결 후 <b>사업자 인증(사업자등록증)</b>을 통과해야 모집글을 올릴 수 있습니다.
+        가입한 샵에는 발행권 3개를 드리고, 파일럿 기간에는 발행권 차감 없이 샵당 5회(첫 회차 7일 이내)까지 올릴 수 있습니다.</div>
+      <p class="muted" style="margin-top:18px;text-align:center">초대 링크가 없으신가요?
+        <a href="/badapong/partners/">파트너 안내 페이지</a>에서 신청해 주세요.</p>
+    </div>
   </div>
-
   <!-- 초대 없음 -->
-  <div id="view-noinvite" class="center hidden">
-    <p style="font-size:1.05rem"><b>연결된 샵이 없습니다</b></p>
-    <p class="muted" style="margin:10px 0 22px">이 포털은 초대 링크(1회용)로만 샵과 연결됩니다.<br/>
-      받은 초대 링크를 다시 열거나, 아래에서 신청해 주세요.</p>
-    <a class="btn sec" href="/badapong/partners/">파트너 신청하기</a>
-    <p style="margin-top:18px"><a class="muted" href="#" id="btn-logout2">로그아웃</a></p>
+  <div id="view-noinvite" class="hidden">
+    <div class="card login">
+      <div class="orb">🔗</div>
+      <h2>연결된 샵이 없습니다</h2>
+      <p class="sub">이 포털은 초대 링크(1회용)로만 샵과 연결됩니다.<br/>받은 초대 링크를 다시 열거나, 아래에서 신청해 주세요.</p>
+      <a class="btn sec" href="/badapong/partners/" style="display:block;text-align:center">파트너 신청하기</a>
+      <p style="margin-top:18px;text-align:center"><a class="muted" href="#" id="btn-logout2">로그아웃</a></p>
+    </div>
   </div>
-
   <!-- 대시보드 -->
   <div id="view-dash" class="hidden">
     <div class="card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -147,7 +181,7 @@
           <h2 style="margin:0">내 모집글</h2>
           <button class="btn sm" id="btn-new" style="margin-left:auto">+ 새 모집글</button>
         </div>
-        <div class="muted" style="margin-top:4px" id="credit-note">발행 1건 = 🎫 발행권 1개 · 발행 24시간 내·신청 0명이면 취소 시 돌려드립니다.</div>
+        <div class="muted" style="margin-top:4px" id="credit-note">발행 1건 = 🎫 발행권 1개 · 가입 시 3개 무료 · 발행 24시간 내·신청 0명이면 취소 시 돌려드립니다.</div>
         <div class="muted" id="free-note" style="margin-top:4px;color:#2bb5a0"></div>
         <div id="meetup-list" style="margin-top:10px"><span class="muted">불러오는 중…</span></div>
       </div>
@@ -362,9 +396,9 @@ async function init() {
 
   // [2026-09-03] 무료 기간 스위치 — 앱과 같은 행(meetup_policy)을 읽는다.
   try {
-    const { data: pol } = await sb.from('meetup_policy').select('free_period,free_max_days,free_max_active').limit(1).maybeSingle();
+    const { data: pol } = await sb.from('meetup_policy').select('free_period,free_max_days,free_max_posts').limit(1).maybeSingle();
     if (pol && pol.free_period) {
-      $('free-note').textContent = '🎫 지금은 무료 체험 기간 — 발행권 차감 없음 · 첫 회차 ' + pol.free_max_days + '일 이내 · 동시 ' + pol.free_max_active + '건. 결제 심사 완료 후 발행권은 이 포털에서 구매하며, 전환 2주 전 안내드립니다.';
+      $('free-note').textContent = '🎫 지금은 파일럿 기간 — 발행권 차감 없이 샵당 ' + pol.free_max_posts + '회까지(첫 회차 ' + pol.free_max_days + '일 이내). 파일럿이 끝나면 유료로 전환되며 7일 전에 앱 알림으로 안내드립니다. 발행권은 이 포털에서 구매합니다.';
     }
   } catch (e) {}
   const { data, error } = await sb.rpc('my_partner_account');
@@ -378,10 +412,16 @@ async function init() {
   loadMeetups();
 }
 
-$('btn-google').onclick = async () => {
-  await sb.auth.signInWithOAuth({ provider: 'google',
+// 앱 로그인 시트와 같은 3종(구글·카카오·Apple). 카카오는 Supabase 의 email scope 요청 때문에
+// 개인 앱 상태에선 KOE205 로 막힐 수 있다(feedback 메모리) — 비즈 앱 전환 전까지 실패하면 다른 방법 안내.
+const sso = provider => async () => {
+  const { error } = await sb.auth.signInWithOAuth({ provider,
     options: { redirectTo: location.origin + location.pathname + location.search } });
+  if (error) alert('로그인에 실패했습니다: ' + error.message + '\n다른 계정으로 시도하거나 support@browniebase.com 으로 알려주세요.');
 };
+$('btn-google').onclick = sso('google');
+$('btn-kakao').onclick = sso('kakao');
+$('btn-apple').onclick = sso('apple');
 const logout = async e => { e.preventDefault(); await sb.auth.signOut(); location.href = location.pathname; };
 $('btn-logout').onclick = logout;
 $('btn-logout2').onclick = logout;
@@ -479,8 +519,9 @@ const fmtDt = iso => { const d = new Date(iso);
 // 발행 결과 사유 → 한국어
 const PUB_REASON = {
   no_credit:'🎫 발행권이 부족합니다. 이 포털에서 구매할 수 있습니다(결제 창구 오픈 후).', no_slot:'회차를 1개 이상 넣어주세요.',
-  free_period_too_far:'무료 기간에는 첫 회차가 7일 이내여야 합니다.',
-  free_period_limit:'무료 기간에는 동시에 5건까지만 발행할 수 있습니다. 지난 모집이 끝나면 다시 올릴 수 있습니다.',
+  free_period_too_far:'파일럿 기간에는 첫 회차가 7일 이내여야 합니다.',
+  free_period_limit:'파일럿 기간에는 샵당 5회까지만 발행할 수 있습니다.',
+  business_unverified:'사업자 인증(STEP 1)을 통과해야 모집글을 올릴 수 있습니다.',
   past_slot:'지난 시각의 회차가 있습니다.', cancel_policy_required:'취소 규정은 필수입니다.',
   duplicate_slot:'같은 스팟·활동·시각에 이미 발행한 모집글이 있습니다.',
   spot_inactive:'해당 스팟은 현재 비활성 상태입니다.', surf_not_supported:'서핑 베타 스팟이 아닙니다.',
