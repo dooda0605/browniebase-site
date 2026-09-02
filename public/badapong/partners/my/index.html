@@ -107,6 +107,14 @@
   .sso.kakao { background:#FEE500; color:rgba(0,0,0,.85); }
   .sso.apple { background:#000; color:#fff; border:1px solid var(--line-input); }
   .sso svg { width:18px; height:18px; }
+  /* 홍보 사진 — 업로드 즉시 미리보기, ×로 제거 후 저장 (2026-09-03) */
+  .photos { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+  .photos figure { position:relative; width:96px; height:96px; border-radius:12px; overflow:hidden;
+                   border:1px solid var(--line); background:rgba(255,255,255,.04); }
+  .photos img { width:100%; height:100%; object-fit:cover; display:block; }
+  .photos button { position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%;
+                   border:0; background:rgba(0,0,0,.6); color:#fff; font-size:13px; line-height:1;
+                   cursor:pointer; padding:0; }
   .note { margin-top:16px; padding:12px 14px; border-radius:12px; background:rgba(20,184,166,.10);
           border:1px solid rgba(20,184,166,.35); color:var(--strong); font-size:.85rem; line-height:1.55; }
 </style>
@@ -328,6 +336,11 @@
         <label>서핑 보드 종류</label>
         <div class="chips" id="p-boards"></div>
 
+        <label style="margin-top:18px">홍보 사진 <span class="muted" style="font-weight:400">— 앱 샵 정보 화면에 보입니다 · 최대 6장</span></label>
+        <div id="p-photos" class="photos"></div>
+        <input id="p-photo-file" type="file" accept="image/*" multiple style="margin-top:8px" />
+        <div class="muted" id="p-photo-msg" style="margin-top:4px"></div>
+
         <details>
           <summary>더 자세히 (선택)</summary>
           <label>대여 가격 안내</label>
@@ -366,6 +379,14 @@ const SIZES = ['XS','S','M','L','XL','2XL','3XL'];
 const SUIT_MM = ['2','3','5','7'];
 const GEAR = {bcd:'BCD',regulator:'호흡기',computer:'다이브 컴퓨터',tank:'탱크',weights:'웨이트',mask_fins:'마스크·핀',torch:'수중 랜턴'};
 const BOARDS = {soft:'소프트보드',long:'롱보드',fun:'펀보드',short:'숏보드',bodyboard:'바디보드',sup:'SUP'};
+let photos = [];   // partner_profiles.photos (공개 URL 배열)
+const renderPhotos = () => {
+  $('p-photos').innerHTML = photos.map((u, i) =>
+    `<figure><img src="${u}" alt="" /><button type="button" data-i="${i}">×</button></figure>`).join('');
+  [...$('p-photos').querySelectorAll('button')].forEach(b => b.onclick = () => {
+    photos.splice(+b.dataset.i, 1); renderPhotos();
+  });
+};
 const chipsHtml = (id, items, sel) => Object.entries(items).map(([k,v]) =>
   `<label><input type="checkbox" value="${k}" ${ (sel||[]).includes(k)?'checked':'' }/> ${v}</label>`).join('');
 const checked = id => [...document.querySelectorAll('#'+id+' input:checked')].map(i => i.value);
@@ -470,7 +491,31 @@ function renderDash() {
   $('p-mm').innerHTML = chipsHtml('p-mm', Object.fromEntries(SUIT_MM.map(m => [m, m+'mm'])), eq.suit_mm);
   $('p-gear').innerHTML = chipsHtml('p-gear', GEAR, eq.scuba_gear);
   $('p-boards').innerHTML = chipsHtml('p-boards', BOARDS, eq.surf_boards);
+  photos = (p.photos || []).slice();
+  renderPhotos();
 }
+
+// 홍보 사진 업로드 — meetup-images 버킷 재사용(공개 읽기 · 경로 첫 칸이 uid 인 정책).
+// 새 버킷을 만들면 정책 2개를 또 써야 하고 얻는 게 없다. 경로 앞에 shop/ 을 붙여 구분한다.
+$('p-photo-file').onchange = async e => {
+  const files = [...(e.target.files || [])];
+  if (!files.length) return;
+  const room = 6 - photos.length;
+  if (room <= 0) { $('p-photo-msg').textContent = '사진은 최대 6장입니다.'; e.target.value = ''; return; }
+  $('p-photo-msg').textContent = '업로드 중…';
+  for (const file of files.slice(0, room)) {
+    if (file.size > 5 * 1024 * 1024) { $('p-photo-msg').textContent = '5MB 이하 파일만 올릴 수 있습니다.'; continue; }
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${uid}/shop/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+    const up = await sb.storage.from('meetup-images')
+      .upload(path, file, { contentType: file.type || 'image/jpeg' });
+    if (up.error) { $('p-photo-msg').textContent = '업로드 실패: ' + up.error.message; continue; }
+    photos.push(sb.storage.from('meetup-images').getPublicUrl(path).data.publicUrl);
+  }
+  renderPhotos();
+  e.target.value = '';
+  $('p-photo-msg').textContent = '아래 저장을 눌러야 반영됩니다.';
+};
 
 // 탭 전환
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
@@ -730,6 +775,7 @@ $('btn-save-profile').onclick = async () => {
     price_note: $('p-price-note').value.trim() || null,
     free_text: $('p-free').value.trim() || null,
     facilities,
+    photos,
     equipment: { suit_mm: checked('p-mm'), scuba_gear: checked('p-gear'), surf_boards: checked('p-boards') },
     updated_at: new Date().toISOString(),
   };
