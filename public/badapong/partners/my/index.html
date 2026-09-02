@@ -262,6 +262,7 @@
     <div id="tab-verify" class="hidden">
       <div class="card">
         <h2 style="margin-top:0">STEP 1 — 사업자 인증 <span id="v-biz-badge"></span></h2>
+        <div class="muted" style="margin-bottom:8px">⏱ 자동 확인이 안 되면 수동 검수로 넘어가며, 보통 <b>1~2일(영업일)</b> 걸립니다.</div>
         <div class="muted">국세청 조회로 즉시 확인됩니다. 통과하면 🟢 사업자 확인 배지가 붙습니다.
           <b>사업자등록번호 하나에 계정 하나</b>입니다 — 이미 인증된 번호는 다른 계정에서 다시 인증할 수 없습니다.</div>
         <div class="row2">
@@ -277,7 +278,8 @@
       </div>
 
       <div class="card">
-        <h2 style="margin-top:0">STEP 2 — 자격 · 보험 <span class="muted" style="font-weight:400">(선택 · 수동 검수)</span></h2>
+        <h2 style="margin-top:0">STEP 2 — 자격 · 보험 <span class="muted" style="font-weight:400">(선택)</span></h2>
+        <div class="muted" style="margin-bottom:8px">⏱ 인증 심사는 보통 <b>1~2일(영업일)</b> 걸립니다. 승인되면 배지가 붙습니다.</div>
         <div class="muted">채우면 배지가 늘고 앱에서 더 잘 보입니다. 며칠 걸려도 괜찮습니다 — 나중에 와서 올리셔도 됩니다.</div>
 
         <h2 style="font-size:.95rem">강사 자격 <span id="v-cert-badge"></span></h2>
@@ -323,9 +325,12 @@
         <select id="p-resv"><option value="">선택</option><option value="true">예약 필요</option>
           <option value="false">워크인 가능</option></select>
 
-        <label style="margin-top:18px">기본 정보</label>
-        <div class="chips">
-          <label><input type="checkbox" id="p-beginner" /> 초보 강습 가능</label>
+        <label style="margin-top:18px">강습 가능 범위
+          <span class="muted" style="font-weight:400">— 어디까지 가르치는지. 없는 등급은 직접 추가하세요</span></label>
+        <div class="chips" id="p-teach"></div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <input id="p-teach-new" placeholder="직접 추가 (예: 테크니컬)" style="max-width:260px" />
+          <button type="button" class="btn sec sm" id="btn-add-teach">추가</button>
         </div>
         <div class="row2">
           <div><label>샤워</label><select id="p-shower"><option value="">없음</option>
@@ -401,6 +406,23 @@ const BOARDS = {soft:'소프트보드',long:'롱보드',fun:'펀보드',short:'�
 let photos = [];   // partner_profiles.photos (공개 URL 배열)
 let certs = [], courses = [];   // 앱 ProfileScreen 과 같은 키
 const CERT_F   = [['org','발급 단체'],['level','등급'],['no','자격번호'],['url','인증 조회 URL']];
+// 강습 가능 범위 — 값(키)은 앱 ShopCardLabels.teachLevels 와 같아야 한다.
+const TEACH = {discover:'체험', beginner:'초보·오픈워터', advanced:'어드밴스드', master:'레스큐·마스터', instructor:'강사'};
+let teach = [];
+function renderTeach() {
+  const known = Object.keys(TEACH);
+  $('p-teach').innerHTML =
+    known.map(k => `<label><input type="checkbox" data-k="${k}" ${teach.includes(k)?'checked':''}/> ${TEACH[k]}</label>`).join('') +
+    teach.filter(k => !known.includes(k)).map(k =>
+      `<label>${k} <button type="button" data-del="${k}" style="background:none;border:0;color:var(--sub);cursor:pointer">×</button></label>`).join('');
+  [...$('p-teach').querySelectorAll('input[data-k]')].forEach(i => {
+    i.onchange = () => { const k = i.dataset.k;
+      if (i.checked) { if (!teach.includes(k)) teach.push(k); } else teach = teach.filter(x => x !== k); };
+  });
+  [...$('p-teach').querySelectorAll('button[data-del]')].forEach(b => {
+    b.onclick = () => { teach = teach.filter(x => x !== b.dataset.del); renderTeach(); };
+  });
+}
 const COURSE_F = [['name','강습명'],['hours','소요 시간'],['price','가격']];
 function renderRows(id, list, fields, cls) {
   const el = $(id);
@@ -516,7 +538,9 @@ function renderDash() {
   $('p-rental').value = p.rental_scope || '';
   $('p-resv').value = p.reservation_required === null || p.reservation_required === undefined
     ? '' : String(p.reservation_required);
-  $('p-beginner').checked = !!p.beginner_ok;
+  teach = Array.isArray(p.teach_levels) ? p.teach_levels.slice() : [];
+  if (!teach.length && p.beginner_ok) teach = ['beginner'];   // 토글만 있던 시절 데이터
+  renderTeach();
   $('p-langs').value = (p.languages || []).join(', ');
   $('p-price-note').value = p.price_note || '';
   $('p-free').value = p.free_text || '';
@@ -536,6 +560,11 @@ function renderDash() {
   renderCerts(); renderCourses();
 }
 
+$('btn-add-teach').onclick = () => {
+  const v = $('p-teach-new').value.trim();
+  if (v && !teach.includes(v)) teach.push(v);
+  $('p-teach-new').value = ''; renderTeach();
+};
 $('btn-add-cert').onclick = () => { certs.push({}); renderCerts(); };
 $('btn-add-course').onclick = () => { courses.push({}); renderCourses(); };
 
@@ -818,7 +847,9 @@ $('btn-save-profile').onclick = async () => {
     rental_scope: $('p-rental').value || null,
     suit_sizes: sizes,
     reservation_required: $('p-resv').value === '' ? null : $('p-resv').value === 'true',
-    beginner_ok: $('p-beginner').checked,
+    teach_levels: teach,
+    // 다른 화면이 아직 beginner_ok 를 읽는다 — 범위에서 파생.
+    beginner_ok: teach.includes('beginner') || teach.includes('discover'),
     languages: $('p-langs').value.split(',').map(s=>s.trim()).filter(Boolean),
     price_note: $('p-price-note').value.trim() || null,
     free_text: $('p-free').value.trim() || null,
