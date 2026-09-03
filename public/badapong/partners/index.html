@@ -256,7 +256,7 @@
   </div>
 </header>
 
-<!-- ── 292 + 검색 ─────────────────────────────────────────────
+<!-- ── 280 + 검색 ─────────────────────────────────────────────
      "내 샵이 이미 나온다"가 이 페이지에서 가장 강한 훅인데
      지금까지 중간 본문에 묻혀 있었다. 히어로 바로 다음으로 올린다. -->
 <section id="find">
@@ -507,8 +507,9 @@ document.getElementById('shop-q').addEventListener('input', e => {
   const q = e.target.value.trim();
   if (q.length < 2) { document.getElementById('shop-result').innerHTML=''; return; }
   shopTimer = setTimeout(async () => {
-    // 🔴 [2026-09-03] 예전엔 limit=400 을 받아 브라우저에서 걸렀는데, 활성 등재가
-    //   891건이라 뒤쪽 샵을 검색하면 "아직 등재 전"이라는 거짓말이 나왔다.
+    // 🔴 [2026-09-03] 예전엔 limit=400 을 받아 브라우저에서 걸렀는데, 등재 행(스팟별로
+    //   같은 샵이 여러 번 들어간다)이 그보다 많아 뒤쪽 샵을 검색하면
+    //   "아직 등재 전"이라는 거짓말이 나왔다.
     //   이 페이지에서 가장 강한 훅이라 서버에서 거른다.
     const rows = await fetch(`${SB}/spot_services?service_type=in.(dive_shop,surf_shop)&is_active=eq.true`
       + `&name->>ko=ilike.*${encodeURIComponent(q)}*&select=name,address,spot_id&limit=40`,

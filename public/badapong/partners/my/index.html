@@ -175,6 +175,7 @@
       <div class="orb">🔗</div>
       <h2>연결된 샵이 없습니다</h2>
       <p class="sub">이 포털은 초대 링크(1회용)로만 샵과 연결됩니다.<br/>받은 초대 링크를 다시 열거나, 아래에서 신청해 주세요.</p>
+      <div class="msg" id="invite-msg"></div>
       <a class="btn sec" href="/badapong/partners/" style="display:block;text-align:center">파트너 신청하기</a>
       <p style="margin-top:18px;text-align:center"><a class="muted" href="#" id="btn-logout2">로그아웃</a></p>
     </div>
@@ -204,6 +205,7 @@
         </div>
         <div class="muted" style="margin-top:4px" id="credit-note">발행 1건 = 🎫 발행권 1개 · 발행권은 계정마다 따로 · 유료 전환 뒤 가입하는 샵에 3개, 강사는 라이선스 인증 시 1개 · 발행 24시간 내·신청 0명이면 취소 시 돌려드립니다.</div>
         <div class="muted" id="free-note" style="margin-top:4px;color:#2bb5a0"></div>
+        <div class="muted" style="margin-top:4px">발행한 글의 내용 수정은 <b>앱</b>에서 합니다 — 이 포털에는 수정 폼이 없습니다. 임시저장 글은 삭제하고 다시 작성해 주세요.</div>
         <div id="meetup-list" style="margin-top:10px"><span class="muted">불러오는 중…</span></div>
       </div>
 
@@ -221,38 +223,29 @@
               <option value="snorkel">스노클링</option><option value="beach_swim">해변수영</option>
               <option value="surf">서핑 (베타 스팟만)</option>
             </select></div>
-          <div><label>레벨</label>
-            <select id="m-level"><option value="any">누구나</option><option value="beginner">입문</option>
-              <option value="intermediate">중급</option><option value="advanced">상급</option></select></div>
-        </div>
-        <div class="row2">
           <div><label>모임 유형</label>
             <select id="m-type">
               <option value="normal">일반</option>
               <option value="lesson">강습</option>
               <option value="trial">체험</option>
             </select></div>
-          <div><label>대표 사진 <span class="muted" style="font-weight:400">— 목록 카드에 걸립니다</span></label>
-            <input id="m-thumb" type="file" accept="image/*" /></div>
         </div>
+        <label>대표 사진 <span class="muted" style="font-weight:400">— 목록 카드에 걸립니다</span></label>
+        <input id="m-thumb" type="file" accept="image/*" />
         <label>제목 *</label>
-        <input id="m-title" maxlength="60" placeholder="예: 일요일 아침 갈남 펀다이빙 (2다이브)" />
+        <input id="m-title" maxlength="40" placeholder="예: 일요일 아침 갈남 펀다이빙 (2다이브)" />
         <label>회차 * <span class="muted" style="font-weight:400">— 같은 글에 시간대 여러 개 가능, 크레딧은 1</span></label>
         <div id="slot-box"></div>
         <button class="btn sec sm" id="btn-add-slot" style="margin-top:8px">+ 회차 추가</button>
-        <div class="row2">
-          <div><label>참가비(원)</label><input id="m-price" type="number" min="0" step="1000" placeholder="예: 90000" />
-            <div class="muted" style="margin-top:4px">참가비는 <b>샵이 직접</b> 받습니다. 바다퐁은 참가비를 받지 않고 결제를 중개하지 않으며, 앱에는 안내 금액만 표시됩니다.</div></div>
-          <div><label>가격 비고</label><input id="m-price-note" placeholder="예: 장비 풀렌탈 포함" /></div>
-        </div>
-        <label>포함 사항 <span class="muted" style="font-weight:400">(쉼표로 구분)</span></label>
-        <input id="m-includes" placeholder="예: 가이드, 탱크 2개, 웨이트" />
+        <label>참가비(원)</label>
+        <input id="m-price" type="number" min="0" step="1000" placeholder="예: 90000" />
+        <div class="muted" style="margin-top:4px">참가비는 <b>샵이 직접</b> 받습니다. 바다퐁은 참가비를 받지 않고 결제를 중개하지 않으며, 앱에는 안내 금액만 표시됩니다.</div>
         <label>집결지</label>
-        <input id="m-meet" placeholder="예: 샵 앞 주차장 05:40" />
+        <input id="m-meet" maxlength="60" placeholder="예: 샵 앞 주차장 05:40" />
         <label>취소 규정 <span class="muted" style="font-weight:400" id="m-cancel-note">— 참가비를 받으면 필수입니다. 카드 하단에 항상 노출됩니다</span></label>
-        <textarea id="m-cancel" placeholder="예: 취소 시점별 환불 비율, 일정 변경 가능 여부 (참가비는 샵이 직접 받고 환불합니다)"></textarea>
+        <textarea id="m-cancel" maxlength="200" placeholder="예: 취소 시점별 환불 비율, 일정 변경 가능 여부 (참가비는 샵이 직접 받고 환불합니다)"></textarea>
         <label>소개</label>
-        <textarea id="m-body" placeholder="일정, 준비물, 수준 안내 등"></textarea>
+        <textarea id="m-body" maxlength="100" placeholder="일정, 준비물, 수준 안내 등"></textarea>
         <div class="msg" id="m-msg"></div>
         <div style="display:flex;gap:8px;margin-top:14px">
           <button class="btn" id="btn-publish">발행 (🎫 1개)</button>
@@ -264,7 +257,14 @@
 
     <!-- ── 탭 2. 인증 ─────────────────────────── -->
     <div id="tab-verify" class="hidden">
-      <div class="card">
+      <div class="card hidden" id="card-biz-staff">
+        <h2 style="margin-top:0">STEP 1 — 사업자 인증 <span class="muted" style="font-weight:400">(샵 대표 계정에서 진행)</span></h2>
+        <div class="muted">샵의 사업자 인증은 <b>대표(샵) 계정</b>에서만 합니다. 강사 계정에서 인증하면
+          사업자등록번호가 강사 계정에 묶여, 정작 대표 계정이 인증할 수 없게 됩니다.
+          소속 강사는 아래 <b>본인 라이선스(자격) 인증</b>만 통과하면 각자 계정으로 모집글을 올릴 수 있습니다.</div>
+      </div>
+
+      <div class="card hidden" id="card-biz">
         <h2 style="margin-top:0">STEP 1 — 사업자 인증 <span id="v-biz-badge"></span></h2>
         <div class="muted" style="margin-bottom:8px">⏱ 자동 확인이 안 되면 수동 검수로 넘어가며, 보통 <b>1~2일(영업일)</b> 걸립니다.</div>
         <div class="muted">국세청 조회로 즉시 확인됩니다. 통과하면 🟢 사업자 확인 배지가 붙습니다.
@@ -401,6 +401,14 @@ const show = id => {
     $(v).classList.toggle('hidden', v !== id);
 };
 const msg = (id, text, ok) => { const el=$(id); el.textContent=text; el.className='msg '+(ok?'ok':'err'); };
+// 초대 링크 소진 실패 사유 → 한국어. 예전엔 console.warn 뿐이라
+// 어떤 실패든 "연결된 샵이 없습니다" 한 화면으로만 보였다(2026-09-03 감사).
+const INVITE_REASON = {
+  invalid_token:'링크가 올바르지 않습니다.',
+  already_used:'이미 사용된 초대 링크입니다.',
+  expired:'초대 링크가 만료되었습니다 — 운영자에게 재발급을 요청해 주세요.',
+  shop_already_linked:'이 샵은 이미 다른 계정에 연결되어 있습니다.',
+  not_signed_in:'로그인 후 초대 링크를 다시 열어주세요.' };
 const ACT_KO = {beach_swim:'해변수영',snorkel:'스노클링',freedive:'프리다이빙',scuba:'스쿠버',surf:'서핑'};
 const SIZES = ['XS','S','M','L','XL','2XL','3XL'];
 // 2026-09-03 equipment jsonb — 값(key)은 앱 ProfileScreen 과 같아야 한다.
@@ -455,7 +463,7 @@ const chipsHtml = (id, items, sel) => Object.entries(items).map(([k,v]) =>
   `<label><input type="checkbox" value="${k}" ${ (sel||[]).includes(k)?'checked':'' }/> ${v}</label>`).join('');
 const checked = id => [...document.querySelectorAll('#'+id+' input:checked')].map(i => i.value);
 
-let me = null;         // my_partner_account 결과
+let me = null;   // my_partner_account 결과
 let uid = null;
 
 // ── 부팅 ─────────────────────────────────────────────
@@ -469,13 +477,17 @@ async function init() {
   $('hd-who').innerHTML = esc(session.user.email || '');
 
   // 초대 토큰이 붙어 왔으면 소진 시도 (이미 연결돼 있으면 RPC가 already=true 로 무해하게 응답)
+  let inviteErr = '';
   if (token) {
     const { data, error } = await sb.rpc('consume_partner_invite', { p_token: token });
     if (!error && data && data.ok) {
       history.replaceState(null, '', location.pathname);   // 토큰을 주소창에서 제거
-    } else if (!error && data && !data.ok && data.reason !== 'already_used') {
-      // already_used 인데 내 계정이 없으면 아래 no_account 분기로 떨어진다
-      console.warn('invite:', data.reason);
+    } else {
+      // 이미 연결된 계정이면 아래 my_partner_account 가 성공해 이 문구는 쓰이지 않는다.
+      // 계정이 없을 때(no_account)만 사유를 보여준다.
+      const reason = (!error && data) ? data.reason : '';
+      inviteErr = INVITE_REASON[reason] || '초대 링크를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+      console.warn('invite:', reason || (error && error.message));
     }
   }
 
@@ -484,11 +496,16 @@ async function init() {
     const { data: pol } = await sb.from('meetup_policy').select('free_period,free_max_days,free_max_posts').limit(1).maybeSingle();
     if (pol && pol.free_period) {
       $('free-note').textContent = '🎫 지금은 파일럿 기간 — 발행권 차감 없이 샵당 ' + pol.free_max_posts + '회까지(첫 회차 ' + pol.free_max_days + '일 이내). 파일럿이 끝나면 유료로 전환되며 7일 전에 앱 알림으로 안내드립니다. 발행권은 이 포털에서 구매합니다.';
+      // 파일럿 중엔 차감이 없다. 버튼·안내가 "1개 나간다"고 말하면 발행을 아끼게 된다.
+      $('btn-publish').textContent = '발행';
+      $('credit-note').textContent =
+        '파일럿 기간에는 발행권이 차감되지 않습니다 · 발행권은 계정마다 따로 · 유료 전환 뒤 가입하는 샵에 3개, 강사는 라이선스 인증 시 1개.';
     }
   } catch (e) {}
   const { data, error } = await sb.rpc('my_partner_account');
   if (error || !data || !data.ok) {
-    show(data && data.reason === 'no_account' ? 'view-noinvite' : 'view-noinvite');
+    if (inviteErr) msg('invite-msg', inviteErr, false);
+    show('view-noinvite');
     return;
   }
   me = data;
@@ -519,6 +536,13 @@ function renderDash() {
   // '충전/차감' 같은 금융 용어보다 부드럽고, 우리 앱의 바다 세계관에 맞는다.
   $('hd-credit').textContent = '🎫 발행권 ' + me.credits + '개';
   $('hd-credit').classList.remove('hidden');
+
+  // [2026-09-03] 사업자 인증은 owner 계정만. staff 가 STEP1 을 돌리면 사업자등록번호가
+  // 강사 계정 행에 묶이는데 발행 게이트는 owner 계정의 배지를 본다 —
+  // 그때부터 진짜 대표는 biz_no_taken 으로 영영 막힌다.
+  const isOwner = me.role === 'owner';
+  $('card-biz').classList.toggle('hidden', !isOwner);
+  $('card-biz-staff').classList.toggle('hidden', isOwner);
 
   const b = me.badges || {};
   $('badge-box').innerHTML =
@@ -616,6 +640,7 @@ async function loadMeetups() {
   (slots || []).forEach(s => (slotsBy[s.meetup_id] = slotsBy[s.meetup_id] || []).push(s));
 
   const stateKo = { draft:'임시저장', published:'모집 중', closed:'마감', cancelled:'취소됨' };
+  const cancelKo = { weather:'기상·예보 악화', self:'자진 취소', shortfall:'인원 미달', shop:'주최 측 사정', policy:'운영 정책' };
   $('meetup-list').innerHTML = rows.map(r => {
     const ss = (slotsBy[r.id] || []).sort((a,b)=>a.starts_at<b.starts_at?-1:1)
       .map(s => `${fmtDt(s.starts_at)} · 잔여 ${s.seats_left}/${s.capacity}`).join('<br/>');
@@ -624,9 +649,10 @@ async function loadMeetups() {
       <div class="meetup-head">
         <span class="grade ${g?'g'+g:'gN'}">${g||'–'}</span>
         <b>${esc(r.title || '(제목 없음)')}</b>
-        <span class="state-chip">${stateKo[r.state]||r.state}${r.cancel_reason?' · '+r.cancel_reason:''}</span>
+        <span class="state-chip">${stateKo[r.state]||r.state}${r.cancel_reason?' · '+(cancelKo[r.cancel_reason]||r.cancel_reason):''}</span>
         <span style="margin-left:auto;display:flex;gap:6px">
-          ${r.state==='draft' ? `<button class="btn sm" onclick="publishNow('${r.id}')">발행</button>` : ''}
+          ${r.state==='draft' ? `<button class="btn sm" onclick="publishNow('${r.id}')">발행</button>
+            <button class="btn warn sm" onclick="deleteNow('${r.id}')">삭제</button>` : ''}
           ${r.state==='published' ? `<button class="btn sec sm" onclick="closeNow('${r.id}')">마감</button>
             <button class="btn warn sm" onclick="cancelNow('${r.id}')">취소</button>` : ''}
         </span>
@@ -653,7 +679,8 @@ const PUB_REASON = {
   spot_inactive:'해당 스팟은 현재 비활성 상태입니다.', surf_not_supported:'서핑 베타 스팟이 아닙니다.',
   activity_not_supported:'이 스팟이 지원하지 않는 활동입니다.',
   activity_shop_kind_mismatch:'서핑샵은 스쿠버 모집을 올릴 수 없습니다.',
-  partner_suspended:'계정 상태를 확인해 주세요.', not_draft:'이미 발행된 글입니다.' };
+  partner_suspended:'계정 상태를 확인해 주세요.', not_draft:'이미 발행된 글입니다.',
+  not_published:'모집 중인 글만 마감할 수 있습니다.', forbidden:'이 글을 처리할 권한이 없습니다.' };
 
 window.publishNow = async id => {
   const { data, error } = await sb.rpc('publish_meetup', { p_meetup: id });
@@ -663,8 +690,21 @@ window.publishNow = async id => {
   alert(m); refreshAll();
 };
 window.closeNow = async id => {
-  if (!confirm('모집을 마감할까요? (발행권은 소진됩니다)')) return;
-  await sb.rpc('close_meetup', { p_meetup: id }); refreshAll();
+  // 마감은 발행권과 무관하다 — 이미 발행 시점에 처리됐다. 되돌릴 수 없다는 것만 말한다.
+  if (!confirm('모집을 마감할까요? 더 이상 신청을 받지 않으며 되돌릴 수 없습니다.')) return;
+  // 결과를 버리면 실패한 마감이 성공처럼 보인다(2026-09-03 감사).
+  const { data, error } = await sb.rpc('close_meetup', { p_meetup: id });
+  if (error || !data || !data.ok) {
+    alert(PUB_REASON[data && data.reason] || '마감 실패: ' + ((data && data.reason) || (error && error.message)));
+    return;
+  }
+  refreshAll();
+};
+window.deleteNow = async id => {
+  if (!confirm('임시저장 글을 삭제할까요? 되돌릴 수 없습니다.')) return;
+  const { error } = await sb.from('meetups').delete().eq('id', id);
+  if (error) { alert('삭제 실패: ' + error.message); return; }
+  loadMeetups();
 };
 window.cancelNow = async id => {
   const r = prompt('취소 사유를 입력하세요 (신청자에게 알림이 갑니다):\n1 = 기상 악화\n2 = 인원 미달\n3 = 샵 사정\n4 = 자진 취소 (발행 24h 내·신청 0명이면 발행권 반환)', '1');
@@ -740,10 +780,10 @@ async function saveDraft() {
     host_kind: 'shop', partner_id: me.partner_id, creator_user_id: uid,
     spot_id: spot, activity: $('m-activity').value,
     title: $('m-title').value.trim(), body: $('m-body').value.trim() || null,
-    level: $('m-level').value, price: +$('m-price').value || null,
+    // level·price_note·includes 는 앱 어디에도 표시되지 않아 입력을 뺐다(2026-09-03).
+    // level 은 컬럼 제약이 있어 폼 기본값이던 'any' 를 그대로 보낸다.
+    level: 'any', price: +$('m-price').value || null,
     meetup_type: $('m-type').value,
-    price_note: $('m-price-note').value.trim() || null,
-    includes: $('m-includes').value.split(',').map(s=>s.trim()).filter(Boolean),
     meet_point: $('m-meet').value.trim() || null,
     cancel_policy: $('m-cancel').value.trim() || null,
     images,
