@@ -162,7 +162,10 @@
       <div class="note">연결 후 <b>사업자 인증(사업자등록증)</b>을 통과해야 모집글을 올릴 수 있습니다.
         <b>소속 강사</b>는 샵의 사업자 인증을 따르고 <b>본인 라이선스(자격) 인증</b>을 통과하면 각자 계정으로 올릴 수 있습니다.
         가입한 샵에는 발행권 3개를 드리고, 파일럿 기간에는 발행권 차감 없이 샵당 5회(첫 회차 7일 이내)까지 올릴 수 있습니다.</div>
-      <p class="muted" style="margin-top:18px;text-align:center">초대 링크가 없으신가요?
+      <p class="muted" style="margin-top:14px;text-align:center;font-size:12px">
+        계속하면 <a href="/terms-badapong.html">이용약관</a>과
+        <a href="/privacy-badapong.html">개인정보처리방침</a>에 동의하는 것으로 봅니다.</p>
+      <p class="muted" style="margin-top:14px;text-align:center">초대 링크가 없으신가요?
         <a href="/badapong/partners/">파트너 안내 페이지</a>에서 신청해 주세요.</p>
     </div>
   </div>
@@ -844,7 +847,10 @@ $('btn-save-profile').onclick = async () => {
     const v = $(el).value; if (v) facilities[k] = v; else delete facilities[k];
   }
   const patch = {
-    partner_id: me.partner_id,
+    // 강사 계정은 프로필을 **샵 owner 기준**(card_partner_id)으로 읽는다.
+    // 자기 partner_id 로 쓰면 RLS 는 통과하지만 읽을 때 안 보여서
+    // "저장 완료"만 뜨고 값이 원래대로 되돌아갔다(09-03 감사).
+    partner_id: me.card_partner_id || me.partner_id,
     rental_scope: $('p-rental').value || null,
     suit_sizes: sizes,
     reservation_required: $('p-resv').value === '' ? null : $('p-resv').value === 'true',

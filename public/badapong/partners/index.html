@@ -262,10 +262,10 @@
 <section id="find">
   <div class="wrap">
     <div class="bignum">
-      <div class="n">292<small>무료 등재 완료</small></div>
+      <div class="n">280<small>무료 등재 완료</small></div>
       <div class="t">
         <h2>내 샵, 이미 나오고 있을 수 있습니다</h2>
-        <div class="sub">전국 다이브샵 145곳 · 서핑샵 147곳을 스팟 근처 서비스로 무료 등재했습니다.
+        <div class="sub">전국 다이브샵 128곳 · 서핑샵 152곳을 스팟 근처 서비스로 무료 등재했습니다.
           상호로 확인해 보세요.</div>
       </div>
     </div>
@@ -322,7 +322,8 @@
       <div class="stat-row"><span><span class="badge3">✓ 보험</span>
         &nbsp;배상책임보험 증권</span><span class="muted">서류 검수 · 만료 관리</span></div>
       <div class="muted" style="margin-top:12px">
-        사업자 인증은 번호를 넣으면 <b>즉시</b> 끝납니다. 자격·보험은 사진을 올려주시면 검수 후 붙습니다.
+        사업자 인증은 국세청 자동 조회로 대부분 <b>즉시</b> 끝나고, 자동 확인이 안 되면
+        수동 검수로 <b>1~2 영업일</b> 걸립니다. 자격·보험은 사진을 올려주시면 검수 후 붙습니다.
       </div>
     </div>
   </div>
@@ -394,11 +395,11 @@
           (강사는 라이선스 인증 필요). <b>인증 심사는 보통 1~2일(영업일)</b> 걸립니다 —
           별도 가입이 없습니다. 링크는 1회용이며, <b>사업자등록번호 하나에 계정 하나</b>입니다.</div>
         <div class="step"><b>사업자 인증 5분.</b> 사업자등록번호·대표자명·개업일자만 넣으면
-          국세청 조회로 즉시 확인됩니다.</div>
+          국세청 조회로 대부분 즉시 확인됩니다(자동 확인이 안 되면 수동 검수 1~2 영업일).</div>
         <div class="step"><b>모집글을 올립니다.</b> 스팟·날짜·시간대·좌석·참가비를 넣으면 끝입니다.
 모집글 1건에 🎫 발행권 1개입니다.</div>
-        <div class="step"><b>앱 안에서 대화합니다.</b> 전화번호를 받지 않으므로
-          개인정보 동의 절차가 없습니다.</div>
+        <div class="step"><b>앱 안에서 대화합니다.</b> 참가자와 <b>앱 안 대화</b>로만
+          연락하므로 서로의 전화번호를 주고받지 않습니다.</div>
       </div>
     </div>
     <div class="card">
@@ -415,6 +416,9 @@
       </div>
       <label>활동 지역</label>
       <input id="f-region" maxlength="60" placeholder="예: 강릉 사천 / 서귀포" />
+      <p class="muted" style="margin-top:10px;font-size:12px">
+        수집 항목 샵명·연락처·활동 지역 · 목적 파트너 심사 및 안내 · 보유 심사 후 1년.
+        자세한 내용은 <a href="/privacy-badapong.html">개인정보처리방침</a>을 확인해 주세요.</p>
       <label>남기실 말</label>
       <textarea id="f-msg" maxlength="500" placeholder="운영 중인 스팟, 궁금한 점 등"></textarea>
       <div style="margin-top:18px">
@@ -471,12 +475,14 @@
   <div class="wrap" style="margin-bottom:10px">
     <a href="/">Browniebase</a> ·
     <a href="/badapong/">바다퐁 소개</a> ·
+    <a href="/terms-badapong.html">이용약관</a> ·
+    <a href="/privacy-badapong.html">개인정보처리방침</a> ·
     <a href="mailto:support@browniebase.com">support@browniebase.com</a>
   </div>
   <div class="wrap">
     Browniebase · 바다퐁(Badapong) · 문의는 위 신청 폼으로 남겨주세요.<br/>
     실적 수치는 앱 실사용 로그 기준이며 매일 갱신됩니다.
-    🎫 발행권은 파일럿 기간 무료(샵당 5회·첫 회차 7일 이내)이며, 유료 전환 후에는 이 포털에서 구매합니다 — 전환 7일 전 사전 안내. 가입 시 3개 무료.
+    🎫 발행권은 파일럿 기간 무료(샵당 5회·첫 회차 7일 이내)이며, 유료 전환 후에는 이 포털에서 구매하게 됩니다(앱 인앱결제가 아닙니다) — 전환 7일 전 사전 안내. 가입 시 3개 무료.
   </div>
   <div class="wrap bizinfo">
     상호 브라우니베이스(Browniebase) &nbsp;|&nbsp; 대표 최민기 &nbsp;|&nbsp; 사업자등록번호 322-04-03564<br/>
@@ -501,10 +507,14 @@ document.getElementById('shop-q').addEventListener('input', e => {
   const q = e.target.value.trim();
   if (q.length < 2) { document.getElementById('shop-result').innerHTML=''; return; }
   shopTimer = setTimeout(async () => {
+    // 🔴 [2026-09-03] 예전엔 limit=400 을 받아 브라우저에서 걸렀는데, 활성 등재가
+    //   891건이라 뒤쪽 샵을 검색하면 "아직 등재 전"이라는 거짓말이 나왔다.
+    //   이 페이지에서 가장 강한 훅이라 서버에서 거른다.
     const rows = await fetch(`${SB}/spot_services?service_type=in.(dive_shop,surf_shop)&is_active=eq.true`
-      + `&select=name,address,spot_id&limit=400`, {headers:H}).then(r=>r.json());
+      + `&name->>ko=ilike.*${encodeURIComponent(q)}*&select=name,address,spot_id&limit=40`,
+      {headers:H}).then(r=>r.json());
     const seen = new Set();
-    const hit = rows.filter(x => ((x.name && x.name.ko)||'').includes(q))
+    const hit = rows
       .filter(x => { const k=(x.name&&x.name.ko)+x.address; if(seen.has(k)) return false; seen.add(k); return true; })
       .slice(0,5);
     document.getElementById('shop-result').innerHTML = hit.length
