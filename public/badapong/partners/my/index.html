@@ -573,9 +573,18 @@ async function handlePaymentReturn() {
     const { data, error } = await sb.functions.invoke('toss-confirm', {
       body: { paymentKey, orderId, amount: Number(amount) },
     });
-    if (error || !data || !data.ok) {
+
+    // supabase-js 는 non-2xx 면 data 를 비우고 error.message 에 「non-2xx status code」만 넣는다.
+    // 우리가 만든 진짜 사유(reason·토스 코드)는 응답 본문에 있으니 거기서 꺼낸다 —
+    // 안 그러면 결제 실패 원인이 영영 안 보인다.
+    let body = data;
+    if (!body && error && error.context && typeof error.context.json === 'function') {
+      try { body = await error.context.json(); } catch (_) {}
+    }
+
+    if (error || !body || !body.ok) {
       // 돈이 빠졌는데 실패로 보이는 경우가 최악이다. 주문번호를 반드시 남겨 문의가 가능하게 한다.
-      const why = (data && (data.message || data.reason)) || (error && error.message) || '알 수 없음';
+      const why = (body && (body.message || body.reason)) || (error && error.message) || '알 수 없음';
       // 🔴 여기서 주소창을 비우면 안 된다. paymentKey 가 주소에만 있어서,
       //   지우는 순간 재시도할 방법이 사라진다 — 돈은 빠졌는데 발행권이 없는 상태로 굳는다.
       //   (2026-09-03 첫 테스트 결제가 정확히 이렇게 날아갔다. 원인은 Edge Function CORS 누락.)
@@ -584,7 +593,7 @@ async function handlePaymentReturn() {
               ' · 아래 「다시 확인하기」를 눌러주세요. 계속 실패하면 이 주문번호로 support@browniebase.com 에 알려주세요.' };
       return;                       // clean() 하지 않는다
     } else {
-      payMsg = { ok: true, text: '🎫 발행권 ' + data.qty + '개가 충전됐습니다. 현재 잔량 ' + data.balance + '개.' };
+      payMsg = { ok: true, text: '🎫 발행권 ' + body.qty + '개가 충전됐습니다. 현재 잔량 ' + body.balance + '개.' };
     }
   } catch (e) {
     payMsg = { ok: false, text: '결제 확인 중 오류 · 주문번호 ' + orderId + ' 로 문의해 주세요.' };
