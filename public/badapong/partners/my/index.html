@@ -543,9 +543,10 @@ async function init() {
 
 // ── 발행권 구매 (토스페이먼츠 결제위젯 v2) ─────────────────────
 // ⚠ 이 클라이언트 키는 공개돼도 되는 값이다(결제 승인은 시크릿 키로 서버에서만 한다).
-//   현재는 토스 공식 문서의 **공용 예제 키** — 심사 전에 우리 상점 테스트 키,
-//   승인 후 라이브 키로 교체해야 한다. 상점관리자 → 내 개발정보.
-const TOSS_CLIENT_KEY = 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm';
+//   2026-09-03: 토스 공용 예제 키 → **브라우니베이스 상점 테스트 키**로 교체 완료.
+//   심사 승인 뒤 라이브 키(live_gck_...)로 한 번 더 교체해야 한다.
+//   위치: 개발자센터 → 상점 「브라우니베이스」 선택 → API 키.
+const TOSS_CLIENT_KEY = 'test_gck_EP59LybZ8BBQWMyYJlmW86GYo7pR';
 
 let payMsg = null;        // 결제창에서 돌아온 결과 (렌더는 initCredits 에서)
 let tossWidgets = null;
