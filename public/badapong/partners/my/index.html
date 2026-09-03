@@ -214,7 +214,7 @@
            서버가 주문 금액을 찍는다 — 클라이언트가 금액을 정하면 1원에 20개를 살 수 있다. -->
       <div class="card" id="card-buy">
         <h2 style="margin-top:0">🎫 발행권 구매</h2>
-        <div class="muted" id="buy-note">모집글 1건에 발행권 1개가 나갑니다. 표시 금액은 부가세 포함 최종 결제금액입니다.</div>
+        <div class="muted" id="buy-note">모집글 1건에 발행권 1개가 나갑니다. 표시 금액은 <b>부가세 포함 최종 결제금액</b>입니다.<br/>카드로 결제하시면 <b>카드매출전표</b>가 세금계산서를 갈음합니다(매입세액공제 가능). 세금계산서가 따로 필요하시면 결제 후 사업자등록번호와 함께 support@browniebase.com 으로 알려주세요.</div>
         <div id="buy-msg" style="margin-top:8px"></div>
         <div id="buy-tiers" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
 
@@ -626,11 +626,15 @@ async function initCredits() {
     .select('qty,amount').order('qty');
   if (!products || !products.length) { $('buy-tiers').innerHTML = '<span class="muted">가격 정보를 불러오지 못했습니다.</span>'; return; }
 
-  $('buy-tiers').innerHTML = products.map(p =>
-    '<button class="btn sm" data-qty="' + p.qty + '">' +
-    '🎫 ' + p.qty + '개 · ' + p.amount.toLocaleString() + '원' +
-    '<span class="muted" style="display:block;font-size:11px">개당 ' +
-    Math.round(p.amount / p.qty).toLocaleString() + '원</span></button>').join('');
+  // 총액(=결제금액)을 앞에 두고 공급가·부가세를 병기한다. 토스 심사는 표시가와 결제가가
+  // 다르면 반려하므로 「30,000원 + 부가세」식 표기는 쓰지 않는다.
+  $('buy-tiers').innerHTML = products.map(p => {
+    const supply = Math.round(p.amount / 1.1), vat = p.amount - supply;
+    return '<button class="btn sm" data-qty="' + p.qty + '">' +
+      '🎫 ' + p.qty + '개 · ' + p.amount.toLocaleString() + '원' +
+      '<span class="muted" style="display:block;font-size:11px">공급가 ' +
+      supply.toLocaleString() + ' + 부가세 ' + vat.toLocaleString() + '</span></button>';
+  }).join('');
 
   $('buy-tiers').querySelectorAll('button').forEach(b =>
     b.onclick = () => startPurchase(Number(b.dataset.qty)));
@@ -650,8 +654,10 @@ async function startPurchase(qty) {
     return;
   }
   pendingOrder = data;
+  const supply = Math.round(data.amount / 1.1);
   $('buy-selected').textContent =
-    '🎫 ' + data.qty + '개 · ' + data.amount.toLocaleString() + '원 (부가세 포함)';
+    '🎫 ' + data.qty + '개 · 결제금액 ' + data.amount.toLocaleString() + '원' +
+    ' (공급가 ' + supply.toLocaleString() + ' + 부가세 ' + (data.amount - supply).toLocaleString() + ')';
   $('buy-pay').classList.remove('hidden');
 
   const tp = TossPayments(TOSS_CLIENT_KEY);
