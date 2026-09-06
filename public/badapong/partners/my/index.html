@@ -445,7 +445,9 @@ let photos = [];   // partner_profiles.photos (공개 URL 배열)
 let certs = [], courses = [];   // 앱 ProfileScreen 과 같은 키
 const CERT_F   = [['org','발급 단체'],['level','등급'],['no','자격번호'],['url','인증 조회 URL']];
 // 강습 가능 범위 — 값(키)은 앱 ShopCardLabels.teachLevels 와 같아야 한다.
-const TEACH = {discover:'체험', beginner:'초보·오픈워터', advanced:'어드밴스드', master:'레스큐·마스터', instructor:'강사'};
+const TEACH = {discover:'체험', beginner:'초보·오픈워터', advanced:'어드밴스드', master:'레스큐·마스터', instructor:'강사',
+  // 2026-09-07 프리다이빙은 AIDA 단계(2·3·4 ≈ SSI L1·L2·L3) — 앱 ShopCardLabels 와 키 동일
+  fd_basic:'프리다이빙 AIDA 1·2', fd_advanced:'프리다이빙 AIDA 3·4', fd_instructor:'프리다이빙 강사'};
 let teach = [];
 function renderTeach() {
   const known = Object.keys(TEACH);
