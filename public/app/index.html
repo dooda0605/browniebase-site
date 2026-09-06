@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>바다퐁 다운로드</title>
+<meta name="robots" content="noindex">
+<!--
+  바다퐁 스토어 단축 링크. 2026-09-06 신설.
+
+  왜: 영상 설명란에 안드로이드·아이폰 링크를 각각 적으면 두 줄이고, Play 링크는
+  referrer 인코딩 때문에 135자가 넘어 모바일에서 세 줄로 접힌다. 여기로 한 줄만 적는다.
+    https://browniebase.com/app?s=youtube&c=reel07
+
+  ⚠ 유입 출처 추적을 잃지 않는 것이 이 페이지의 존재 이유다.
+    Play 는 referrer 파라미터가 설치 귀속에 쓰이므로 s(source)·c(campaign)를
+    utm_source·utm_campaign 으로 그대로 옮긴다. 값이 없으면 s=web·c=direct.
+    애플은 referrer 개념이 없어 그냥 스토어로 보낸다(유입 구분은 Play 로만).
+
+  ⚠ GitHub Pages 는 서버 리디렉션이 없다 → JS 로 보낸다. JS 가 꺼진 경우를 위해
+    아래 <noscript> 에 두 링크를 그대로 노출한다. 이게 없으면 빈 화면이 된다.
+-->
+<style>
+  body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;
+       background:#0A1628;color:#e8eef7;display:grid;place-items:center;min-height:100vh}
+  .box{text-align:center;padding:24px}
+  a{display:block;margin:10px 0;padding:14px 22px;border-radius:10px;
+    background:#1f6feb;color:#fff;text-decoration:none;font-weight:700}
+  p{opacity:.75;font-size:14px}
+</style>
+</head>
+<body>
+<div class="box">
+  <p>바다퐁 스토어로 이동 중…</p>
+  <a id="ap" href="https://apps.apple.com/app/id6768805465">App Store (iPhone)</a>
+  <a id="gp" href="https://play.google.com/store/apps/details?id=com.browniebase.badapong">Google Play (Android)</a>
+  <noscript><p>위 버튼에서 기기에 맞는 스토어를 선택하세요.</p></noscript>
+</div>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  // 영문/숫자/._- 만 허용 — 임의 문자열이 referrer 에 그대로 실려 나가지 않게 한다.
+  var safe = function (v, d) { return (v && /^[\w.-]{1,40}$/.test(v)) ? v : d; };
+  var s = safe(q.get('s'), 'web');
+  var c = safe(q.get('c'), 'direct');
+
+  var play = 'https://play.google.com/store/apps/details?id=com.browniebase.badapong'
+           + '&referrer=' + encodeURIComponent('utm_source=' + s + '&utm_campaign=' + c);
+  var apple = 'https://apps.apple.com/app/id6768805465';
+
+  document.getElementById('gp').href = play;
+  document.getElementById('ap').href = apple;
+
+  var ua = navigator.userAgent || '';
+  // iPadOS 13+ 는 UA 가 Macintosh 로 나온다 → 터치 지원 여부로 가른다.
+  var iOS = /iPhone|iPod/.test(ua) ||
+            (/iPad|Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  var android = /Android/.test(ua);
+  if (iOS) location.replace(apple);
+  else if (android) location.replace(play);
+  // 데스크톱은 보내지 않는다 — 두 버튼을 그대로 보여준다.
+})();
+</script>
+</body>
+</html>
