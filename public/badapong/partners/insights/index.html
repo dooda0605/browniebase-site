@@ -72,6 +72,13 @@
   td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
   .bar { display:inline-block; height:8px; background:var(--teal); border-radius:4px; vertical-align:middle; margin-right:6px; }
   .note { font-size:.78rem; color:var(--sub); margin-top:8px; line-height:1.5; }
+  .heat { display:grid; grid-template-columns:44px repeat(8,1fr); gap:3px; font-size:.74rem; }
+  .heat .lbl { color:var(--sub); align-self:center; }
+  .heat .hd { color:var(--sub); text-align:center; }
+  .heat .c { height:26px; border-radius:6px; background:rgba(20,184,166,var(--a,0)); border:1px solid var(--line2);
+             display:flex; align-items:center; justify-content:center; color:var(--ink); }
+  .rank-own td { background:rgba(20,184,166,.08); font-weight:800; }
+  .up { color:var(--ok); } .down { color:var(--bad); }
   .g-A,.g-B { color:var(--ok); font-weight:800; } .g-C { color:var(--warn); font-weight:800; } .g-D,.g-E { color:var(--bad); font-weight:800; }
 </style>
 </head>
@@ -124,7 +131,8 @@
     </div>
     <div id="body"></div>
     <p class="note">앱에서 스팟 상세를 연 사용자(운영자 제외)의 서버 집계입니다. 사용자 식별 정보는 포함되지 않으며 표본 <span id="kmin">5</span> 미만인 칸은 표시하지 않습니다.
-      「조회 시 등급」은 사용자가 화면을 연 시각의 해당 활동 예보 등급, 「길안내」는 외부 지도앱을 연 횟수(2.0.7 이상 앱부터 집계), 「미리 보기」는 3일 이상 앞의 예보를 본 사용자입니다.</p>
+      「조회 시 등급」은 사용자가 화면을 연 시각의 해당 활동 예보 등급, 「길안내」는 외부 지도앱을 연 횟수(2.0.7 이상 앱부터 집계), 「미리 보기」는 3일 이상 앞의 예보를 본 사용자입니다.<br/>
+      <b>제공하지 않는 것:</b> 개별 사용자의 행동·재방문 추적, 다른 샵의 실적 비교. 이 페이지의 모든 수치는 지역·스팟·활동·등급·시간대 단위 집계입니다.</p>
     <p style="margin-top:14px"><a class="muted" href="#" id="btn-logout">로그아웃</a></p>
   </div>
 
@@ -195,6 +203,33 @@ function render(d) {
       <div class="kpi"><b>${pct(leadPct('d3plus'))}</b><span>3일+ 미리 보는 사용자 (${d.weeks}주)</span></div>
     </div>`;
 
+  // ③ 지역 순위 (최근 7일 vs 직전 7일)
+  const rk = d.rank || {};
+  const own = (rk.list || []).find(r => r.own);
+  const arrow = (a, b) => (a == null || b == null) ? '' : a < b ? `<span class="up">▲${b - a}</span>` : a > b ? `<span class="down">▼${a - b}</span>` : '<span class="muted">−</span>';
+  if (rk.list && rk.list.length) {
+    h += `<h2>지역 순위 <small>최근 7일 본 사람 기준 · ${n(rk.total)}개 지역</small></h2><div class="card tblwrap">`
+      + (own ? `<div style="margin-bottom:8px"><b>${esc(d.region.name)}</b> ${n(own.rank_now)}위 ${arrow(own.rank_now, own.rank_prev)} <span class="muted">(지난주 ${n(own.rank_prev)}위 · 본 사람 ${n(own.now)} ← ${n(own.prev)})</span></div>` : '')
+      + `<table><tr><th class="num">순위</th><th>지역</th><th class="num">본 사람</th><th class="num">지난주</th><th class="num">변동</th></tr>`
+      + rk.list.map(r => `<tr class="${r.own ? 'rank-own' : ''}"><td class="num">${n(r.rank_now)}</td><td>${esc(r.name)}</td><td class="num">${n(r.now)}</td><td class="num">${n(r.prev)}</td><td class="num">${arrow(r.rank_now, r.rank_prev)}</td></tr>`).join('')
+      + `</table><div class="note">상위 10개 지역과 현재 지역만 표시합니다. 다른 샵의 실적은 제공하지 않습니다.</div></div>`;
+  }
+
+  // ② 이번 주말 수요 예측
+  const wk = d.weekend || {};
+  if (wk.days && wk.days.length) {
+    const dn = s => { const dt = new Date(s + 'T00:00:00'); return ['일','월','화','수','목','금','토'][dt.getDay()]; };
+    const hv = d.heat || {};
+    h += `<h2>이번 주말 수요 예측 <small>${esc(wk.sat)}(토) · ${esc(wk.sun)}(일)</small></h2><div class="card tblwrap">
+      <div class="kpis" style="margin-bottom:10px">`
+      + wk.days.map(x => `<div class="kpi"><b>${n(x.good_spots)} <span style="font-size:.9rem;color:var(--sub)">/ ${n(x.total_spots)}</span></b><span>${esc(x.date.slice(5))} (${dn(x.date)}) 낮 예보 A·B 우세 스팟</span></div>
+          <div class="kpi"><b>${n(x.fav_holders)}</b><span>${esc(x.date.slice(5))} (${dn(x.date)}) 그 스팟을 찜해 둔 사람</span></div>`).join('')
+      + `<div class="kpi"><b>${n(hv.weekend_day_viewers)} <span style="font-size:.9rem;color:var(--sub)">vs ${n(hv.weekday_day_viewers)}</span></b><span>지난 ${d.weeks}주 하루 평균 본 사람 (주말 vs 평일)</span></div></div>`
+      + ((wk.good_spots || []).length ? `<table><tr><th>예보 좋은 스팟</th><th class="num">낮 A·B 비중</th><th class="num">찜해 둔 사람</th></tr>`
+          + wk.good_spots.map(g => `<tr><td>${esc(g.spot)}</td><td class="num">${pct(g.ab_share)}</td><td class="num">${n(g.fav_holders)}</td></tr>`).join('') + `</table>` : `<div class="muted">이번 주말 낮 예보가 A·B 우세인 스팟이 없습니다.</div>`)
+      + `<div class="note">「찜해 둔 사람」은 예보가 좋아지면 다시 열어보는 비율이 높은 집단입니다(등급별 행동 표 참고). 예보는 매 3시간 갱신되므로 주말이 가까울수록 정확합니다.</div></div>`;
+  }
+
   // 주간 추이
   const maxU = Math.max(1, ...d.weekly.map(w => w.viewers || 0));
   h += `<h2>주간 추이 <small>${d.weeks}주</small></h2><div class="card tblwrap"><table>
@@ -203,6 +238,19 @@ function render(d) {
         <td><span class="bar" style="width:${Math.round(120 * (w.viewers || 0) / maxU)}px"></span>${n(w.viewers)}</td>
         <td class="num">${n(w.views)}</td><td class="num">${n(w.favorites)}</td><td class="num">${n(w.directions)}</td><td class="num">${n(w.ahead3)}</td></tr>`).join('')
     + `</table></div>`;
+
+  // ① 요일 × 시간대 히트맵
+  const ht = d.heat || {};
+  if (ht.cells && ht.cells.length) {
+    const cell = {}; let mx = 1;
+    ht.cells.forEach(c => { cell[c.dow + '-' + c.blk] = c; mx = Math.max(mx, c.views || 0); });
+    const dows = [1,2,3,4,5,6,0], dn = ['일','월','화','수','목','금','토'];
+    h += `<h2>언제 보나 <small>요일 × 시간대(KST) · 조회 수 · ${d.weeks}주</small></h2><div class="card"><div class="heat">
+      <div></div>` + [0,1,2,3,4,5,6,7].map(b => `<div class="hd">${b * 3}시</div>`).join('')
+      + dows.map(w => `<div class="lbl">${dn[w]}</div>` + [0,1,2,3,4,5,6,7].map(b => { const c = cell[w + '-' + b]; const v = c ? c.views : 0;
+          return `<div class="c" style="--a:${(0.12 + 0.88 * v / mx).toFixed(2)};${v ? '' : 'background:transparent'}" title="${dn[w]} ${b*3}~${b*3+3}시 · 조회 ${v}">${v || ''}</div>`; }).join('')).join('')
+      + `</div><div class="note">문의가 몰리는 시간, 게시물 올릴 시간, 직원 배치의 근거로 쓰십시오. 진할수록 조회가 많습니다.</div></div>`;
+  }
 
   // 활동별
   h += `<h2>활동별 <small>누가 무엇으로 보나</small></h2><div class="card tblwrap"><table>
@@ -217,6 +265,15 @@ function render(d) {
     + (d.grades.length ? d.grades.map(g => `<tr><td>${GR(g.grade)}</td><td class="num">${n(g.pairs)}</td><td class="num">${n(g.views_per)}</td><td class="num">${n(g.favorites)}</td><td class="num">${pct(g.fav_rate)}</td><td class="num">${n(g.directions)}</td></tr>`).join('')
        : `<tr><td colspan="6" class="muted">표본 부족</td></tr>`)
     + `</table><div class="note">찜 전환이 D·E에서 높으면 「나쁠 때 미리 찜해 두고 좋아지길 기다리는」 수요, 길안내가 A·B에 몰리면 「좋아지면 바로 출발하는」 수요입니다.</div></div>`;
+
+  // ⑤ 활동 × 등급 교차
+  if (d.cross && d.cross.length) {
+    const sh = (x, t) => t ? Math.round(100 * x / t) + '%' : '—';
+    h += `<h2>활동별 손님은 언제 오나 <small>활동 × 조회 시 등급</small></h2><div class="card tblwrap"><table>
+      <tr><th>활동</th><th class="num">조회 쌍</th><th class="num">A·B</th><th class="num">C</th><th class="num">D·E</th><th class="num">미기록</th><th class="num">인당 조회 A·B / D·E</th><th class="num">길안내 A·B / D·E</th></tr>`
+      + d.cross.map(c => `<tr><td>${esc(ACT[c.activity] || c.activity)}</td><td class="num">${n(c.pairs)}</td><td class="num g-A">${sh(c.ab, c.pairs)}</td><td class="num g-C">${sh(c.c, c.pairs)}</td><td class="num g-D">${sh(c.de, c.pairs)}</td><td class="num">${sh(c.unk, c.pairs)}</td><td class="num">${n(c.views_per_ab)} / ${n(c.views_per_de)}</td><td class="num">${n(c.directions_ab)} / ${n(c.directions_de)}</td></tr>`).join('')
+      + `</table><div class="note">A·B 에 몰리는 활동은 「좋은 날에만 오는」 손님, D·E 에서도 보는 활동은 「예보와 무관하게 계획하는」 손님입니다. 활동별로 홍보 시점을 다르게 잡는 근거입니다.</div></div>`;
+  }
 
   // 리드타임
   h += `<h2>예보를 며칠 앞까지 보나 <small>${d.weeks}주 · 사용자 ${n(lead.viewers)}</small></h2><div class="card tblwrap"><table>
