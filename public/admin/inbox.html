@@ -98,6 +98,7 @@
   <h1>🐚 문의함</h1>
   <button class="chip on" id="fUnread">미답변 <span id="cUnread">·</span></button>
   <button class="chip" id="fAll">전체</button>
+  <button class="chip" id="fArch">숨김 <span id="cArch">·</span></button>
   <span class="spacer"></span>
   <button class="chip" id="reload">↻</button>
 </header>
@@ -140,7 +141,9 @@ const RESOLUTIONS = [
   ['rejected',       '반영 불가'],
 ];
 
-let threads = [], requests = {}, selected = null, onlyUnread = true;
+let threads = [], requests = {}, selected = null;
+// 'unread' | 'all' | 'archived' — 숨긴 스레드는 앞의 둘에서 빠진다.
+let mode = 'unread';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => (s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -170,7 +173,7 @@ async function api(path, opt) {
 async function loadThreads() {
   showErr('');
   try {
-    threads = await api('message_threads?select=id,kind,request_id,created_at,last_msg_at,user_unread,operator_unread'
+    threads = await api('message_threads?select=id,kind,request_id,created_at,last_msg_at,user_unread,operator_unread,archived_at'
                         + '&order=last_msg_at.desc&limit=300');
     if (threads.length) sawAnyRow = true;
 
@@ -196,7 +199,10 @@ async function loadThreads() {
 }
 
 function visible() {
-  const ts = onlyUnread ? threads.filter(t => (t.operator_unread || 0) > 0) : threads;
+  const live = threads.filter(t => !t.archived_at);
+  const ts = mode === 'archived' ? threads.filter(t => t.archived_at)
+           : mode === 'unread'   ? live.filter(t => (t.operator_unread || 0) > 0)
+           :                       live;
   // 미답변 먼저, 그다음 최신순
   return ts.slice().sort((a, b) => {
     const ua = (a.operator_unread || 0) > 0 ? 0 : 1, ub = (b.operator_unread || 0) > 0 ? 0 : 1;
@@ -206,14 +212,15 @@ function visible() {
 }
 
 function renderList() {
-  const unread = threads.filter(t => (t.operator_unread || 0) > 0).length;
+  const unread = threads.filter(t => !t.archived_at && (t.operator_unread || 0) > 0).length;
   $('cUnread').textContent = unread;
+  $('cArch').textContent = threads.filter(t => t.archived_at).length;
   const ts = visible();
   if (!ts.length) {
     $('list').innerHTML = '<div class="empty">' +
       (threads.length === 0 && !sawAnyRow
         ? '0행 — 어드민 토큰이 맞는지 확인하세요.<br>(RLS 는 권한이 없으면 에러 대신 빈 결과를 줍니다)'
-        : (onlyUnread ? '미답변 없음 👏' : '문의 없음')) + '</div>';
+        : (mode === 'unread' ? '미답변 없음 👏' : mode === 'archived' ? '숨긴 문의 없음' : '문의 없음')) + '</div>';
     return;
   }
   $('list').innerHTML = ts.map(t => {
@@ -261,7 +268,9 @@ async function openThread(id) {
 function renderDetail(t, msgs) {
   const rq = t && t.request_id ? requests[t.request_id] : null;
   let html = '<div class="pad">'
-    + '<button class="back" onclick="document.body.classList.remove(\'detail-open\')">← 목록</button>';
+    + '<button class="back" onclick="document.body.classList.remove(\'detail-open\')">← 목록</button>'
+    + '<button class="back" id="arch" style="display:inline-block;margin-left:6px">'
+    + (t && t.archived_at ? '숨김 해제' : '숨기기') + '</button>';
 
   if (rq) {
     const c = rq.context || {};
@@ -297,6 +306,7 @@ function renderDetail(t, msgs) {
 
   [...document.querySelectorAll('[data-res]')].forEach(b => b.onclick = () => setResolution(rq, b.dataset.res));
   $('send').onclick = () => send(t.id);
+  $('arch').onclick = () => toggleArchive(t);
 }
 
 async function setResolution(rq, res) {
@@ -314,6 +324,22 @@ async function setResolution(rq, res) {
     rq.resolution = res || null; rq.resolution_note = note || null;
     openThread(selected);
   } catch (e) { showErr('원장 기록 실패: ' + e.message); }
+}
+
+// 숨기기 = soft delete. 하드 삭제를 쓰지 않는 이유: user_messages 가 thread 에 CASCADE 라
+// 스레드를 지우면 **사용자가 쓴 메시지까지 영구 소멸**하고 되돌릴 수 없다.
+async function toggleArchive(t) {
+  const next = t.archived_at ? null : new Date().toISOString();
+  try {
+    await api('message_threads?id=eq.' + t.id, {
+      method: 'PATCH', headers: H, body: JSON.stringify({ archived_at: next }) });
+    t.archived_at = next;
+    selected = null;
+    document.body.classList.remove('detail-open');
+    $('detail').innerHTML = '<div class="empty">'
+      + (next ? '숨겼습니다 — 「숨김」 탭에서 되돌릴 수 있어요' : '숨김을 해제했습니다') + '</div>';
+    renderList();
+  } catch (e) { showErr('숨기기 실패: ' + e.message); }
 }
 
 async function send(threadId) {
@@ -338,8 +364,15 @@ async function send(threadId) {
 }
 
 // ── 필터·초기화 ─────────────────────────────────────────────────────────────
-$('fUnread').onclick = () => { onlyUnread = true;  $('fUnread').classList.add('on');    $('fAll').classList.remove('on'); renderList(); };
-$('fAll').onclick    = () => { onlyUnread = false; $('fUnread').classList.remove('on'); $('fAll').classList.add('on');    renderList(); };
+function setMode(m) {
+  mode = m;
+  [['unread','fUnread'],['all','fAll'],['archived','fArch']].forEach(([k, id]) =>
+    $(id).classList.toggle('on', k === m));
+  renderList();
+}
+$('fUnread').onclick = () => setMode('unread');
+$('fAll').onclick    = () => setMode('all');
+$('fArch').onclick   = () => setMode('archived');
 $('reload').onclick  = () => loadThreads();
 
 if (!SUPABASE_KEY || !ADMIN_TOKEN) {
