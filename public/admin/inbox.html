@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>바다퐁 문의함</title>
+<!--
+  운영자 문의함 (2026-09-11 신설)
+
+  왜 웹인가: 앱에서 운영자가 답하려면 RPC+허용목록+UI+빌드+심사가 필요하고, 운영자 uid 가
+    익명계정이라 앱 재설치마다 바뀐다. 이 페이지는 spot-map.html 과 **같은 인증**
+    (x-admin-token → admin_tokens → RLS is_spot_admin())을 써서 빌드·심사 없이 동작한다.
+    ⚠ service_role 키는 절대 여기 두지 않는다. anon 키 + 어드민 토큰뿐이고, 권한은 전부 RLS 가 판단한다.
+
+  첫 접속: /admin/inbox.html?sb=<ANON_KEY>&at=<ADMIN_TOKEN>  → localStorage 캐시(spot-map 과 공용)
+  이후:    /admin/inbox.html
+
+  ⚠ 문의 본문은 개인 정보다. 토큰이 새면 전체 문의를 읽을 수 있다 —
+    유출 의심 시 admin_tokens 에서 그 행만 삭제하면 즉시 무효(앱 배포 불필요).
+-->
+<style>
+  :root{
+    --bg:#0f172a; --panel:#16213a; --panel2:#1e2b47; --line:#2b3a5c;
+    --fg:#e8eefc; --dim:#93a4c8; --accent:#4aa8ff; --warn:#ffb84a; --ok:#49d18a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg); color:var(--fg);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    -webkit-text-size-adjust:100%;
+  }
+  header{
+    position:sticky; top:0; z-index:5; background:var(--panel);
+    border-bottom:1px solid var(--line);
+    padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+  }
+  header h1{font-size:15px;margin:0;font-weight:700}
+  .chip{
+    background:var(--panel2); border:1px solid var(--line); color:var(--dim);
+    padding:5px 10px; border-radius:999px; font-size:12px; cursor:pointer;
+  }
+  .chip.on{background:var(--accent); border-color:var(--accent); color:#04121f; font-weight:700}
+  .spacer{flex:1}
+  .wrap{display:flex; height:calc(100% - 0px)}
+  #list{width:100%; max-width:420px; border-right:1px solid var(--line); overflow-y:auto}
+  #detail{flex:1; overflow-y:auto; display:none}
+  @media(min-width:900px){ #detail{display:block} }
+  body.detail-open #list{display:none}
+  body.detail-open #detail{display:block}
+  @media(min-width:900px){ body.detail-open #list{display:block} }
+
+  .row{padding:11px 12px; border-bottom:1px solid var(--line); cursor:pointer}
+  .row:active{background:var(--panel2)}
+  .row.sel{background:var(--panel2); border-left:3px solid var(--accent)}
+  .row .top{display:flex; gap:6px; align-items:center; margin-bottom:3px}
+  .row .prev{color:var(--dim); font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .badge{font-size:10.5px; padding:2px 6px; border-radius:4px; background:var(--warn); color:#231400; font-weight:700}
+  .badge.res{background:var(--panel2); color:var(--dim); font-weight:600}
+  .badge.ok{background:var(--ok); color:#03210f}
+  .time{color:var(--dim); font-size:11px; margin-left:auto; white-space:nowrap}
+
+  #detail .pad{padding:12px}
+  .back{background:none;border:1px solid var(--line);color:var(--fg);border-radius:6px;padding:5px 10px;font-size:12px}
+  @media(min-width:900px){ .back{display:none} }
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:11px; margin-bottom:12px}
+  .card h3{margin:0 0 6px; font-size:12px; color:var(--dim); font-weight:600}
+  .kv{font-size:13px; margin:3px 0}
+  .msg{margin:9px 0; display:flex}
+  .msg .b{max-width:78%; padding:8px 11px; border-radius:12px; white-space:pre-wrap; word-break:break-word}
+  .msg.user .b{background:var(--panel2); border:1px solid var(--line); border-bottom-left-radius:3px}
+  .msg.operator{justify-content:flex-end}
+  .msg.operator .b{background:#1d4b7a; border-bottom-right-radius:3px}
+  .msg .t{font-size:10.5px; color:var(--dim); margin:2px 4px 0}
+  #composer{position:sticky; bottom:0; background:var(--panel); border-top:1px solid var(--line);
+            padding:10px 12px calc(10px + env(safe-area-inset-bottom)); display:flex; gap:8px}
+  textarea{
+    flex:1; background:var(--bg); color:var(--fg); border:1px solid var(--line);
+    border-radius:8px; padding:9px; font:inherit; resize:vertical; min-height:44px; max-height:40vh;
+  }
+  button.send{background:var(--accent); color:#04121f; border:0; border-radius:8px; padding:0 16px; font-weight:700; cursor:pointer}
+  button.send:disabled{opacity:.45; cursor:default}
+  .resbtns{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
+  .resbtns button{
+    background:var(--panel2); color:var(--fg); border:1px solid var(--line);
+    border-radius:6px; padding:5px 9px; font-size:12px; cursor:pointer;
+  }
+  .resbtns button.cur{border-color:var(--accent); color:var(--accent); font-weight:700}
+  a{color:var(--accent)}
+  .empty{padding:28px 14px; color:var(--dim); text-align:center}
+  .err{background:#5a1d1d; color:#ffd7d7; padding:8px 12px; font-size:12.5px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🐚 문의함</h1>
+  <button class="chip on" id="fUnread">미답변 <span id="cUnread">·</span></button>
+  <button class="chip" id="fAll">전체</button>
+  <span class="spacer"></span>
+  <button class="chip" id="reload">↻</button>
+</header>
+<div id="err" class="err" style="display:none"></div>
+
+<div class="wrap">
+  <div id="list"><div class="empty">불러오는 중…</div></div>
+  <div id="detail"><div class="empty">왼쪽에서 대화를 선택하세요</div></div>
+</div>
+
+<script>
+// ── 인증 (spot-map.html 과 동일 패턴·동일 localStorage 키) ────────────────────
+function _loadKey(name, label) {
+  const fromUrl = new URLSearchParams(window.location.search).get(name);
+  if (fromUrl) { localStorage.setItem('admin_' + name, fromUrl); return fromUrl; }
+  let v = localStorage.getItem('admin_' + name);
+  if (!v) { v = prompt(label + ' 입력:'); if (v) localStorage.setItem('admin_' + name, v); }
+  return v;
+}
+const SUPABASE_URL = 'https://gprgkcouugiwrfnbcsjz.supabase.co';
+const SUPABASE_KEY = _loadKey('sb', 'Supabase anon key (eyJ...)');
+const ADMIN_TOKEN  = _loadKey('at', 'Admin token (32+ char)');
+
+const H = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'x-admin-token': ADMIN_TOKEN,
+  'Content-Type': 'application/json',
+};
+const H_RET = Object.assign({}, H, { 'Prefer': 'return=representation' });
+
+// 토큰이 틀리면 RLS 가 **에러 대신 0행**을 준다 — 빈 목록을 「문의 없음」으로 오독하지 않도록
+// 최초 로드에서 이 플래그로 구분한다(스레드 0 + 요청 0 이면 토큰 의심).
+let sawAnyRow = false;
+
+const RESOLUTIONS = [
+  ['registered',     '등록함'],
+  ['already_exists', '이미 있음'],
+  ['deferred',       '보류'],
+  ['rejected',       '반영 불가'],
+];
+
+let threads = [], requests = {}, selected = null, onlyUnread = true;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => (s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function showErr(m) { const e = $('err'); e.textContent = m; e.style.display = m ? 'block' : 'none'; }
+
+function kst(iso) {
+  const d = new Date(iso);
+  const s = new Date(d.getTime() + 9 * 3600e3).toISOString();
+  return s.slice(5, 10).replace('-', '/') + ' ' + s.slice(11, 16);
+}
+function ago(iso) {
+  const m = Math.floor((Date.now() - new Date(iso)) / 60000);
+  if (m < 60) return m + '분 전';
+  if (m < 1440) return Math.floor(m / 60) + '시간 전';
+  return Math.floor(m / 1440) + '일 전';
+}
+
+async function api(path, opt) {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/' + path, opt || { headers: H });
+  if (!r.ok) throw new Error(r.status + ' ' + (await r.text()).slice(0, 200));
+  const t = await r.text();
+  return t ? JSON.parse(t) : null;
+}
+
+// ── 목록 ────────────────────────────────────────────────────────────────────
+async function loadThreads() {
+  showErr('');
+  try {
+    threads = await api('message_threads?select=id,kind,request_id,created_at,last_msg_at,user_unread,operator_unread'
+                        + '&order=last_msg_at.desc&limit=300');
+    if (threads.length) sawAnyRow = true;
+
+    // 스팟 요청 원장 — 스레드에 붙은 것만
+    const ids = threads.map(t => t.request_id).filter(Boolean);
+    requests = {};
+    if (ids.length) {
+      const rows = await api('user_requests?id=in.(' + ids.join(',') + ')'
+                             + '&select=id,request_type,content,context,resolution,resolution_note,created_at');
+      rows.forEach(r => requests[r.id] = r);
+      if (rows.length) sawAnyRow = true;
+    }
+    // 마지막 메시지 미리보기 (스레드 300개 이하라 한 번에)
+    const msgs = await api('user_messages?select=thread_id,sender,body,created_at&order=created_at.asc&limit=3000');
+    const prev = {};
+    msgs.forEach(m => prev[m.thread_id] = m);
+    threads.forEach(t => t._prev = prev[t.id]);
+
+    renderList();
+  } catch (e) {
+    showErr('불러오기 실패: ' + e.message + ' (토큰·anon 키 확인)');
+  }
+}
+
+function visible() {
+  const ts = onlyUnread ? threads.filter(t => (t.operator_unread || 0) > 0) : threads;
+  // 미답변 먼저, 그다음 최신순
+  return ts.slice().sort((a, b) => {
+    const ua = (a.operator_unread || 0) > 0 ? 0 : 1, ub = (b.operator_unread || 0) > 0 ? 0 : 1;
+    if (ua !== ub) return ua - ub;
+    return new Date(b.last_msg_at) - new Date(a.last_msg_at);
+  });
+}
+
+function renderList() {
+  const unread = threads.filter(t => (t.operator_unread || 0) > 0).length;
+  $('cUnread').textContent = unread;
+  const ts = visible();
+  if (!ts.length) {
+    $('list').innerHTML = '<div class="empty">' +
+      (threads.length === 0 && !sawAnyRow
+        ? '0행 — 어드민 토큰이 맞는지 확인하세요.<br>(RLS 는 권한이 없으면 에러 대신 빈 결과를 줍니다)'
+        : (onlyUnread ? '미답변 없음 👏' : '문의 없음')) + '</div>';
+    return;
+  }
+  $('list').innerHTML = ts.map(t => {
+    const rq = t.request_id ? requests[t.request_id] : null;
+    const un = (t.operator_unread || 0) > 0;
+    const res = rq && rq.resolution
+      ? '<span class="badge res">' + esc((RESOLUTIONS.find(r => r[0] === rq.resolution) || [, rq.resolution])[1]) + '</span>'
+      : '';
+    return '<div class="row' + (selected === t.id ? ' sel' : '') + '" data-id="' + t.id + '">'
+      + '<div class="top">'
+      + (un ? '<span class="badge">미답변 ' + t.operator_unread + '</span>' : '')
+      + res
+      + '<span class="time">' + ago(t.last_msg_at) + '</span></div>'
+      + '<div class="prev">' + esc((t._prev && t._prev.body) || '(내용 없음)') + '</div>'
+      + '</div>';
+  }).join('');
+  [...document.querySelectorAll('.row')].forEach(el =>
+    el.onclick = () => openThread(el.dataset.id));
+}
+
+// ── 대화 ────────────────────────────────────────────────────────────────────
+async function openThread(id) {
+  selected = id;
+  document.body.classList.add('detail-open');
+  renderList();
+  $('detail').innerHTML = '<div class="empty">불러오는 중…</div>';
+  try {
+    const msgs = await api('user_messages?thread_id=eq.' + id
+                           + '&select=id,sender,body,created_at&order=created_at.asc&limit=300');
+    renderDetail(threads.find(t => t.id === id), msgs);
+    // 읽음 처리 — 실패해도 대화는 보여준다
+    const t = threads.find(x => x.id === id);
+    if (t && (t.operator_unread || 0) > 0) {
+      try {
+        await api('message_threads?id=eq.' + id, {
+          method: 'PATCH', headers: H, body: JSON.stringify({ operator_unread: 0 }) });
+        t.operator_unread = 0; renderList();
+      } catch (e) { /* 표시만 남는다 */ }
+    }
+  } catch (e) {
+    $('detail').innerHTML = '<div class="err">대화 불러오기 실패: ' + esc(e.message) + '</div>';
+  }
+}
+
+function renderDetail(t, msgs) {
+  const rq = t && t.request_id ? requests[t.request_id] : null;
+  let html = '<div class="pad">'
+    + '<button class="back" onclick="document.body.classList.remove(\'detail-open\')">← 목록</button>';
+
+  if (rq) {
+    const c = rq.context || {};
+    const lat = c.lat, lon = c.lon;
+    html += '<div class="card" style="margin-top:10px">'
+      + '<h3>스팟 요청 · ' + esc(rq.request_type) + ' · ' + kst(rq.created_at) + '</h3>'
+      + '<div class="kv">' + esc(rq.content) + '</div>'
+      + (lat && lon
+          ? '<div class="kv">📍 ' + lat + ', ' + lon
+            + ' · <a target="_blank" rel="noopener" href="https://map.kakao.com/link/map/요청지점,'
+            + lat + ',' + lon + '">지도</a></div>'
+          : '')
+      + (rq.resolution_note ? '<div class="kv" style="color:var(--dim)">메모: ' + esc(rq.resolution_note) + '</div>' : '')
+      + '<div class="resbtns">'
+      + RESOLUTIONS.map(([v, l]) =>
+          '<button data-res="' + v + '" class="' + (rq.resolution === v ? 'cur' : '') + '">' + l + '</button>').join('')
+      + '<button data-res="">미정</button>'
+      + '</div></div>';
+  }
+
+  html += (msgs.length ? msgs.map(m =>
+      '<div class="msg ' + esc(m.sender) + '"><div>'
+      + '<div class="b">' + esc(m.body) + '</div>'
+      + '<div class="t" style="text-align:' + (m.sender === 'operator' ? 'right' : 'left') + '">'
+      + kst(m.created_at) + '</div></div></div>').join('')
+    : '<div class="empty">메시지 없음</div>');
+
+  html += '</div><div id="composer">'
+    + '<textarea id="body" placeholder="답변을 입력하세요 (사용자 앱에 그대로 표시됩니다)"></textarea>'
+    + '<button class="send" id="send">보내기</button></div>';
+
+  $('detail').innerHTML = html;
+
+  [...document.querySelectorAll('[data-res]')].forEach(b => b.onclick = () => setResolution(rq, b.dataset.res));
+  $('send').onclick = () => send(t.id);
+}
+
+async function setResolution(rq, res) {
+  if (!rq) return;
+  const note = res ? (prompt('메모 (선택, 비워도 됨):', rq.resolution_note || '') ?? null) : null;
+  try {
+    await api('user_requests?id=eq.' + rq.id, {
+      method: 'PATCH', headers: H,
+      body: JSON.stringify({
+        resolution: res || null,
+        resolution_note: note || null,
+        resolved_at: res ? new Date().toISOString() : null,
+      }),
+    });
+    rq.resolution = res || null; rq.resolution_note = note || null;
+    openThread(selected);
+  } catch (e) { showErr('원장 기록 실패: ' + e.message); }
+}
+
+async function send(threadId) {
+  const ta = $('body'), btn = $('send');
+  const body = ta.value.trim();
+  if (!body) return;
+  btn.disabled = true;
+  try {
+    // sender='operator' 는 RLS(with check)가 강제한다 — 토큰 없으면 여기서 막힌다.
+    await api('user_messages', {
+      method: 'POST', headers: H_RET,
+      body: JSON.stringify({ thread_id: threadId, sender: 'operator', body }),
+    });
+    ta.value = '';
+    await loadThreads();
+    await openThread(threadId);
+  } catch (e) {
+    showErr('전송 실패: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── 필터·초기화 ─────────────────────────────────────────────────────────────
+$('fUnread').onclick = () => { onlyUnread = true;  $('fUnread').classList.add('on');    $('fAll').classList.remove('on'); renderList(); };
+$('fAll').onclick    = () => { onlyUnread = false; $('fUnread').classList.remove('on'); $('fAll').classList.add('on');    renderList(); };
+$('reload').onclick  = () => loadThreads();
+
+if (!SUPABASE_KEY || !ADMIN_TOKEN) {
+  showErr('키가 없습니다. /admin/inbox.html?sb=<anon>&at=<admin token> 으로 한 번 접속하세요.');
+} else {
+  loadThreads();
+}
+</script>
+</body>
+</html>
