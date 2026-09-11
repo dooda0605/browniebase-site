@@ -153,8 +153,10 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;
 const show = id => { for (const v of ['view-login','view-gate','view-main','view-loading']) $(v).classList.toggle('hidden', v !== id); };
 const n = v => (v === null || v === undefined) ? '<span class="muted">—</span>' : Number(v).toLocaleString();
 const pct = v => (v === null || v === undefined) ? '<span class="muted">—</span>' : v + '%';
-const ACT = { beach_swim:'물놀이', snorkel:'스노클', freedive:'프리다이빙', scuba:'스쿠버', surf:'서핑', fishing:'낚시', mudflat:'해루질', unknown:'미지정' };
-const GR = g => g === '?' ? '<span class="muted">미기록</span>' : `<span class="g-${esc(g)}">${esc(g)}</span>`;
+// 활동 이름은 앱 app_ko.arb(activityBeachSwim…)와 같은 표기를 쓴다 — 같은 파트너가 /my·앱·여기를 오가므로 다르면 다른 활동으로 읽힌다
+const ACT = { beach_swim:'해변수영', snorkel:'스노클링', freedive:'프리다이빙', scuba:'스쿠버다이빙', surf:'서핑', fishing:'낚시', mudflat:'해루질', unknown:'미지정' };
+// '?' = 조회 시점 등급이 저장 안 된 조회. 등급 기록은 2026-09-04부터라 그 이전 기간은 전부 여기로 잡힌다(활동 '미지정'과 다른 것)
+const GR = g => g === '?' ? '<span class="muted">등급 미기록</span>' : `<span class="g-${esc(g)}">${esc(g)}</span>`;
 
 let region = new URLSearchParams(location.search).get('r') || null;
 
@@ -267,13 +269,13 @@ function render(d) {
     <tr><th>조회 시 등급</th><th class="num">조회 (사람·스팟·일)</th><th class="num">인당 조회</th><th class="num">즐겨찾기 등록</th><th class="num">찜 전환</th><th class="num">길안내</th></tr>`
     + (d.grades.length ? d.grades.map(g => `<tr><td>${GR(g.grade)}</td><td class="num">${n(g.pairs)}</td><td class="num">${n(g.views_per)}</td><td class="num">${n(g.favorites)}</td><td class="num">${pct(g.fav_rate)}</td><td class="num">${n(g.directions)}</td></tr>`).join('')
        : `<tr><td colspan="6" class="muted">표본 부족</td></tr>`)
-    + `</table><div class="note">찜 전환이 D·E에서 높으면 「나쁠 때 미리 찜해 두고 좋아지길 기다리는」 수요, 길안내가 A·B에 몰리면 「좋아지면 바로 출발하는」 수요입니다.</div></div>`;
+    + `</table><div class="note">「등급 미기록」은 조회 시점 등급이 저장되지 않은 조회입니다 — 등급 기록은 2026-09-04부터 들어가 그 이전 기간은 전부 여기로 잡히며, 창이 지날수록 줄어듭니다. 찜 전환이 D·E에서 높으면 「나쁠 때 미리 찜해 두고 좋아지길 기다리는」 수요, 길안내가 A·B에 몰리면 「좋아지면 바로 출발하는」 수요입니다.</div></div>`;
 
   // ⑤ 활동 × 등급 교차
   if (d.cross && d.cross.length) {
     const sh = (x, t) => t ? Math.round(100 * x / t) + '%' : '—';
     h += `<h2>활동별 손님은 언제 오나 <small>활동 × 조회 시 등급</small></h2><div class="card tblwrap"><table>
-      <tr><th>활동</th><th class="num">조회 쌍</th><th class="num">A·B</th><th class="num">C</th><th class="num">D·E</th><th class="num">미기록</th><th class="num">인당 조회 A·B / D·E</th><th class="num">길안내 A·B / D·E</th></tr>`
+      <tr><th>활동</th><th class="num">조회 쌍</th><th class="num">A·B</th><th class="num">C</th><th class="num">D·E</th><th class="num">등급 미기록</th><th class="num">인당 조회 A·B / D·E</th><th class="num">길안내 A·B / D·E</th></tr>`
       + d.cross.map(c => `<tr><td>${esc(ACT[c.activity] || c.activity)}</td><td class="num">${n(c.pairs)}</td><td class="num g-A">${sh(c.ab, c.pairs)}</td><td class="num g-C">${sh(c.c, c.pairs)}</td><td class="num g-D">${sh(c.de, c.pairs)}</td><td class="num">${sh(c.unk, c.pairs)}</td><td class="num">${n(c.views_per_ab)} / ${n(c.views_per_de)}</td><td class="num">${n(c.directions_ab)} / ${n(c.directions_de)}</td></tr>`).join('')
       + `</table><div class="note">A·B 에 몰리는 활동은 「좋은 날에만 오는」 손님, D·E 에서도 보는 활동은 「예보와 무관하게 계획하는」 손님입니다. 활동별로 홍보 시점을 다르게 잡는 근거입니다.</div></div>`;
   }
