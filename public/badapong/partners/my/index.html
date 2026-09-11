@@ -192,7 +192,11 @@
         <b id="shop-name" style="font-size:1.08rem">—</b>
         <div class="muted" id="shop-addr"></div>
       </div>
-      <div style="margin-left:auto;display:flex;gap:6px" id="badge-box"></div>
+      <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+        <span id="badge-box" style="display:flex;gap:6px"></span>
+        <!-- [2026-09-12] 지역 인사이트 — 사업자 인증 파트너만 열린다(서버 RPC 가 검사) -->
+        <a class="btn sec sm" href="/badapong/partners/insights/">📊 지역 인사이트</a>
+      </div>
     </div>
 
     <div class="tabs">

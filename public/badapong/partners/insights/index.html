@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex" />
+<title>바다퐁 파트너 — 지역 인사이트</title>
+<!--
+  파트너 지역 인사이트 (2026-09-12) — 사업자 인증을 마친 파트너에게 앱 사용자 행동을 지역 단위 집계로 보여준다.
+  로그인·세션은 partners/my 와 동일(구글·카카오·Apple, anon 키). 데이터는 RPC partner_region_insights 하나 —
+  서버가 사업자 인증 상태를 검사하고 집계만 돌려준다(기기 식별자 없음, 표본 5 미만 칸 제거).
+  같은 표를 운영 다이제스트 「행동 심층」이 매일 본다 — 파트너와 운영자가 같은 숫자를 본다.
+-->
+<style>
+  :root {
+    --bg:#0B1220; --panel:rgba(255,255,255,.03); --panel2:#0D1627;
+    --line:rgba(255,255,255,.16); --line2:rgba(255,255,255,.08); --line-input:rgba(255,255,255,.32);
+    --ink:#F0F4F8; --body:#A9BCD0; --strong:#C3D3E4; --sub:#6B8AA8;
+    --blue:#1A73E8; --teal:#14B8A6; --teal-l:#2DD4BF; --sea:linear-gradient(135deg,#1A73E8,#14B8A6);
+    --ok:#34D399; --warn:#F5B75C; --bad:#F87171;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo",sans-serif; color:var(--ink);
+         line-height:1.6; background:var(--bg);
+         background-image:radial-gradient(1100px 420px at 50% -160px, rgba(26,115,232,.16), transparent 70%),
+                          radial-gradient(900px 340px at 108% 4%, rgba(20,184,166,.10), transparent 70%);
+         background-attachment:fixed; -webkit-font-smoothing:antialiased; }
+  a { color:var(--teal-l); }
+  .wrap { max-width:860px; margin:0 auto; padding:0 18px 60px; }
+  header { padding:22px 0 8px; }
+  header .wrap { padding-bottom:0; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  header img { width:38px; height:38px; border-radius:11px; }
+  header h1 { font-size:1.05rem; font-weight:800; letter-spacing:-.2px; }
+  header h1 span { font-weight:500; color:var(--body); }
+  header .who { margin-left:auto; font-size:.8rem; color:var(--sub); }
+  header .who a { color:var(--strong); }
+  h2 { font-size:1.02rem; font-weight:800; letter-spacing:-.3px; margin:22px 0 8px; }
+  h2 small { font-weight:500; color:var(--sub); font-size:.8rem; margin-left:6px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:20px; margin-bottom:14px; }
+  select,button { font:inherit; }
+  select { border:1px solid var(--line-input); border-radius:10px; padding:8px 12px; background:rgba(255,255,255,.04); color:var(--ink); }
+  select option { background:var(--panel2); color:var(--ink); }
+  .btn { display:inline-block; background:var(--sea); color:#fff; border:0; border-radius:12px; padding:11px 22px;
+         font-weight:800; cursor:pointer; box-shadow:0 4px 14px rgba(26,115,232,.28); }
+  .btn.sec { background:transparent; color:var(--strong); border:1px solid var(--line-input); box-shadow:none; }
+  .muted { color:var(--sub); font-size:.82rem; }
+  .hidden { display:none !important; }
+  .center { text-align:center; padding:60px 0; }
+  .login { max-width:420px; margin:40px auto; text-align:center; }
+  .login .orb { width:64px; height:64px; border-radius:50%; background:var(--sea); margin:0 auto 14px; display:flex;
+                align-items:center; justify-content:center; font-size:30px; }
+  .login .sub { color:var(--body); font-size:.9rem; margin:6px 0 18px; }
+  .sso { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:11px; margin-top:8px;
+         border-radius:12px; border:1px solid var(--line-input); background:rgba(255,255,255,.04); color:var(--ink);
+         font-weight:700; cursor:pointer; }
+  .sso svg { width:18px; height:18px; }
+  .sso.google { background:#fff; color:#222; border-color:#fff; }
+  .sso.kakao { background:#FEE500; color:#191919; border-color:#FEE500; }
+  .sso.apple { background:#000; color:#fff; border-color:#000; }
+  .msg { border-radius:10px; padding:10px 12px; margin:10px 0; font-size:.9rem; }
+  .msg.err { background:rgba(248,113,113,.12); color:#FCA5A5; }
+  .toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .toolbar label { font-size:.84rem; font-weight:700; color:var(--strong); }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-top:6px; }
+  .kpi { background:rgba(255,255,255,.04); border:1px solid var(--line2); border-radius:14px; padding:12px 14px; }
+  .kpi b { display:block; font-size:1.4rem; letter-spacing:-.5px; }
+  .kpi span { font-size:.78rem; color:var(--sub); }
+  .tblwrap { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; font-size:.86rem; }
+  th,td { padding:7px 10px; border-bottom:1px solid var(--line2); text-align:left; white-space:nowrap; }
+  th { color:var(--sub); font-weight:700; font-size:.78rem; }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .bar { display:inline-block; height:8px; background:var(--teal); border-radius:4px; vertical-align:middle; margin-right:6px; }
+  .note { font-size:.78rem; color:var(--sub); margin-top:8px; line-height:1.5; }
+  .g-A,.g-B { color:var(--ok); font-weight:800; } .g-C { color:var(--warn); font-weight:800; } .g-D,.g-E { color:var(--bad); font-weight:800; }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <img src="/badapong-icon.png" alt="" />
+  <h1>바다퐁 파트너 <span>· 지역 인사이트</span></h1>
+  <span class="who" id="hd-who"></span>
+</div></header>
+
+<div class="wrap">
+  <div id="view-login" class="hidden">
+    <div class="card login">
+      <div class="orb">📊</div>
+      <h2>파트너 로그인</h2>
+      <p class="sub">파트너 포털과 같은 계정으로 로그인하세요.<br/>사업자 인증을 마친 파트너에게만 열립니다.</p>
+      <button class="sso google" id="btn-google">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.5 30.2 0 24 0 14.6 0 6.5 5.4 2.5 13.3l7.8 6C12.2 13.6 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.3 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C.9 16.5 0 20.1 0 24s.9 7.5 2.5 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.6-2 15.4-5.6l-7.5-5.8c-2.1 1.4-4.8 2.3-7.9 2.3-6.4 0-11.8-4.1-13.7-9.8l-7.8 6C6.5 42.6 14.6 48 24 48z"/></svg>
+        Google로 시작하기
+      </button>
+      <button class="sso kakao" id="btn-kakao">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.9c-.1.3.3.6.6.4l4.5-3c.4 0 .8.1 1.2.1 5.5 0 10-3.6 10-8.1S17.5 3 12 3z"/></svg>
+        카카오로 시작하기
+      </button>
+      <button class="sso apple" id="btn-apple">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8 0 0-2.5-1-2.6-3.8zM14 5.4c.7-.8 1.1-2 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4z"/></svg>
+        Apple로 시작하기
+      </button>
+      <p class="muted" style="margin-top:14px">파트너가 아니신가요? <a href="/badapong/partners/">파트너 안내 페이지</a></p>
+    </div>
+  </div>
+
+  <div id="view-gate" class="hidden">
+    <div class="card login">
+      <div class="orb">🔒</div>
+      <h2 id="gate-title">사업자 인증이 필요합니다</h2>
+      <p class="sub" id="gate-sub"></p>
+      <a class="btn sec" href="/badapong/partners/my/" style="display:block;text-align:center">파트너 포털로 이동</a>
+      <p style="margin-top:18px"><a class="muted" href="#" id="btn-logout2">로그아웃</a></p>
+    </div>
+  </div>
+
+  <div id="view-main" class="hidden">
+    <div class="card toolbar">
+      <label>지역</label> <select id="sel-region"></select>
+      <label>기간</label>
+      <select id="sel-weeks"><option value="4">최근 4주</option><option value="8">최근 8주</option><option value="12">최근 12주</option></select>
+      <span class="muted" id="range"></span>
+      <a class="muted" href="/badapong/partners/my/" style="margin-left:auto">← 파트너 포털</a>
+    </div>
+    <div id="body"></div>
+    <p class="note">앱에서 스팟 상세를 연 사용자(운영자 제외)의 서버 집계입니다. 사용자 식별 정보는 포함되지 않으며 표본 <span id="kmin">5</span> 미만인 칸은 표시하지 않습니다.
+      「조회 시 등급」은 사용자가 화면을 연 시각의 해당 활동 예보 등급, 「길안내」는 외부 지도앱을 연 횟수(2.0.7 이상 앱부터 집계), 「미리 보기」는 3일 이상 앞의 예보를 본 사용자입니다.</p>
+    <p style="margin-top:14px"><a class="muted" href="#" id="btn-logout">로그아웃</a></p>
+  </div>
+
+  <div id="view-loading" class="center"><span class="muted">확인 중…</span></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL = 'https://gprgkcouugiwrfnbcsjz.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwcmdrY291dWdpd3JmbmJjc2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTUyMTksImV4cCI6MjA4OTkzMTIxOX0.E9EGnluU7JLqizT6X1CnjumoPzmsflSYnyqttklOgLg';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const show = id => { for (const v of ['view-login','view-gate','view-main','view-loading']) $(v).classList.toggle('hidden', v !== id); };
+const n = v => (v === null || v === undefined) ? '<span class="muted">—</span>' : Number(v).toLocaleString();
+const pct = v => (v === null || v === undefined) ? '<span class="muted">—</span>' : v + '%';
+const ACT = { beach_swim:'물놀이', snorkel:'스노클', freedive:'프리다이빙', scuba:'스쿠버', surf:'서핑', fishing:'낚시', mudflat:'해루질', unknown:'미지정' };
+const GR = g => g === '?' ? '<span class="muted">미기록</span>' : `<span class="g-${esc(g)}">${esc(g)}</span>`;
+
+let region = new URLSearchParams(location.search).get('r') || null;
+
+init();
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { show('view-login'); return; }
+  $('hd-who').innerHTML = esc(session.user.email || '');
+  await load();
+}
+
+async function load() {
+  show('view-loading');
+  const weeks = Number($('sel-weeks').value || 4);
+  const { data, error } = await sb.rpc('partner_region_insights', { p_region: region, p_weeks: weeks });
+  if (error) { gate('불러오지 못했습니다', error.message); return; }
+  if (!data || !data.ok) {
+    const r = data && data.reason;
+    if (r === 'no_account') gate('연결된 파트너 계정이 없습니다', '파트너 포털에서 초대 링크로 샵을 먼저 연결해 주세요.');
+    else if (r === 'not_verified') gate('사업자 인증이 필요합니다', '파트너 포털 「인증 · 배지」에서 사업자등록 진위확인을 통과하면 바로 열립니다.');
+    else if (r === 'no_region') gate('아직 데이터가 없습니다', '집계 가능한 지역이 없습니다. 며칠 뒤 다시 확인해 주세요.');
+    else gate('열 수 없습니다', r || '');
+    return;
+  }
+  render(data);
+  show('view-main');
+}
+function gate(title, sub) { $('gate-title').textContent = title; $('gate-sub').textContent = sub; show('view-gate'); }
+
+function render(d) {
+  region = d.region.slug;
+  const sel = $('sel-region');
+  sel.innerHTML = d.regions.map(r => `<option value="${esc(r.slug)}" ${r.slug === region ? 'selected' : ''}>${esc(r.name)} (${r.viewers})</option>`).join('');
+  if (!d.regions.some(r => r.slug === region)) sel.insertAdjacentHTML('afterbegin', `<option value="${esc(region)}" selected>${esc(d.region.name)}</option>`);
+  $('range').textContent = `${d.from} ~ ${d.to}`;
+  $('kmin').textContent = d.kmin;
+
+  const last = d.weekly[d.weekly.length - 1] || {};
+  const prev = d.weekly[d.weekly.length - 2] || {};
+  const delta = (a, b) => (a == null || b == null) ? '' : (a - b >= 0 ? ` <span style="color:var(--ok);font-size:.8rem">▲${a - b}</span>` : ` <span style="color:var(--bad);font-size:.8rem">▼${b - a}</span>`);
+  const lead = d.lead || {};
+  const leadPct = k => lead.viewers ? Math.round(100 * (lead[k] || 0) / lead.viewers) : null;
+
+  let h = `<h2>${esc(d.region.name)} <small>이번 주 (${esc(last.from || '')}~${esc(last.to || '')}) vs 지난주</small></h2>
+    <div class="kpis">
+      <div class="kpi"><b>${n(last.viewers)}${delta(last.viewers, prev.viewers)}</b><span>본 사람</span></div>
+      <div class="kpi"><b>${n(last.views)}${delta(last.views, prev.views)}</b><span>조회</span></div>
+      <div class="kpi"><b>${n(last.favorites)}${delta(last.favorites, prev.favorites)}</b><span>즐겨찾기 등록</span></div>
+      <div class="kpi"><b>${n(last.directions)}${delta(last.directions, prev.directions)}</b><span>길안내 탭</span></div>
+      <div class="kpi"><b>${pct(leadPct('d3plus'))}</b><span>3일+ 미리 보는 사용자 (${d.weeks}주)</span></div>
+    </div>`;
+
+  // 주간 추이
+  const maxU = Math.max(1, ...d.weekly.map(w => w.viewers || 0));
+  h += `<h2>주간 추이 <small>${d.weeks}주</small></h2><div class="card tblwrap"><table>
+    <tr><th>주</th><th>본 사람</th><th class="num">조회</th><th class="num">즐겨찾기 +</th><th class="num">길안내</th><th class="num">3일+ 미리 봄</th></tr>`
+    + d.weekly.map(w => `<tr><td>${esc(w.from)}~${esc(w.to)}</td>
+        <td><span class="bar" style="width:${Math.round(120 * (w.viewers || 0) / maxU)}px"></span>${n(w.viewers)}</td>
+        <td class="num">${n(w.views)}</td><td class="num">${n(w.favorites)}</td><td class="num">${n(w.directions)}</td><td class="num">${n(w.ahead3)}</td></tr>`).join('')
+    + `</table></div>`;
+
+  // 활동별
+  h += `<h2>활동별 <small>누가 무엇으로 보나</small></h2><div class="card tblwrap"><table>
+    <tr><th>활동</th><th class="num">본 사람</th><th class="num">조회</th><th class="num">본 스팟</th><th class="num">조회 시 A·B</th></tr>`
+    + (d.activities.length ? d.activities.map(a => `<tr><td>${esc(ACT[a.activity] || a.activity)}</td><td class="num">${n(a.viewers)}</td><td class="num">${n(a.views)}</td><td class="num">${n(a.spots)}</td><td class="num">${pct(a.ab_share)}</td></tr>`).join('')
+       : `<tr><td colspan="5" class="muted">표본 부족</td></tr>`)
+    + `</table></div>`;
+
+  // 등급별
+  h += `<h2>예보 등급별 행동 <small>어떤 조건일 때 찜하고, 출발하나</small></h2><div class="card tblwrap"><table>
+    <tr><th>조회 시 등급</th><th class="num">조회 (사람·스팟·일)</th><th class="num">인당 조회</th><th class="num">즐겨찾기 등록</th><th class="num">찜 전환</th><th class="num">길안내</th></tr>`
+    + (d.grades.length ? d.grades.map(g => `<tr><td>${GR(g.grade)}</td><td class="num">${n(g.pairs)}</td><td class="num">${n(g.views_per)}</td><td class="num">${n(g.favorites)}</td><td class="num">${pct(g.fav_rate)}</td><td class="num">${n(g.directions)}</td></tr>`).join('')
+       : `<tr><td colspan="6" class="muted">표본 부족</td></tr>`)
+    + `</table><div class="note">찜 전환이 D·E에서 높으면 「나쁠 때 미리 찜해 두고 좋아지길 기다리는」 수요, 길안내가 A·B에 몰리면 「좋아지면 바로 출발하는」 수요입니다.</div></div>`;
+
+  // 리드타임
+  h += `<h2>예보를 며칠 앞까지 보나 <small>${d.weeks}주 · 사용자 ${n(lead.viewers)}</small></h2><div class="card tblwrap"><table>
+    <tr><th>당일만</th><th>1~2일 앞</th><th>3일 이상 앞</th><th>시점 변경 없음</th></tr>
+    <tr><td>${pct(leadPct('d0'))}</td><td>${pct(leadPct('d1_2'))}</td><td><b>${pct(leadPct('d3plus'))}</b></td><td>${pct(leadPct('none'))}</td></tr>
+    </table><div class="note">3일 이상 앞을 보는 비율이 예약 리드타임의 근사치입니다. 2.0.7 이상 앱부터 집계돼 초기에는 「시점 변경 없음」이 큽니다.</div></div>`;
+
+  // 스팟
+  h += `<h2>많이 본 스팟 <small>본 사람 ${d.kmin}명 이상</small></h2><div class="card tblwrap"><table>
+    <tr><th>스팟</th><th class="num">본 사람</th><th class="num">조회</th><th class="num">조회 시 평균 점수</th><th class="num">A·B 비중</th><th class="num">즐겨찾기 +</th><th class="num">길안내</th></tr>`
+    + (d.top_spots.length ? d.top_spots.map(s => `<tr><td>${esc(s.spot)}</td><td class="num">${n(s.viewers)}</td><td class="num">${n(s.views)}</td><td class="num">${n(s.score)}</td><td class="num">${pct(s.ab_share)}</td><td class="num">${n(s.favorites)}</td><td class="num">${n(s.directions)}</td></tr>`).join('')
+       : `<tr><td colspan="7" class="muted">표본 부족</td></tr>`)
+    + `</table></div>`;
+  $('body').innerHTML = h;
+}
+
+$('sel-region').onchange = e => { region = e.target.value; history.replaceState(null, '', '?r=' + encodeURIComponent(region)); load(); };
+$('sel-weeks').onchange = () => load();
+
+const sso = provider => async () => {
+  const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: location.origin + location.pathname + location.search } });
+  if (error) alert('로그인에 실패했습니다: ' + error.message);
+};
+$('btn-google').onclick = sso('google');
+$('btn-kakao').onclick = sso('kakao');
+$('btn-apple').onclick = sso('apple');
+const logout = async e => { e.preventDefault(); await sb.auth.signOut(); location.href = location.pathname; };
+$('btn-logout').onclick = logout;
+$('btn-logout2').onclick = logout;
+</script>
+</body>
+</html>
