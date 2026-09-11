@@ -143,7 +143,11 @@
 <script>
 const SB_URL = 'https://gprgkcouugiwrfnbcsjz.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwcmdrY291dWdpd3JmbmJjc2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTUyMTksImV4cCI6MjA4OTkzMTIxOX0.E9EGnluU7JLqizT6X1CnjumoPzmsflSYnyqttklOgLg';
-const sb = supabase.createClient(SB_URL, SB_KEY);
+// [2026-09-12] CDN 이 막히면(광고차단 확장·사내 DNS·일시 장애) window.supabase 가 없다.
+//   예전 코드는 이 줄에서 던지고 스크립트 전체가 죽어 페이지가 「확인 중…」에 **영원히 멈췄다** —
+//   무증상 실패라 사용자에겐 「페이지가 안 열린다」로만 보인다(feedback_silent_ui_fallback_hides_failure).
+//   boot() 가 보조 CDN 을 한 번 더 시도하고, 그래도 없으면 눈에 보이는 안내를 띄운다.
+let sb = null;
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const show = id => { for (const v of ['view-login','view-gate','view-main','view-loading']) $(v).classList.toggle('hidden', v !== id); };
@@ -154,7 +158,6 @@ const GR = g => g === '?' ? '<span class="muted">미기록</span>' : `<span clas
 
 let region = new URLSearchParams(location.search).get('r') || null;
 
-init();
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { show('view-login'); return; }
@@ -300,9 +303,29 @@ const sso = provider => async () => {
 $('btn-google').onclick = sso('google');
 $('btn-kakao').onclick = sso('kakao');
 $('btn-apple').onclick = sso('apple');
-const logout = async e => { e.preventDefault(); await sb.auth.signOut(); location.href = location.pathname; };
+const logout = async e => { e.preventDefault(); if (sb) await sb.auth.signOut(); location.href = location.pathname; };
 $('btn-logout').onclick = logout;
 $('btn-logout2').onclick = logout;
+
+// ── 부팅: SDK 확보 → 세션 확인 ──────────────────────
+(async function boot() {
+  if (!window.supabase) {
+    await new Promise(done => {
+      const t = document.createElement('script');
+      t.src = 'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+      t.onload = done; t.onerror = done;
+      document.head.appendChild(t);
+    });
+  }
+  if (!window.supabase) {
+    gate('로그인 모듈을 불러오지 못했습니다',
+      '광고 차단 확장이나 네트워크가 cdn.jsdelivr.net · unpkg.com 을 막고 있습니다. 차단을 끄거나 다른 브라우저·모바일 데이터로 다시 열어 주세요.');
+    return;
+  }
+  sb = supabase.createClient(SB_URL, SB_KEY);
+  try { await init(); }
+  catch (e) { gate('화면을 열지 못했습니다', (e && e.message) ? e.message : String(e)); }
+})();
 </script>
 </body>
 </html>
