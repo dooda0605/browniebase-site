@@ -213,11 +213,11 @@ function render(d) {
   const own = (rk.list || []).find(r => r.own);
   const arrow = (a, b) => (a == null || b == null) ? '' : a < b ? `<span class="up">▲${b - a}</span>` : a > b ? `<span class="down">▼${a - b}</span>` : '<span class="muted">−</span>';
   if (rk.list && rk.list.length) {
-    h += `<h2>지역 순위 <small>최근 7일 본 사람 기준 · ${n(rk.total)}개 지역</small></h2><div class="card tblwrap">`
+    h += `<h2>지역 순위 <small>최근 7일 본 사람 기준 · 이 기간 집계된 ${n(rk.total)}개 지역</small></h2><div class="card tblwrap">`
       + (own ? `<div style="margin-bottom:8px"><b>${esc(d.region.name)}</b> ${n(own.rank_now)}위 ${arrow(own.rank_now, own.rank_prev)} <span class="muted">(지난주 ${n(own.rank_prev)}위 · 본 사람 ${n(own.now)} ← ${n(own.prev)})</span></div>` : '')
       + `<table><tr><th class="num">순위</th><th>지역</th><th class="num">본 사람</th><th class="num">지난주</th><th class="num">변동</th></tr>`
       + rk.list.map(r => `<tr class="${r.own ? 'rank-own' : ''}"><td class="num">${n(r.rank_now)}</td><td>${esc(r.name)}</td><td class="num">${n(r.now)}</td><td class="num">${n(r.prev)}</td><td class="num">${arrow(r.rank_now, r.rank_prev)}</td></tr>`).join('')
-      + `</table><div class="note">상위 10개 지역과 현재 지역만 표시합니다. 다른 샵의 실적은 제공하지 않습니다.</div></div>`;
+      + `</table><div class="note">상위 10개 지역과 현재 지역만 표시합니다. 지역 수가 위 선택 목록보다 적은 것은 여기만 최근 7일 기준이기 때문입니다(선택 목록은 ${d.weeks}주). 다른 샵의 실적은 제공하지 않습니다.</div></div>`;
   }
 
   // ② 이번 주말 수요 예측
@@ -254,7 +254,7 @@ function render(d) {
       <div></div>` + [0,1,2,3,4,5,6,7].map(b => `<div class="hd">${b * 3}시</div>`).join('')
       + dows.map(w => `<div class="lbl">${dn[w]}</div>` + [0,1,2,3,4,5,6,7].map(b => { const c = cell[w + '-' + b]; const v = c ? c.views : 0;
           return `<div class="c" style="--a:${(0.12 + 0.88 * v / mx).toFixed(2)};${v ? '' : 'background:transparent'}" title="${dn[w]} ${b*3}~${b*3+3}시 · 조회 ${v}">${v || ''}</div>`; }).join('')).join('')
-      + `</div><div class="note">문의가 몰리는 시간, 게시물 올릴 시간, 직원 배치의 근거로 쓰십시오. 진할수록 조회가 많습니다.</div></div>`;
+      + `</div><div class="note">문의가 몰리는 시간, 게시물 올릴 시간, 직원 배치의 근거로 쓰십시오. 진할수록 조회가 많습니다. 본 사람 ${d.kmin}명 미만인 칸은 비워 둡니다.</div></div>`;
   }
 
   // 활동별
