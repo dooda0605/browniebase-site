@@ -197,7 +197,14 @@ function render(d) {
   const prev = d.weekly[d.weekly.length - 2] || {};
   const delta = (a, b) => (a == null || b == null) ? '' : (a - b >= 0 ? ` <span style="color:var(--ok);font-size:.8rem">▲${a - b}</span>` : ` <span style="color:var(--bad);font-size:.8rem">▼${b - a}</span>`);
   const lead = d.lead || {};
-  const leadPct = k => lead.viewers ? Math.round(100 * (lead[k] || 0) / lead.viewers) : null;
+  // 분모는 viewers 가 아니라 measured(계측된 기기)다. 예보 시점(max_day_offset)은
+  // 2026-09-12 부터 채워져서 4주 창에는 계측 이전 기기(pre)가 절반 넘게 섞인다.
+  // viewers 로 나누면 「3일+ 9%」가 「3%」로 보이고 칸 합이 100%가 안 된다.
+  const leadBase = lead.measured || 0;
+  const leadPct = k => leadBase ? Math.round(100 * (lead[k] || 0) / leadBase) : null;
+  // 「당일만」 = 예보 시점을 안 건드림(untouched = -1) + 오늘을 고름(d0). 둘 다 당일 조회다.
+  const leadSamePct = () => leadBase
+    ? Math.round(100 * ((lead.untouched || 0) + (lead.d0 || 0)) / leadBase) : null;
 
   let h = `<h2>${esc(d.region.name)} <small>이번 주 (${esc(last.from || '')}~${esc(last.to || '')}) vs 지난주</small></h2>
     <div class="kpis">
@@ -281,10 +288,10 @@ function render(d) {
   }
 
   // 리드타임
-  h += `<h2>예보를 며칠 앞까지 보나 <small>${d.weeks}주 · 사용자 ${n(lead.viewers)}</small></h2><div class="card tblwrap"><table>
-    <tr><th>당일만</th><th>1~2일 앞</th><th>3일 이상 앞</th><th>시점 변경 없음</th></tr>
-    <tr><td>${pct(leadPct('d0'))}</td><td>${pct(leadPct('d1_2'))}</td><td><b>${pct(leadPct('d3plus'))}</b></td><td>${pct(leadPct('none'))}</td></tr>
-    </table><div class="note">3일 이상 앞을 보는 비율이 예약 리드타임의 근사치입니다. 2.0.7 이상 앱부터 집계돼 초기에는 「시점 변경 없음」이 큽니다.</div></div>`;
+  h += `<h2>예보를 며칠 앞까지 보나 <small>${d.weeks}주 · 집계된 사용자 ${n(lead.measured)}</small></h2><div class="card tblwrap"><table>
+    <tr><th>당일만</th><th>1~2일 앞</th><th>3일 이상 앞</th></tr>
+    <tr><td>${pct(leadSamePct())}</td><td>${pct(leadPct('d1_2'))}</td><td><b>${pct(leadPct('d3plus'))}</b></td></tr>
+    </table><div class="note">세 칸을 더하면 100%입니다. 3일 이상 앞을 보는 비율이 예약 리드타임의 근사치예요. 예보 시점은 2026-09-12부터 집계돼, 그 이전에 다녀간 ${n(lead.pre)}명은 분모에서 뺐습니다.</div></div>`;
 
   // 스팟
   h += `<h2>많이 본 스팟 <small>본 사람 ${d.kmin}명 이상</small></h2><div class="card tblwrap"><table>
