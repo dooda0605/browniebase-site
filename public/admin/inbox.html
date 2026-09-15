@@ -59,6 +59,7 @@
   .badge{font-size:10.5px; padding:2px 6px; border-radius:4px; background:var(--warn); color:#231400; font-weight:700}
   .badge.res{background:var(--panel2); color:var(--dim); font-weight:600}
   .badge.ok{background:var(--ok); color:#03210f}
+  .badge.act{background:#25406b; color:#bcd6ff; font-weight:600}
   .time{color:var(--dim); font-size:11px; margin-left:auto; white-space:nowrap}
 
   #detail .pad{padding:12px}
@@ -133,6 +134,15 @@ const H_RET = Object.assign({}, H, { 'Prefer': 'return=representation' });
 // 토큰이 틀리면 RLS 가 **에러 대신 0행**을 준다 — 빈 목록을 「문의 없음」으로 오독하지 않도록
 // 최초 로드에서 이 플래그로 구분한다(스레드 0 + 요청 0 이면 토큰 의심).
 let sawAnyRow = false;
+
+// 요청자가 고른 활동 — user_requests.context.activities (앱 request_sheet.dart 가 넣는다).
+// 라벨은 app/lib/core/constants.dart 의 Activity.labelKo() 와 같은 어휘. 모르는 값은 원문 그대로.
+const ACT_KO = {
+  beach_swim: '해변수영', snorkel: '스노클링', freedive: '프리다이빙',
+  surf: '서핑', scuba: '스쿠버다이빙', fishing: '낚시', mudflat: '해루질',
+};
+const actLabels = (rq) => ((rq && rq.context && rq.context.activities) || [])
+  .map(a => ACT_KO[a] || a);
 
 const RESOLUTIONS = [
   ['registered',     '등록함'],
@@ -233,6 +243,7 @@ function renderList() {
       + '<div class="top">'
       + (un ? '<span class="badge">미답변 ' + t.operator_unread + '</span>' : '')
       + res
+      + (actLabels(rq).length ? '<span class="badge act">' + esc(actLabels(rq).join('·')) + '</span>' : '')
       + '<span class="time">' + ago(t.last_msg_at) + '</span></div>'
       + '<div class="prev">' + esc((t._prev && t._prev.body) || '(내용 없음)') + '</div>'
       + '</div>';
@@ -278,6 +289,9 @@ function renderDetail(t, msgs) {
     html += '<div class="card" style="margin-top:10px">'
       + '<h3>스팟 요청 · ' + esc(rq.request_type) + ' · ' + kst(rq.created_at) + '</h3>'
       + '<div class="kv">' + esc(rq.content) + '</div>'
+      + (actLabels(rq).length
+          ? '<div class="kv">🏷 요청 활동: <b>' + esc(actLabels(rq).join(', ')) + '</b></div>'
+          : '<div class="kv" style="color:var(--dim)">🏷 요청 활동: 미지정</div>')
       + (lat && lon
           ? '<div class="kv">📍 ' + lat + ', ' + lon
             + ' · <a target="_blank" rel="noopener" href="https://map.kakao.com/link/map/요청지점,'
