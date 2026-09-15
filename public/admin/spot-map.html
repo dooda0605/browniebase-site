@@ -385,6 +385,7 @@ const API_HEADERS_RETURN = {
 // ── State ─────────────────────────────────────────────────────────────────
 let allSpots = [];
 let allZones = [];
+let inactiveZoneCodes = [];  // [2026-09-16] 비활성 존 {parent_spot_id, zone_code} — 중복 검사 전용(마커 X)
 let allShops = [];          // [2026-08-18] 다이브샵 + 서핑샵 (spot_services, 읽기 전용)
 let showShops = true;       // 🤿🏄 레이어 토글
 let selectedSpot = null;
@@ -538,6 +539,12 @@ async function loadData() {
   if (!zonesRes.ok) throw new Error('zones 로드 실패: ' + await zonesRes.text());
   allSpots = await spotsRes.json();
   allZones = await zonesRes.json();
+  // [2026-09-16] 비활성 존 코드도 중복 검사에 넣는다 — 마커로는 안 띄운다.
+  //   남해 송정해수욕장에 05-27 비활성 Z1 이 남아 있어, 화면엔 존이 없는데 새 Z1 이
+  //   409 duplicate key 로 실패했다(09-16 07:40). DB 유일키(parent_spot_id, zone_code)는
+  //   is_active 와 무관한데 클라이언트 검사는 allZones(활성만)만 봐서 통과시켰다.
+  const inactRes = await fetch(`${SUPABASE_URL}/rest/v1/sub_spots?select=parent_spot_id,zone_code&is_active=eq.false&limit=1000`, { headers: API_HEADERS });
+  inactiveZoneCodes = inactRes.ok ? await inactRes.json() : [];
   allShops = shopsRes.ok ? await shopsRes.json() : [];   // 샵은 실패해도 본 기능을 막지 않는다
   allSpots.sort((a, b) => (a.name?.ko || '').localeCompare(b.name?.ko || ''));
   renderSpotList(allSpots);
@@ -876,6 +883,8 @@ function _isDuplicateZoneCode(parentSpotId, zoneCode, excludeId, excludeTempId) 
     !pendingDeletes.includes(z.id)
   );
   if (dbDup) return true;
+  // [2026-09-16] 비활성 존도 같은 코드를 점유한다 — loadData 주석 참조
+  if (inactiveZoneCodes.some(z => z.parent_spot_id === parentSpotId && z.zone_code === code)) return true;
   const insertDup = pendingInserts.find(p =>
     p.parent_spot_id === parentSpotId &&
     p.zone_code === code &&
@@ -1379,6 +1388,8 @@ async function saveChanges() {
       z.parent_spot_id === pi.parent_spot_id &&
       z.zone_code === pi.zone_code &&
       !pendingDeletes.includes(z.id)
+    ) || inactiveZoneCodes.find(z =>   // [2026-09-16] 비활성 존 코드도 충돌
+      z.parent_spot_id === pi.parent_spot_id && z.zone_code === pi.zone_code
     );
     const batchDup = batchSeen.has(k);
     if (dbDup || batchDup) {
