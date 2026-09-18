@@ -116,11 +116,12 @@
   .rows { display:flex; flex-direction:column; gap:6px; margin-top:6px; }
   .rows .r { display:grid; gap:6px; align-items:center; }
   .rows .r.cert { grid-template-columns:1fr 1fr 1fr 1.4fr 30px; }
-  .rows .r.course { grid-template-columns:1.6fr 1fr 1fr 30px; }
+  .rows .r.course { grid-template-columns:1.4fr .8fr .6fr .6fr .8fr .9fr 30px; }
+  .rows .r.instr  { grid-template-columns:1fr .8fr .8fr .5fr 30px; }
   .rows .r input { padding:8px 10px; font-size:.88rem; }
   .rows .r button { background:transparent; border:1px solid var(--line-input); color:var(--sub);
                     border-radius:8px; height:34px; cursor:pointer; }
-  @media (max-width:640px){ .rows .r.cert, .rows .r.course { grid-template-columns:1fr 1fr 30px; } }
+  @media (max-width:640px){ .rows .r.cert, .rows .r.course, .rows .r.instr { grid-template-columns:1fr 1fr 30px; } }
   /* 홍보 사진 — 업로드 즉시 미리보기, ×로 제거 후 저장 (2026-09-03) */
   .photos { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
   .photos figure { position:relative; width:96px; height:96px; border-radius:12px; overflow:hidden;
@@ -139,7 +140,7 @@
   <div class="wrap">
     <img src="/badapong-icon.png" alt="" />
     <h1>바다퐁 파트너 <span>· 샵 관리자</span></h1>
-    <span id="hd-credit" class="credit-pill hidden">🎫 발행권 —</span>
+    <span id="hd-credit" class="credit-pill hidden">📅 멤버십 —</span>
     <span class="who" id="hd-who"></span>
   </div>
 </header>
@@ -187,7 +188,7 @@
 
       <div class="note">연결 후 <b>사업자 인증(사업자등록증)</b>을 통과해야 모집글을 올릴 수 있습니다.
         <b>소속 강사</b>는 샵의 사업자 인증을 따르고 <b>본인 라이선스(자격) 인증</b>을 통과하면 각자 계정으로 올릴 수 있습니다.
-        파일럿 기간에는 발행권 차감 없이 샵당 5회(첫 회차 7일 이내)까지 올릴 수 있습니다. 유료 전환 뒤 가입하는 샵에는 발행권 3개를 드립니다.</div>
+        <b>2026년 12월 31일까지 파일럿 무료</b> — 샵당 5건(첫 회차 7일 이내)까지 올릴 수 있습니다. 이후에는 연간 멤버십(330,000원·부가세 포함)으로 과정·세션·투어·소식을 제한 없이 올립니다. 설치비·수수료는 없습니다.</div>
       <p class="muted" style="margin-top:14px;text-align:center;font-size:12px">
         계속하면 <a href="/terms-badapong.html">이용약관</a>과
         <a href="/privacy-badapong.html">개인정보처리방침</a>에 동의하는 것으로 봅니다.</p>
@@ -220,48 +221,32 @@
       </div>
     </div>
 
+    <!-- [2026-09-19] 어신 모델 개편 — 일정(세션·투어) · 소식 · 인증 · 샵 정보 · 멤버십.
+         발행권 구매 탭은 없어졌다(충전형 → 연간 멤버십, PARTNER_MODEL_USIN_PHASE1_2026-09-19.md). -->
     <div class="tabs">
-      <button class="tab on" data-tab="meetups">모집글</button>
+      <button class="tab on" data-tab="meetups">일정</button>
+      <button class="tab" data-tab="posts">소식</button>
       <button class="tab" data-tab="verify">인증 · 배지</button>
-      <button class="tab" data-tab="profile">샵 카드</button>
+      <button class="tab" data-tab="profile">샵 정보</button>
+      <button class="tab" data-tab="membership">멤버십</button>
     </div>
 
-    <!-- ── 탭 1. 모집글 ─────────────────────────── -->
+    <!-- ── 탭 1. 일정 (세션 · 투어) ─────────────────────────── -->
     <div id="tab-meetups">
       <div class="card">
         <div style="display:flex;align-items:center;gap:10px">
-          <h2 style="margin:0">내 모집글</h2>
-          <button class="btn sm" id="btn-new" style="margin-left:auto">+ 새 모집글</button>
+          <h2 style="margin:0">세션 · 투어</h2>
+          <button class="btn sm" id="btn-new" style="margin-left:auto">+ 새 일정</button>
         </div>
-        <div class="muted" style="margin-top:4px" id="credit-note">발행 1건 = 🎫 발행권 1개 · 발행권은 계정마다 따로 · 유료 전환 뒤 가입하는 샵에 3개, 강사는 라이선스 인증 시 1개 · 발행 24시간 내·신청 0명이면 취소 시 돌려드립니다.</div>
+        <div class="muted" style="margin-top:4px" id="credit-note">세션 = 날짜·정원이 정해진 모집(펀다이빙 출조·오션 세션·서핑 강습 회차·체험). 투어 = 기간·정원이 있는 원정·캠프. 상시 접수 과정은 「샵 정보」 탭의 과정 목록에 적습니다.</div>
         <div class="muted" id="free-note" style="margin-top:4px;color:#2bb5a0"></div>
-        <div class="muted" style="margin-top:4px">발행한 글의 내용 수정은 <b>앱</b>에서 합니다 — 이 포털에는 수정 폼이 없습니다. 임시저장 글은 삭제하고 다시 작성해 주세요.</div>
+        <div class="muted" style="margin-top:4px">발행한 글의 내용 수정은 <b>앱</b>에서 합니다 — 이 포털에는 수정 폼이 없습니다. 임시저장 글은 삭제하고 다시 작성해 주세요. 취소·환불 기준은 <b>바다퐁 표준</b>이 모든 세션·투어에 자동으로 붙습니다(아래 작성 폼 참고).</div>
         <div id="meetup-list" style="margin-top:10px"><span class="muted">불러오는 중…</span></div>
-      </div>
-
-      <!-- ── 발행권 구매 ─────────────────────────────
-           가격은 여기 하드코딩하지 않는다. credit_products 테이블이 단일 진실원천이고
-           서버가 주문 금액을 찍는다 — 클라이언트가 금액을 정하면 1원에 20개를 살 수 있다. -->
-      <div class="card" id="card-buy">
-        <h2 style="margin-top:0">🎫 발행권 구매</h2>
-        <div class="muted" id="buy-note">모집글 1건에 발행권 1개가 나갑니다. 표시 금액은 <b>부가세 포함 최종 결제금액</b>입니다.<br/>카드로 결제하시면 <b>카드매출전표</b>가 세금계산서를 갈음합니다(매입세액공제 가능). 세금계산서가 따로 필요하시면 결제 후 사업자등록번호와 함께 support@browniebase.com 으로 알려주세요.<br/><b>환불</b> — 구매 7일 이내 미사용분은 전액, 일부 사용 시 사용분(구매 당시 개당 단가)을 뺀 잔여분을 환불합니다. 이미 발행에 쓴 발행권과 구매 7일 경과분은 환불되지 않습니다(유효기간은 없어 계속 사용 가능). <a href="https://browniebase.com/terms-badapong.html" target="_blank" rel="noopener" style="color:#8ab4f8">약관 4-3</a></div>
-        <div id="buy-msg" style="margin-top:8px"></div>
-        <div id="buy-tiers" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
-
-        <div id="buy-pay" class="hidden" style="margin-top:16px">
-          <div class="muted" id="buy-selected" style="margin-bottom:8px"></div>
-          <div id="toss-methods"></div>
-          <div id="toss-agreement"></div>
-          <div style="display:flex;gap:8px;margin-top:12px">
-            <button class="btn" id="btn-pay">결제하기</button>
-            <button class="btn sm" id="btn-pay-cancel">취소</button>
-          </div>
-        </div>
       </div>
 
       <!-- 작성 폼 -->
       <div class="card hidden" id="composer">
-        <h2 style="margin-top:0">모집글 작성</h2>
+        <h2 style="margin-top:0">일정 작성</h2>
         <label>스팟 *</label>
         <input id="m-spot-q" placeholder="스팟 이름 검색 (예: 갈남항)" autocomplete="off" />
         <div id="m-spot-result"></div>
@@ -273,18 +258,24 @@
               <option value="snorkel">스노클링</option><option value="beach_swim">해변수영</option>
               <option value="surf">서핑 (베타 스팟만)</option>
             </select></div>
-          <div><label>모임 유형</label>
+          <div><label>유형</label>
             <select id="m-type">
-              <option value="normal">일반</option>
-              <option value="lesson">강습</option>
-              <option value="trial">체험</option>
+              <option value="normal">세션 · 펀다이빙 / 오션 세션</option>
+              <option value="lesson">세션 · 강습 회차</option>
+              <option value="trial">세션 · 체험</option>
+              <option value="tour">투어 · 캠프 (기간형)</option>
             </select></div>
+        </div>
+        <!-- 투어만: 종료일·예약금 안내. 회차 1개(출발일·정원)로 올린다. -->
+        <div class="row2 hidden" id="tour-box">
+          <div><label>투어 종료일 *</label><input id="m-ends" type="date" /></div>
+          <div><label>예약금 안내</label><input id="m-deposit" maxlength="80" placeholder="예: 예약금 20만원, 잔금 출발 전 현장" /></div>
         </div>
         <label>대표 사진 <span class="muted" style="font-weight:400">— 목록 카드에 걸립니다</span></label>
         <input id="m-thumb" type="file" accept="image/*" />
         <label>제목 *</label>
         <input id="m-title" maxlength="40" placeholder="예: 일요일 아침 갈남 펀다이빙 (2다이브)" />
-        <label>회차 * <span class="muted" style="font-weight:400">— 같은 글에 시간대 여러 개 가능, 크레딧은 1</span></label>
+        <label>회차 * <span class="muted" style="font-weight:400" id="slot-note">— 같은 글에 시간대 여러 개 가능</span></label>
         <div id="slot-box"></div>
         <button class="btn sec sm" id="btn-add-slot" style="margin-top:8px">+ 회차 추가</button>
         <label>참가비(원)</label>
@@ -292,16 +283,46 @@
         <div class="muted" style="margin-top:4px">참가비는 <b>샵이 직접</b> 받습니다. 바다퐁은 참가비를 받지 않고 결제를 중개하지 않으며, 앱에는 안내 금액만 표시됩니다.</div>
         <label>집결지</label>
         <input id="m-meet" maxlength="60" placeholder="예: 샵 앞 주차장 05:40" />
-        <label>취소 규정 <span class="muted" style="font-weight:400" id="m-cancel-note">— 참가비를 받으면 필수입니다. 카드 하단에 항상 노출됩니다</span></label>
-        <textarea id="m-cancel" maxlength="200" placeholder="예: 취소 시점별 환불 비율, 일정 변경 가능 여부 (참가비는 샵이 직접 받고 환불합니다)"></textarea>
+        <label>취소 · 환불 기준 <span class="muted" style="font-weight:400">— 바다퐁 표준(모든 샵 동일). 발행 시 자동으로 붙고 카드 하단에 항상 노출됩니다</span></label>
+        <pre id="m-cancel-std" class="muted" style="white-space:pre-wrap;font:inherit;font-size:.84rem;border:1px dashed var(--line);border-radius:10px;padding:10px 12px">불러오는 중…</pre>
         <label>소개</label>
         <textarea id="m-body" maxlength="100" placeholder="일정, 준비물, 수준 안내 등"></textarea>
         <div class="msg" id="m-msg"></div>
         <div style="display:flex;gap:8px;margin-top:14px">
-          <button class="btn" id="btn-publish">발행 (🎫 1개)</button>
+          <button class="btn" id="btn-publish">발행</button>
           <button class="btn sec" id="btn-draft">임시저장</button>
           <button class="btn sec" id="btn-cancel-compose" style="margin-left:auto">닫기</button>
         </div>
+      </div>
+    </div>
+
+    <!-- ── 탭 1b. 소식 (어신 「조황일지」 대응) ───────────────────
+         컨디션/수료/공지 3종. 우리 예보·등급은 넣지 않는다(2026-09-19 원칙) — 자유 본문.
+         게시하면 이 샵 단골에게 푸시(샵당 하루 1건으로 합침). 샵당 하루 3건. -->
+    <div id="tab-posts" class="hidden">
+      <div class="card">
+        <h2 style="margin-top:0">소식 올리기</h2>
+        <div class="muted">오늘 바다 컨디션·수료 인증·공지. 앱 샵 상세와 「샵」 탭 전체 소식에 보이고, 단골에게 알림이 갑니다. 하루 3건까지.</div>
+        <div class="row2">
+          <div><label>종류 *</label>
+            <select id="sp-kind">
+              <option value="condition">오늘 바다 컨디션</option>
+              <option value="graduation">수료 · 인증</option>
+              <option value="notice">공지</option>
+            </select></div>
+          <div><label>제목 *</label><input id="sp-title" maxlength="80" placeholder="예: 오늘 시야 15m, 수온 24도" /></div>
+        </div>
+        <label>내용</label>
+        <textarea id="sp-body" maxlength="1000" placeholder="자유롭게. 시야·수온·파도는 샵이 본 대로 적어주세요."></textarea>
+        <label>사진 <span class="muted" style="font-weight:400">— 최대 6장</span></label>
+        <div id="sp-photos" class="photos"></div>
+        <input id="sp-photo-file" type="file" accept="image/*" multiple style="margin-top:8px" />
+        <div class="msg" id="sp-msg"></div>
+        <button class="btn" id="btn-post" style="margin-top:12px">게시</button>
+      </div>
+      <div class="card">
+        <h2 style="margin-top:0">올린 소식</h2>
+        <div id="post-list"><span class="muted">불러오는 중…</span></div>
       </div>
     </div>
 
@@ -364,11 +385,33 @@
       </div>
     </div>
 
-    <!-- ── 탭 3. 샵 카드 ─────────────────────────── -->
+    <!-- ── 탭 3. 샵 정보 ─────────────────────────── -->
     <div id="tab-profile" class="hidden">
+      <!-- 전화 공개 — 번호는 partner_contacts(비공개 테이블)에만 저장. 크롤한 원장 번호는 절대 안 쓴다.
+           켜려면 사업자 인증 배지가 있어야 하고, 배지가 내려가면 서버가 자동으로 끈다. -->
+      <div class="card" id="card-contact">
+        <h2 style="margin-top:0">📞 전화 문의 받기 <span class="muted" style="font-weight:400">(선택 · 대표 계정)</span></h2>
+        <div class="muted">켜면 앱 샵 상세와 웹 샵 페이지에 <b>전화 버튼</b>이 생깁니다. 번호는 여기 적은 것만 쓰고, 끄면 즉시 내려갑니다. 전화 탭 횟수는 대시보드 지표에 잡힙니다.</div>
+        <div class="row2">
+          <div><label>전화번호</label><input id="c-phone" inputmode="tel" placeholder="010-0000-0000" /></div>
+          <div><label>통화 가능 시간 <span class="muted" style="font-weight:400">(선택)</span></label><input id="c-hours" maxlength="40" placeholder="예: 09~18시, 출조 중엔 문자" /></div>
+        </div>
+        <div class="chips" style="margin-top:10px">
+          <label><input type="checkbox" id="c-public" /> 앱·웹에 전화번호 공개 (동의)</label>
+        </div>
+        <div class="muted" style="margin-top:6px">공개를 켜면 위 번호가 바다퐁 앱과 웹 샵 페이지에 게시되는 데 동의하는 것입니다. 개인 휴대폰이면 사업용 번호를 쓰시길 권합니다. <a href="/privacy-badapong.html" target="_blank" rel="noopener">개인정보처리방침</a></div>
+        <div class="msg" id="c-msg"></div>
+        <button class="btn sec" id="btn-save-contact" style="margin-top:10px">연락처 저장</button>
+      </div>
+
       <div class="card">
-        <h2 style="margin-top:0">샵 카드</h2>
-        <div class="muted">체크하면 앱 샵 상세에 회색 칩으로 바로 반영됩니다. 필수 3개만 채워도 됩니다.</div>
+        <h2 style="margin-top:0">샵 정보</h2>
+        <div class="muted">앱 샵 상세·「샵」 탭 카드에 바로 반영됩니다. 필수 3개만 채워도 됩니다.</div>
+
+        <label>활동 <span class="muted" style="font-weight:400">— 「샵」 탭 활동 필터에 잡힙니다. 비우면 샵 종류로 추정</span></label>
+        <div class="chips" id="p-acts"></div>
+        <label>공지 <span class="muted" style="font-weight:400">— 샵 상세 맨 위 (예: 10월 휴무, 시즌 오픈)</span></label>
+        <input id="p-notice" maxlength="120" placeholder="비워두면 표시 안 됨" />
 
         <label>대여 범위 *</label>
         <select id="p-rental"><option value="">선택</option><option value="full">풀세트</option>
@@ -410,9 +453,13 @@
         <div id="p-certs" class="rows"></div>
         <button type="button" class="btn sec sm" id="btn-add-cert" style="margin-top:6px">+ 자격증 추가</button>
 
-        <label style="margin-top:18px">강습 · 프로그램</label>
+        <label style="margin-top:18px">과정 · 프로그램 <span class="muted" style="font-weight:400">— 상시 접수 교육(오픈워터·Level 1·입문 강습). 「샵」 탭 「과정」에 가격순으로 보이고, 가격이 없으면 뒤로 갑니다</span></label>
         <div id="p-courses" class="rows"></div>
-        <button type="button" class="btn sec sm" id="btn-add-course" style="margin-top:6px">+ 강습 추가</button>
+        <button type="button" class="btn sec sm" id="btn-add-course" style="margin-top:6px">+ 과정 추가</button>
+
+        <label style="margin-top:18px">강사진 <span class="muted" style="font-weight:400">— 프리다이빙은 강사가 곧 샵입니다. 이름·단체·레벨·경력(년)</span></label>
+        <div id="p-instructors" class="rows"></div>
+        <button type="button" class="btn sec sm" id="btn-add-instructor" style="margin-top:6px">+ 강사 추가</button>
 
         <label style="margin-top:18px">홍보 사진 <span class="muted" style="font-weight:400">— 앱 샵 정보 화면에 보입니다 · 최대 6장</span></label>
         <div id="p-photos" class="photos"></div>
@@ -429,6 +476,29 @@
 
         <div class="msg" id="p-msg"></div>
         <button class="btn" id="btn-save-profile" style="margin-top:14px">저장</button>
+      </div>
+    </div>
+
+    <!-- ── 탭 4. 멤버십 ───────────────────────────
+         가격은 하드코딩하지 않는다. membership_products 가 단일 진실원천, 서버가 주문 금액을 찍는다.
+         잔량·횟수 없음(기간만) — 토스 「충전 업종」 재분류를 피하는 조건. 자동갱신 없음. -->
+    <div id="tab-membership" class="hidden">
+      <div class="card" id="card-buy">
+        <h2 style="margin-top:0">📅 파트너 멤버십</h2>
+        <div id="mem-status" class="muted" style="margin-bottom:8px">확인 중…</div>
+        <div class="muted" id="buy-note">연간 멤버십 하나입니다 — 기간 안에 세션·투어·과정·소식을 <b>제한 없이</b> 올립니다. 설치비·예약 수수료 없음. 표시 금액은 <b>부가세 포함 최종 결제금액</b>이며 자동갱신되지 않습니다(만료 7일 전 앱 알림 → 다시 결제하면 만료일 뒤로 이어집니다).<br/>카드로 결제하시면 <b>카드매출전표</b>가 세금계산서를 갈음합니다(매입세액공제 가능). 세금계산서가 따로 필요하시면 결제 후 사업자등록번호와 함께 support@browniebase.com 으로 알려주세요.<br/><b>환불</b> — 결제 7일 이내·미사용이면 전액, 그 뒤에는 남은 기간을 일할 계산해 돌려드립니다(위약금 없음). <a href="https://browniebase.com/terms-badapong.html" target="_blank" rel="noopener" style="color:#8ab4f8">약관 4-3</a></div>
+        <div id="buy-msg" style="margin-top:8px"></div>
+        <div id="buy-tiers" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
+
+        <div id="buy-pay" class="hidden" style="margin-top:16px">
+          <div class="muted" id="buy-selected" style="margin-bottom:8px"></div>
+          <div id="toss-methods"></div>
+          <div id="toss-agreement"></div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn" id="btn-pay">결제하기</button>
+            <button class="btn sm" id="btn-pay-cancel">취소</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -467,8 +537,13 @@ const SUIT_MM = ['2','3','5','7'];
 const GEAR = {bcd:'BCD',regulator:'호흡기',computer:'다이브 컴퓨터',tank:'탱크',weights:'웨이트',mask_fins:'마스크·핀',torch:'수중 랜턴'};
 const BOARDS = {soft:'소프트보드',long:'롱보드',fun:'펀보드',short:'숏보드',bodyboard:'바디보드',sup:'SUP'};
 let photos = [];   // partner_profiles.photos (공개 URL 배열)
-let certs = [], courses = [];   // 앱 ProfileScreen 과 같은 키
+let certs = [], courses = [], instructors = [];   // 앱 ProfileScreen 과 같은 키
 const CERT_F   = [['org','발급 단체'],['level','등급'],['no','자격번호'],['url','인증 조회 URL']];
+// [2026-09-19] 강사진 — partner_profiles.instructors jsonb [{name, agency, level, years}]
+const INSTR_F  = [['name','이름'],['agency','단체 (PADI·AIDA…)'],['level','레벨'],['years','경력(년)']];
+// 샵 활동 — 값(키)은 meetups.activity 와 같다. 「샵」 탭 활동 필터·과정 활동 추정에 쓰인다.
+const ACTS = {scuba:'스쿠버', freedive:'프리다이빙', snorkel:'스노클링·체험', surf:'서핑'};
+let acts = [];
 // 강습 가능 범위 — 값(키)은 앱 ShopCardLabels.teachLevels 와 같아야 한다.
 const TEACH = {discover:'체험', beginner:'초보·오픈워터', advanced:'어드밴스드', master:'레스큐·마스터', instructor:'강사',
   // 2026-09-07 프리다이빙은 AIDA 단계(2·3·4 ≈ SSI L1·L2·L3) — 앱 ShopCardLabels 와 키 동일
@@ -488,7 +563,8 @@ function renderTeach() {
     b.onclick = () => { teach = teach.filter(x => x !== b.dataset.del); renderTeach(); };
   });
 }
-const COURSE_F = [['name','강습명'],['hours','소요 시간'],['price','가격']];
+// [2026-09-19] 과정 = 상시 접수 교육. agency/days/next_start/includes 추가 — 앱 「샵」탭 과정 카드·list_courses RPC 가 읽는다.
+const COURSE_F = [['name','과정명 (오픈워터·Level 1…)'],['agency','단체'],['days','일수'],['hours','총 시간'],['price','가격(원)'],['next_start','다음 개강 (비우면 상시)']];
 function renderRows(id, list, fields, cls) {
   const el = $(id);
   el.innerHTML = list.map((row, i) =>
@@ -505,6 +581,7 @@ function renderRows(id, list, fields, cls) {
 }
 const renderCerts   = () => renderRows('p-certs', certs, CERT_F, 'cert');
 const renderCourses = () => renderRows('p-courses', courses, COURSE_F, 'course');
+const renderInstructors = () => renderRows('p-instructors', instructors, INSTR_F, 'instr');
 const renderPhotos = () => {
   $('p-photos').innerHTML = photos.map((u, i) =>
     `<figure><img src="${u}" alt="" /><button type="button" data-i="${i}">×</button></figure>`).join('');
@@ -549,14 +626,16 @@ async function init() {
   }
 
   // [2026-09-03] 무료 기간 스위치 — 앱과 같은 행(meetup_policy)을 읽는다.
+  // [2026-09-19] 표준 취소 규정도 같은 행에서 — 발행 시 서버가 샵 모집글에 자동으로 붙인다.
   try {
-    const { data: pol } = await sb.from('meetup_policy').select('free_period,free_max_days,free_max_posts').limit(1).maybeSingle();
-    if (pol && pol.free_period) {
-      $('free-note').textContent = '🎫 지금은 파일럿 기간 — 발행권 차감 없이 샵당 ' + pol.free_max_posts + '회까지(첫 회차 ' + pol.free_max_days + '일 이내). 파일럿이 끝나면 유료로 전환되며 7일 전에 앱 알림으로 안내드립니다. 발행권은 이 포털에서 구매합니다.';
-      // 파일럿 중엔 차감이 없다. 버튼·안내가 "1개 나간다"고 말하면 발행을 아끼게 된다.
-      $('btn-publish').textContent = '발행';
-      $('credit-note').textContent =
-        '파일럿 기간에는 발행권이 차감되지 않습니다 · 발행권은 계정마다 따로 · 유료 전환 뒤 가입하는 샵에 3개, 강사는 라이선스 인증 시 1개.';
+    const { data: pol } = await sb.from('meetup_policy')
+      .select('free_period,free_max_days,free_max_posts,paid_from,standard_cancel_policy').limit(1).maybeSingle();
+    if (pol) {
+      $('m-cancel-std').textContent = pol.standard_cancel_policy || '(표준 규정 미설정)';
+      if (pol.free_period) {
+        $('free-note').textContent = '🟢 파일럿 무료 기간' + (pol.paid_from ? ' (' + pol.paid_from + '까지)' : '') +
+          ' — 샵당 ' + pol.free_max_posts + '건까지(세션은 첫 회차 ' + pol.free_max_days + '일 이내, 투어는 예외). 이후엔 연간 멤버십으로 제한 없이 올립니다. 종료 7일 전에 앱 알림으로 안내드립니다.';
+      }
     }
   } catch (e) {}
   const { data, error } = await sb.rpc('my_partner_account');
@@ -569,11 +648,14 @@ async function init() {
   renderDash();
   show('view-dash');
   loadMeetups();
-  initCredits();
+  loadPosts();
+  initMembership();
 }
 
 
-// ── 발행권 구매 (토스페이먼츠 결제위젯 v2) ─────────────────────
+// ── 멤버십 결제 (토스페이먼츠 결제위젯 v2) ─────────────────────
+// [2026-09-19] 발행권(충전형) → 연간 멤버십. 주문·승인 경로(create_*_order → 결제창 → toss-confirm →
+//   settle_credit_order)는 그대로고 상품만 바뀐다. 잔량이 없으니 「충전」 문구를 쓰지 않는다.
 // ⚠ 이 클라이언트 키는 공개돼도 되는 값이다(결제 승인은 시크릿 키로 서버에서만 한다).
 //   2026-09-03: 토스 공용 예제 키 → **브라우니베이스 상점 테스트 키**로 교체 완료.
 //   심사 승인 뒤 라이브 키(live_gck_...)로 한 번 더 교체해야 한다.
@@ -582,7 +664,7 @@ const TOSS_CLIENT_KEY = 'test_gck_EP59LybZ8BBQWMyYJlmW86GYo7pR';
 
 let payMsg = null;        // 결제창에서 돌아온 결과 (렌더는 initCredits 에서)
 let tossWidgets = null;
-let pendingOrder = null;  // { order_id, amount, qty }
+let pendingOrder = null;  // { order_id, amount, months, name, code }
 
 // 결제창 복귀. 성공이면 paymentKey·orderId·amount 가, 실패면 code·message 가 붙어 온다.
 async function handlePaymentReturn() {
@@ -626,7 +708,9 @@ async function handlePaymentReturn() {
               ' · 아래 「다시 확인하기」를 눌러주세요. 계속 실패하면 이 주문번호로 support@browniebase.com 에 알려주세요.' };
       return;                       // clean() 하지 않는다
     } else {
-      payMsg = { ok: true, text: '🎫 발행권 ' + body.qty + '개가 충전됐습니다. 현재 잔량 ' + body.balance + '개.' };
+      payMsg = { ok: true, text: body.kind === 'membership'
+        ? '📅 멤버십이 활성화됐습니다 — ' + fmtDate(body.ends_at) + '까지.'
+        : '결제가 확인됐습니다.' };
     }
   } catch (e) {
     payMsg = { ok: false, text: '결제 확인 중 오류 · 주문번호 ' + orderId + ' 로 문의해 주세요.' };
@@ -634,7 +718,29 @@ async function handlePaymentReturn() {
   clean();
 }
 
-async function initCredits() {
+const fmtDate = iso => { if (!iso) return '—'; const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; };
+
+function renderMembership() {
+  const m = me.membership || {};
+  const pill = $('hd-credit');
+  pill.classList.remove('hidden');
+  if (m.active) {
+    pill.textContent = '📅 멤버십 ~' + fmtDate(m.ends_at);
+    $('mem-status').innerHTML = '<b style="color:var(--ok)">✓ 활성</b> · ' + fmtDate(m.starts_at) + ' ~ <b>' + fmtDate(m.ends_at) + '</b>' +
+      ' · 지금 결제하면 만료일 뒤로 12개월이 이어집니다.';
+  } else if (m.free_period) {
+    pill.textContent = '🟢 파일럿 무료';
+    $('mem-status').innerHTML = '<b style="color:var(--ok)">파일럿 무료 기간</b>' + (m.paid_from ? ' — ' + m.paid_from + '까지' : '') +
+      '. 지금은 멤버십 없이 올릴 수 있습니다. 미리 결제하면 파일럿이 끝난 뒤가 아니라 <b>결제일부터</b> 12개월이 시작되니, 종료 알림을 받은 뒤 결제하시는 게 유리합니다.';
+  } else {
+    pill.textContent = '📅 멤버십 없음';
+    $('mem-status').innerHTML = '<b style="color:var(--warn)">멤버십 없음</b> — 세션·투어·소식을 올리려면 연간 멤버십이 필요합니다. 이미 올린 글은 그대로 유지됩니다.';
+  }
+}
+
+async function initMembership() {
+  renderMembership();
   if (payMsg) {
     const el = $('buy-msg');
     el.textContent = payMsg.text;
@@ -655,41 +761,45 @@ async function initCredits() {
     }
   }
 
-  const { data: products } = await sb.from('credit_products')
-    .select('qty,amount').order('qty');
+  const { data: products } = await sb.from('membership_products')
+    .select('code,name,months,price_krw').eq('active', true).order('months');
   if (!products || !products.length) { $('buy-tiers').innerHTML = '<span class="muted">가격 정보를 불러오지 못했습니다.</span>'; return; }
 
   // 총액(=결제금액)을 앞에 두고 공급가·부가세를 병기한다. 토스 심사는 표시가와 결제가가
-  // 다르면 반려하므로 「30,000원 + 부가세」식 표기는 쓰지 않는다.
+  // 다르면 반려하므로 「300,000원 + 부가세」식 표기는 쓰지 않는다.
   $('buy-tiers').innerHTML = products.map(p => {
-    const supply = Math.round(p.amount / 1.1), vat = p.amount - supply;
-    return '<button class="btn sm" data-qty="' + p.qty + '">' +
-      '🎫 ' + p.qty + '개 · ' + p.amount.toLocaleString() + '원' +
+    const supply = Math.round(p.price_krw / 1.1), vat = p.price_krw - supply;
+    return '<button class="btn sm" data-code="' + p.code + '">' +
+      '📅 ' + p.months + '개월 · ' + p.price_krw.toLocaleString() + '원' +
       '<span class="tier-sub">공급가 ' +
       supply.toLocaleString() + ' + 부가세 ' + vat.toLocaleString() + '</span></button>';
   }).join('');
+  if (me.role !== 'owner') {
+    $('buy-tiers').innerHTML += '<div class="muted" style="width:100%">멤버십은 샵 단위라 <b>대표 계정</b>에서 결제합니다. 강사 계정은 샵 멤버십을 같이 씁니다.</div>';
+  }
 
   $('buy-tiers').querySelectorAll('button').forEach(b =>
-    b.onclick = () => startPurchase(Number(b.dataset.qty)));
+    b.onclick = () => startPurchase(b.dataset.code));
   $('btn-pay-cancel').onclick = () => { $('buy-pay').classList.add('hidden'); pendingOrder = null; };
   $('btn-pay').onclick = payNow;
 }
 
-async function startPurchase(qty) {
+async function startPurchase(code) {
   $('buy-msg').textContent = '';
-  const { data, error } = await sb.rpc('create_credit_order', { p_qty: qty });
+  const { data, error } = await sb.rpc('create_membership_order', { p_code: code });
   if (error || !data || !data.ok) {
     const reason = (data && data.reason) || (error && error.message);
     $('buy-msg').style.color = '#e08b6a';
     $('buy-msg').textContent = reason === 'not_approved'
-      ? '사업자 인증이 끝난 계정만 구매할 수 있습니다. 인증 · 배지 탭을 먼저 확인해 주세요.'
+      ? '사업자 인증이 끝난 계정만 결제할 수 있습니다. 인증 · 배지 탭을 먼저 확인해 주세요.'
+      : reason === 'owner_only' ? '멤버십은 샵 대표 계정에서 결제합니다.'
       : ('주문을 만들지 못했습니다 (' + reason + ')');
     return;
   }
   pendingOrder = data;
   const supply = Math.round(data.amount / 1.1);
   $('buy-selected').textContent =
-    '🎫 ' + data.qty + '개 · 결제금액 ' + data.amount.toLocaleString() + '원' +
+    '📅 ' + data.name + ' (' + data.months + '개월) · 결제금액 ' + data.amount.toLocaleString() + '원' +
     ' (공급가 ' + supply.toLocaleString() + ' + 부가세 ' + (data.amount - supply).toLocaleString() + ')';
   $('buy-pay').classList.remove('hidden');
 
@@ -708,7 +818,7 @@ async function payNow() {
   try {
     await tossWidgets.requestPayment({
       orderId: pendingOrder.order_id,
-      orderName: '바다퐁 발행권 ' + pendingOrder.qty + '개',
+      orderName: pendingOrder.name || '바다퐁 파트너 연간 멤버십',
       successUrl: back,
       failUrl: back,
     });
@@ -759,10 +869,12 @@ $('btn-logout2').onclick = logout;
 function renderDash() {
   $('shop-name').textContent = (me.shop && me.shop.name) || '내 샵';
   $('shop-addr').textContent = (me.shop && me.shop.address) || '';
-  // 크레딧의 이름은 「발행권」이다 — 갯벌에서 캐 모으는 느낌이라
-  // '충전/차감' 같은 금융 용어보다 부드럽고, 우리 앱의 바다 세계관에 맞는다.
-  $('hd-credit').textContent = '🎫 발행권 ' + me.credits + '개';
-  $('hd-credit').classList.remove('hidden');
+  renderMembership();
+  // 연락처 — 오너만 편집. 강사 계정엔 읽기만.
+  const c = me.contact || {};
+  $('c-phone').value = c.phone || ''; $('c-hours').value = c.phone_hours || '';
+  $('c-public').checked = !!c.phone_public;
+  $('card-contact').classList.toggle('hidden', me.role !== 'owner');
 
   // [2026-09-03] 사업자 인증은 owner 계정만. staff 가 STEP1 을 돌리면 사업자등록번호가
   // 강사 계정 행에 묶이는데 발행 게이트는 owner 계정의 배지를 본다 —
@@ -812,7 +924,11 @@ function renderDash() {
   renderPhotos();
   certs = Array.isArray(p.certs) ? p.certs.map(o => Object.assign({}, o)) : [];
   courses = Array.isArray(p.courses) ? p.courses.map(o => Object.assign({}, o)) : [];
-  renderCerts(); renderCourses();
+  instructors = Array.isArray(p.instructors) ? p.instructors.map(o => Object.assign({}, o)) : [];
+  renderCerts(); renderCourses(); renderInstructors();
+  acts = Array.isArray(p.activities) ? p.activities.slice() : [];
+  $('p-acts').innerHTML = chipsHtml('p-acts', ACTS, acts);
+  $('p-notice').value = p.notice || '';
 }
 
 $('btn-add-teach').onclick = () => {
@@ -822,6 +938,76 @@ $('btn-add-teach').onclick = () => {
 };
 $('btn-add-cert').onclick = () => { certs.push({}); renderCerts(); };
 $('btn-add-course').onclick = () => { courses.push({}); renderCourses(); };
+$('btn-add-instructor').onclick = () => { instructors.push({}); renderInstructors(); };
+
+// ── 전화 공개 (partner_contacts) ─────────────────────
+$('btn-save-contact').onclick = async () => {
+  const pub = $('c-public').checked;
+  const { data, error } = await sb.rpc('set_partner_contact', {
+    p_phone: $('c-phone').value.trim(), p_public: pub, p_hours: $('c-hours').value.trim() || null });
+  const R = { bad_phone:'전화번호 형식을 확인해 주세요 (숫자 8~15자리).', phone_required:'공개하려면 번호를 먼저 적어주세요.',
+    business_unverified:'전화 공개는 사업자 인증(STEP 1)을 통과한 뒤 켤 수 있습니다.', owner_only:'대표 계정에서만 바꿀 수 있습니다.' };
+  if (error || !data || !data.ok) { msg('c-msg', R[data && data.reason] || '저장 실패: ' + ((data && data.reason) || (error && error.message)), false); return; }
+  msg('c-msg', pub ? '저장 완료 — 앱·웹 샵 페이지에 전화 버튼이 보입니다.' : '저장 완료 — 전화 버튼은 꺼져 있습니다.', true);
+  refreshAll();
+};
+
+// ── 소식 (shop_posts) ─────────────────────────────────
+let postPhotos = [];
+const renderPostPhotos = () => {
+  $('sp-photos').innerHTML = postPhotos.map((u, i) =>
+    `<figure><img src="${u}" alt="" /><button type="button" data-i="${i}">×</button></figure>`).join('');
+  [...$('sp-photos').querySelectorAll('button')].forEach(b => b.onclick = () => { postPhotos.splice(+b.dataset.i, 1); renderPostPhotos(); });
+};
+$('sp-photo-file').onchange = async e => {
+  const files = [...(e.target.files || [])];
+  const room = 6 - postPhotos.length;
+  if (!files.length || room <= 0) { e.target.value = ''; return; }
+  for (const file of files.slice(0, room)) {
+    if (file.size > 5 * 1024 * 1024) { msg('sp-msg', '5MB 이하 파일만 올릴 수 있습니다.', false); continue; }
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    // 경로 첫 칸이 uid 여야 스토리지 정책(meetup_images_own_write)을 통과한다.
+    const path = `${uid}/post/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+    const up = await sb.storage.from('meetup-images').upload(path, file, { contentType: file.type || 'image/jpeg' });
+    if (up.error) { msg('sp-msg', '업로드 실패: ' + up.error.message, false); continue; }
+    postPhotos.push(sb.storage.from('meetup-images').getPublicUrl(path).data.publicUrl);
+  }
+  renderPostPhotos(); e.target.value = '';
+};
+const POST_REASON = { daily_limit:'소식은 샵당 하루 3건까지 올릴 수 있습니다.', no_membership:'멤버십이 없어 게시할 수 없습니다 — 멤버십 탭을 확인해 주세요.',
+  business_unverified:'사업자 인증(STEP 1)을 통과해야 소식을 올릴 수 있습니다.', partner_suspended:'계정 상태를 확인해 주세요.' };
+$('btn-post').onclick = async () => {
+  const title = $('sp-title').value.trim();
+  if (title.length < 2) { msg('sp-msg', '제목을 2자 이상 적어주세요.', false); return; }
+  $('btn-post').disabled = true;
+  const { data, error } = await sb.rpc('publish_shop_post', {
+    p_kind: $('sp-kind').value, p_title: title, p_body: $('sp-body').value.trim() || null, p_images: postPhotos });
+  $('btn-post').disabled = false;
+  if (error || !data || !data.ok) { msg('sp-msg', POST_REASON[data && data.reason] || '게시 실패: ' + ((data && data.reason) || (error && error.message)), false); return; }
+  msg('sp-msg', '게시했습니다 — 단골에게 알림이 갑니다.', true);
+  $('sp-title').value = ''; $('sp-body').value = ''; postPhotos = []; renderPostPhotos();
+  loadPosts();
+};
+const POST_KIND = { condition:'컨디션', graduation:'수료', notice:'공지' };
+async function loadPosts() {
+  // 내 소식 = 공개 샵 페이지의 posts 와 같은 것(샵 단위). 별도 목록 RPC 를 두지 않는다.
+  const { data } = await sb.rpc('shop_page', { p_partner: me.card_partner_id || me.partner_id });
+  const posts = (data && data.ok && data.posts) || [];
+  if (!posts.length) { $('post-list').innerHTML = '<span class="muted">아직 없습니다.</span>'; return; }
+  $('post-list').innerHTML = posts.map(p => `<div class="meetup-item">
+    <div class="meetup-head"><span class="state-chip">${POST_KIND[p.kind] || p.kind}</span><b>${esc(p.title)}</b>
+      <span class="muted" style="margin-left:auto">${fmtDt(p.created_at)} · 조회 ${p.views}</span>
+      <button class="btn warn sm" onclick="deletePost('${p.id}')">삭제</button></div>
+    ${p.body ? '<div class="muted">' + esc(p.body) + '</div>' : ''}
+    ${(p.images || []).length ? '<div class="photos">' + p.images.map(u => `<figure><img src="${u}" alt="" /></figure>`).join('') + '</div>' : ''}
+  </div>`).join('');
+}
+window.deletePost = async id => {
+  if (!confirm('이 소식을 내릴까요?')) return;
+  const { data, error } = await sb.rpc('delete_shop_post', { p_post: id });
+  if (error || !data || !data.ok) { alert('삭제 실패: ' + ((data && data.reason) || (error && error.message))); return; }
+  loadPosts();
+};
 
 // 홍보 사진 업로드 — meetup-images 버킷 재사용(공개 읽기 · 경로 첫 칸이 uid 인 정책).
 // 새 버킷을 만들면 정책 2개를 또 써야 하고 얻는 게 없다. 경로 앞에 shop/ 을 붙여 구분한다.
@@ -848,33 +1034,50 @@ $('p-photo-file').onchange = async e => {
 // 탭 전환
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
-  for (const k of ['meetups','verify','profile'])
+  for (const k of ['meetups','posts','verify','profile','membership'])
     $('tab-'+k).classList.toggle('hidden', t.dataset.tab !== k);
 });
 
 // ── 모집글 목록 ──────────────────────────────────────
 async function loadMeetups() {
   const { data: rows, error } = await sb.from('meetups')
-    .select('id,title,activity,state,forecast_grade,first_starts_at,cancel_reason')
+    .select('id,title,activity,state,meetup_type,ends_at,first_starts_at,cancel_reason')
     .eq('creator_user_id', uid).order('created_at', { ascending: false }).limit(30);
   if (error) { $('meetup-list').innerHTML = '<span class="muted">불러오기 실패</span>'; return; }
-  if (!rows.length) { $('meetup-list').innerHTML = '<span class="muted">아직 없습니다. 첫 모집글을 올려보세요.</span>'; return; }
+  if (!rows.length) { $('meetup-list').innerHTML = '<span class="muted">아직 없습니다. 첫 일정을 올려보세요.</span>'; return; }
 
   const ids = rows.map(r => r.id);
   const { data: slots } = await sb.from('meetup_slots_public')
-    .select('meetup_id,starts_at,capacity,seats_left').in('meetup_id', ids);
+    .select('id,meetup_id,starts_at,capacity,seats_left').in('meetup_id', ids);
   const slotsBy = {};
   (slots || []).forEach(s => (slotsBy[s.meetup_id] = slotsBy[s.meetup_id] || []).push(s));
 
+  // [2026-09-19] 예약 현황판 — 방 멤버(신청자)를 회차별로. 호스트는 chat_members_room_read 정책으로 읽는다.
+  //   이름은 chat_members.display_name(앱이 참여 시 적는다). 없으면 「참가자」.
+  const { data: rooms } = await sb.from('chat_rooms')
+    .select('id,meetup_id,chat_members(auth_user_id,display_name,state,slot_id,joined_at,is_host)').in('meetup_id', ids);
+  const roomBy = {};
+  (rooms || []).forEach(r => roomBy[r.meetup_id] = r);
+
   const stateKo = { draft:'임시저장', published:'모집 중', closed:'마감', cancelled:'취소됨' };
-  const cancelKo = { weather:'기상·예보 악화', self:'자진 취소', shortfall:'인원 미달', shop:'주최 측 사정', policy:'운영 정책' };
+  const typeKo = { normal:'세션', lesson:'강습', trial:'체험', tour:'투어' };
+  const memKo = { inquiry:'문의', joined:'신청', accepted:'확정', attended:'출석', no_show:'불참', left:'취소', rejected:'거절' };
+  const cancelKo = { weather:'기상 악화', self:'자진 취소', shortfall:'인원 미달', shop:'주최 측 사정', policy:'운영 정책' };
   $('meetup-list').innerHTML = rows.map(r => {
-    const ss = (slotsBy[r.id] || []).sort((a,b)=>a.starts_at<b.starts_at?-1:1)
-      .map(s => `${fmtDt(s.starts_at)} · 잔여 ${s.seats_left}/${s.capacity}`).join('<br/>');
-    const g = r.forecast_grade;
+    const room = roomBy[r.id];
+    const members = ((room && room.chat_members) || []).filter(m => !m.is_host && m.state !== 'left' && m.state !== 'rejected');
+    const ss = (slotsBy[r.id] || []).sort((a,b)=>a.starts_at<b.starts_at?-1:1).map(s => {
+      const who = members.filter(m => m.slot_id === s.id).map(m =>
+        `<span class="state-chip">${esc(m.display_name || '참가자')} · ${memKo[m.state] || m.state}` +
+        (r.state === 'published' && ['joined','accepted'].includes(m.state)
+          ? ` <a href="#" onclick="releaseMember('${room.id}','${m.auth_user_id}');return false" title="연락이 안 되면 좌석을 비웁니다">좌석 해제</a>` : '') +
+        `</span>`).join(' ');
+      return `${fmtDt(s.starts_at)}${r.meetup_type === 'tour' && r.ends_at ? ' ~ ' + fmtDate(r.ends_at) : ''} · 잔여 ${s.seats_left}/${s.capacity}` +
+        (who ? '<div style="margin:3px 0 0 8px;display:flex;gap:4px;flex-wrap:wrap">' + who + '</div>' : '');
+    }).join('<br/>');
     return `<div class="meetup-item">
       <div class="meetup-head">
-        <span class="grade ${g?'g'+g:'gN'}">${g||'–'}</span>
+        <span class="state-chip">${typeKo[r.meetup_type] || r.meetup_type}</span>
         <b>${esc(r.title || '(제목 없음)')}</b>
         <span class="state-chip">${stateKo[r.state]||r.state}${r.cancel_reason?' · '+(cancelKo[r.cancel_reason]||r.cancel_reason):''}</span>
         <span style="margin-left:auto;display:flex;gap:6px">
@@ -893,9 +1096,10 @@ const fmtDt = iso => { const d = new Date(iso);
 
 // 발행 결과 사유 → 한국어
 const PUB_REASON = {
-  no_credit:'🎫 발행권이 부족합니다. 이 포털에서 구매할 수 있습니다(결제 창구 오픈 후).', no_slot:'회차를 1개 이상 넣어주세요.',
-  free_period_too_far:'파일럿 기간에는 첫 회차가 7일 이내여야 합니다.',
-  free_period_limit:'파일럿 기간에는 샵당 5회까지만 발행할 수 있습니다.',
+  no_membership:'📅 멤버십이 없어 발행할 수 없습니다 — 멤버십 탭에서 결제해 주세요.', no_slot:'회차를 1개 이상 넣어주세요.',
+  tour_ends_at_required:'투어는 종료일이 필요하고 출발(회차)보다 뒤여야 합니다.', tour_shop_only:'투어는 샵 계정만 올릴 수 있습니다.',
+  free_period_too_far:'파일럿 기간에는 세션 첫 회차가 7일 이내여야 합니다(투어는 예외).',
+  free_period_limit:'파일럿 기간에는 샵당 5건까지만 발행할 수 있습니다. 더 올리려면 멤버십을 결제해 주세요.',
   business_unverified:'사업자 인증(STEP 1)을 통과해야 모집글을 올릴 수 있습니다.',
   cert_required:'강사 계정은 라이선스(자격) 인증(STEP 2)을 통과해야 모집글을 올릴 수 있습니다.',
   slot_time_locked:'발행 후에는 회차 시각을 바꿀 수 없습니다. 취소 후 다시 올려주세요.',
@@ -912,9 +1116,17 @@ const PUB_REASON = {
 window.publishNow = async id => {
   const { data, error } = await sb.rpc('publish_meetup', { p_meetup: id });
   if (error || !data.ok) { alert(PUB_REASON[data && data.reason] || '발행 실패: ' + ((data&&data.reason)||error.message)); return; }
-  let m = '발행 완료! 현재 예보 등급: ' + (data.forecast_grade || '없음');
+  // 등급은 말하지 않는다 — 모집·진행 판단은 샵 몫(2026-09-19 원칙).
+  let m = '발행 완료!';
   if (data.interested > 0) m += `\n이 날짜에 관심을 눌러둔 사용자 ${data.interested}명에게 노출됩니다.`;
   alert(m); refreshAll();
+};
+// 예약 현황판 — 연락 불가 참가자의 좌석을 비운다(release_meetup_member p_next_state='left').
+window.releaseMember = async (room, user) => {
+  if (!confirm('이 참가자의 좌석을 비울까요? 본인에게 알림이 가고, 다시 신청할 수 있습니다.')) return;
+  const { data, error } = await sb.rpc('release_meetup_member', { p_room: room, p_user: user, p_next_state: 'left' });
+  if (error || !data || !data.ok) { alert('해제 실패: ' + ((data && data.reason) || (error && error.message))); return; }
+  loadMeetups();
 };
 window.closeNow = async id => {
   // 마감은 발행권과 무관하다 — 이미 발행 시점에 처리됐다. 되돌릴 수 없다는 것만 말한다.
@@ -934,12 +1146,12 @@ window.deleteNow = async id => {
   loadMeetups();
 };
 window.cancelNow = async id => {
-  const r = prompt('취소 사유를 입력하세요 (신청자에게 알림이 갑니다):\n1 = 기상 악화\n2 = 인원 미달\n3 = 샵 사정\n4 = 자진 취소 (발행 24h 내·신청 0명이면 발행권 반환)', '1');
+  const r = prompt('취소 사유를 입력하세요 (신청자에게 알림이 갑니다):\n1 = 기상 악화\n2 = 인원 미달\n3 = 샵 사정\n4 = 자진 취소', '1');
   const map = {1:'weather',2:'shortfall',3:'shop',4:'self'};
   if (!map[r]) return;
   const { data, error } = await sb.rpc('cancel_meetup', { p_meetup: id, p_reason: map[r] });
   if (error || !data.ok) { alert('취소 실패: ' + ((data&&data.reason)||error.message)); return; }
-  alert(data.refunded ? '취소 완료 — 🎫 발행권 1개를 돌려드렸습니다.' : '취소 완료 (발행권 반환 없음)');
+  alert('취소 완료 — 신청자 ' + (data.signups || 0) + '명에게 알림을 보냈습니다.');
   refreshAll();
 };
 async function refreshAll() {
@@ -952,6 +1164,13 @@ async function refreshAll() {
 $('btn-new').onclick = () => { $('composer').classList.remove('hidden'); addSlotRow(); window.scrollTo({top:$('composer').offsetTop-20,behavior:'smooth'}); };
 $('btn-cancel-compose').onclick = () => { $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; $('m-thumb').value=''; };
 $('btn-add-slot').onclick = addSlotRow;
+// 투어는 회차 1개(출발일·정원) + 종료일. 유형을 바꾸면 안내만 바뀐다.
+$('m-type').onchange = () => {
+  const tour = $('m-type').value === 'tour';
+  $('tour-box').classList.toggle('hidden', !tour);
+  $('btn-add-slot').classList.toggle('hidden', tour);
+  $('slot-note').textContent = tour ? '— 투어는 출발 일시·정원 1개' : '— 같은 글에 시간대 여러 개 가능';
+};
 function addSlotRow() {
   const div = document.createElement('div');
   div.className = 'slot-row';
@@ -989,6 +1208,12 @@ async function saveDraft() {
     starts_at: r.querySelector('.s-dt').value, capacity: +r.querySelector('.s-cap').value || 0 }))
     .filter(s => s.starts_at && s.capacity > 0);
   if (!slots.length) { msg('m-msg','회차(시각·좌석)를 1개 이상 넣어주세요.',false); return null; }
+  const isTour = $('m-type').value === 'tour';
+  if (isTour) {
+    if (!$('m-ends').value) { msg('m-msg','투어 종료일을 넣어주세요.',false); return null; }
+    if (slots.length > 1) { msg('m-msg','투어는 출발 회차 1개만 넣습니다.',false); return null; }
+    if (new Date($('m-ends').value + 'T23:59') <= new Date(slots[0].starts_at)) { msg('m-msg','종료일은 출발보다 뒤여야 합니다.',false); return null; }
+  }
 
   // 대표 사진은 글 행을 만들기 전에 올린다 — 실패하면 아예 저장하지 않는다.
   let images = [];
@@ -1012,7 +1237,10 @@ async function saveDraft() {
     level: 'any', price: +$('m-price').value || null,
     meetup_type: $('m-type').value,
     meet_point: $('m-meet').value.trim() || null,
-    cancel_policy: $('m-cancel').value.trim() || null,
+    // 취소 규정은 발행 시 서버가 표준으로 덮어쓴다(publish_meetup). 여기선 비워 둔다.
+    cancel_policy: null,
+    ends_at: isTour ? new Date($('m-ends').value + 'T23:59:00').toISOString() : null,
+    deposit_note: isTour ? ($('m-deposit').value.trim() || null) : null,
     images,
   }).select('id').single();
   if (error) { msg('m-msg','저장 실패: '+error.message,false); return null; }
@@ -1027,15 +1255,11 @@ $('btn-draft').onclick = async () => {
   if (id) { msg('m-msg','임시저장 완료. 목록에서 [발행]을 누르면 게시됩니다.',true); refreshAll(); }
 };
 $('btn-publish').onclick = async () => {
-  // 서버(publish_meetup)와 같은 규칙: 돈을 받을 때만 취소 규정을 요구한다.
-  if ((+$('m-price').value || 0) > 0 && !$('m-cancel').value.trim()) {
-    msg('m-msg','참가비를 받는 모집은 취소 규정이 필수입니다 — 발행 전에 채워주세요.',false); return;
-  }
   const id = await saveDraft();
   if (!id) return;
   const { data, error } = await sb.rpc('publish_meetup', { p_meetup: id });
   if (error || !data.ok) { msg('m-msg', PUB_REASON[data && data.reason] || '발행 실패: '+((data&&data.reason)||error.message), false); return; }
-  let m = '발행 완료! 현재 예보 등급: ' + (data.forecast_grade || '없음 (예보 없는 기간)');
+  let m = '발행 완료! 표준 취소 규정이 자동으로 붙었습니다.';
   if (data.interested > 0) m += ` · 관심 사용자 ${data.interested}명에게 알림 대상`;
   msg('m-msg', m, true);
   $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; $('m-thumb').value='';
@@ -1134,6 +1358,10 @@ $('btn-save-profile').onclick = async () => {
                 .map(c => Object.fromEntries(Object.entries(c).filter(([, v]) => (v||'').trim()))),
     courses: courses.filter(c => (c.name||'').trim())
                 .map(c => Object.fromEntries(Object.entries(c).filter(([, v]) => (v||'').trim()))),
+    instructors: instructors.filter(c => (c.name||'').trim())
+                .map(c => Object.fromEntries(Object.entries(c).filter(([, v]) => (v||'').trim()))),
+    activities: checked('p-acts'),
+    notice: $('p-notice').value.trim() || null,
     equipment: { suit_mm: checked('p-mm'), scuba_gear: checked('p-gear'), surf_boards: checked('p-boards') },
     updated_at: new Date().toISOString(),
   };
