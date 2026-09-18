@@ -218,6 +218,8 @@
         <span id="badge-box" style="display:flex;gap:6px"></span>
         <!-- [2026-09-12] 지역 인사이트 — 사업자 인증 파트너만 열린다(서버 RPC 가 검사) -->
         <a class="btn sec sm" href="/badapong/partners/insights/">📊 지역 인사이트</a>
+        <!-- [2026-09-19] 웹 샵 페이지 — 인스타·카톡에 붙이는 링크. 앱 샵 상세와 같은 데이터. -->
+        <button class="btn sec sm" id="btn-copy-link" title="인스타 프로필·카톡 채널에 붙여두세요">🔗 내 샵 페이지</button>
       </div>
     </div>
 
@@ -939,6 +941,14 @@ $('btn-add-teach').onclick = () => {
 $('btn-add-cert').onclick = () => { certs.push({}); renderCerts(); };
 $('btn-add-course').onclick = () => { courses.push({}); renderCourses(); };
 $('btn-add-instructor').onclick = () => { instructors.push({}); renderInstructors(); };
+$('btn-copy-link').onclick = async () => {
+  const url = 'https://browniebase.com/badapong/shop/?p=' + (me.card_partner_id || me.partner_id);
+  try { await navigator.clipboard.writeText(url); $('btn-copy-link').textContent = '✓ 복사됨'; }
+  catch (e) { prompt('내 샵 페이지 주소', url); }
+  setTimeout(() => { $('btn-copy-link').textContent = '🔗 내 샵 페이지'; }, 1800);
+  if (me.state !== 'approved') alert('승인 전에는 페이지가 비어 보입니다. 사업자 인증을 마치면 공개됩니다.');
+  else window.open(url, '_blank');
+};
 
 // ── 전화 공개 (partner_contacts) ─────────────────────
 $('btn-save-contact').onclick = async () => {

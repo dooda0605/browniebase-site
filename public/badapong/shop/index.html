@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>바다퐁 샵</title>
+<meta name="description" content="바다퐁 파트너 샵 — 교육 과정 · 세션 · 투어 · 오늘 바다 소식" />
+<!--
+  [2026-09-19] 파트너 샵 공개 페이지 (어신 「사업주 전용 홈페이지」 대응).
+  앱 샵 상세와 **같은 RPC(shop_page)** 를 읽는다 — 화면 둘, 데이터 하나. PARTNER_MODEL_USIN_PHASE1_2026-09-19.md §3.
+  URL: /badapong/shop/?p=<partner_id>  — 샵이 인스타 프로필·카톡 채널에 붙이는 링크.
+  원칙: 우리 예보·등급을 넣지 않는다(샵 콘텐츠는 샵이 올린 그대로). 전화는 phone_public 일 때만 RPC 가 내려준다 —
+        HTML 에 번호를 박지 않고 탭 시점에만 tel: 로 연다(크롤러 수집 최소화).
+-->
+<style>
+  :root { --bg:#0B1220; --panel:rgba(255,255,255,.03); --line:rgba(255,255,255,.16); --line2:rgba(255,255,255,.08);
+    --ink:#F0F4F8; --body:#A9BCD0; --strong:#C3D3E4; --sub:#6B8AA8; --teal:#14B8A6; --teal-l:#2DD4BF;
+    --sea:linear-gradient(135deg,#1A73E8,#14B8A6); --ok:#34D399; --warn:#F5B75C; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo",sans-serif; color:var(--ink); line-height:1.6;
+    background:var(--bg); background-image:radial-gradient(1100px 420px at 50% -160px, rgba(26,115,232,.16), transparent 70%);
+    -webkit-font-smoothing:antialiased; word-break:keep-all; }
+  a { color:var(--teal-l); text-decoration:none; }
+  .wrap { max-width:720px; margin:0 auto; padding:0 16px 120px; }
+  header { padding:18px 0 6px; }
+  header .wrap { display:flex; align-items:center; gap:10px; padding-bottom:0; }
+  header img { width:30px; height:30px; border-radius:9px; }
+  header .brand { font-size:.85rem; color:var(--body); }
+  .hero { margin-top:14px; }
+  .photos { display:flex; gap:8px; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:4px; }
+  .photos img { width:min(78vw,300px); height:200px; object-fit:cover; border-radius:16px; flex:0 0 auto; scroll-snap-align:start;
+    border:1px solid var(--line2); }
+  .shop-head { display:flex; align-items:center; gap:12px; margin-top:14px; }
+  .avatar { width:52px; height:52px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,.06); border:1px solid var(--line); }
+  h1 { font-size:1.35rem; font-weight:900; letter-spacing:-.3px; }
+  .badges { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+  .badge { border-radius:99px; padding:2px 10px; font-size:.75rem; font-weight:700; background:rgba(52,211,153,.14); color:var(--ok); }
+  .chip { border-radius:99px; padding:2px 10px; font-size:.75rem; background:rgba(255,255,255,.06); color:var(--body); }
+  .muted { color:var(--sub); font-size:.84rem; }
+  .notice { margin-top:12px; padding:10px 14px; border-radius:12px; background:rgba(245,183,92,.12); border:1px solid rgba(245,183,92,.35);
+    color:var(--strong); font-size:.9rem; }
+  .tabs { position:sticky; top:0; z-index:5; background:var(--bg); display:flex; gap:6px; padding:12px 0 8px; margin-top:16px;
+    border-bottom:1px solid var(--line2); }
+  .tab { flex:1; text-align:center; border:1px solid var(--line); border-radius:99px; padding:7px 0; font-size:.88rem; color:var(--body);
+    cursor:pointer; background:transparent; }
+  .tab.on { background:var(--sea); border-color:transparent; color:#fff; font-weight:800; }
+  section { padding:18px 0 6px; }
+  h2 { font-size:1.02rem; font-weight:800; margin:14px 0 8px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin-bottom:10px; }
+  .row { display:flex; justify-content:space-between; gap:10px; padding:5px 0; border-top:1px solid var(--line2); font-size:.9rem; }
+  .row:first-child { border-top:0; }
+  .row b { color:var(--ink); }
+  .price { color:var(--teal-l); font-weight:800; }
+  .slot { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-top:1px solid var(--line2); font-size:.9rem; }
+  .seats { font-size:.82rem; color:var(--body); }
+  .seats b { color:var(--ok); }
+  .post { display:grid; grid-template-columns:96px 1fr; gap:12px; }
+  .post img { width:96px; height:96px; object-fit:cover; border-radius:12px; }
+  .post .k { font-size:.72rem; color:var(--sub); }
+  .post .t { font-weight:800; }
+  .post .b { font-size:.86rem; color:var(--body); white-space:pre-wrap; }
+  .empty { color:var(--sub); font-size:.88rem; padding:8px 0; }
+  .cta { position:fixed; left:0; right:0; bottom:0; padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    background:rgba(11,18,32,.92); backdrop-filter:blur(10px); border-top:1px solid var(--line2); }
+  .cta .in { max-width:720px; margin:0 auto; display:flex; gap:8px; }
+  .btn { flex:1; text-align:center; border:0; border-radius:12px; padding:12px 10px; font-weight:800; cursor:pointer; font-size:.95rem;
+    background:var(--sea); color:#fff; }
+  .btn.sec { background:transparent; color:var(--strong); border:1px solid var(--line); }
+  .btn.hidden { display:none; }
+  pre.policy { white-space:pre-wrap; font:inherit; font-size:.84rem; color:var(--body); background:rgba(255,255,255,.03);
+    border:1px dashed var(--line); border-radius:12px; padding:12px 14px; }
+  .center { text-align:center; padding:60px 0; color:var(--sub); }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a href="/badapong/"><img src="/badapong-icon.png" alt="바다퐁" /></a>
+  <span class="brand">바다퐁 파트너 샵</span>
+</div></header>
+
+<div class="wrap">
+  <div id="loading" class="center">불러오는 중…</div>
+  <div id="notfound" class="center hidden">샵을 찾을 수 없습니다. 링크를 다시 확인해 주세요.</div>
+
+  <div id="page" class="hidden">
+    <div class="hero">
+      <div class="photos" id="photos"></div>
+      <div class="shop-head">
+        <img id="avatar" class="avatar" alt="" />
+        <div>
+          <h1 id="name"></h1>
+          <div class="muted" id="addr"></div>
+          <div class="badges" id="badges"></div>
+        </div>
+      </div>
+      <div class="notice hidden" id="notice"></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab on" data-t="about">소개</button>
+      <button class="tab" data-t="courses">과정</button>
+      <button class="tab" data-t="schedule">일정</button>
+      <button class="tab" data-t="posts">소식</button>
+    </div>
+
+    <section id="sec-about">
+      <div class="card" id="intro"></div>
+      <h2>강사진</h2><div id="instructors"></div>
+      <h2>시설 · 대여</h2><div class="card" id="facilities"></div>
+      <h2>보유 자격</h2><div id="certs"></div>
+      <div id="links" class="muted" style="margin-top:8px"></div>
+    </section>
+
+    <section id="sec-courses" class="hidden">
+      <div class="muted">상시 접수 교육입니다. 일정은 샵과 상담해 정합니다.</div>
+      <div id="courses"></div>
+    </section>
+
+    <section id="sec-schedule" class="hidden">
+      <h2>세션</h2><div id="sessions"></div>
+      <h2>투어 · 캠프</h2><div id="tours"></div>
+      <h2>취소 · 환불 기준 (바다퐁 표준)</h2>
+      <pre class="policy" id="policy"></pre>
+      <div class="muted" style="margin-top:8px">서비스 제공 주체는 이 샵이며, 바다퐁은 모집 정보를 게시하는 플랫폼입니다. 참가비는 샵에 직접 결제합니다.</div>
+    </section>
+
+    <section id="sec-posts" class="hidden">
+      <div id="posts"></div>
+    </section>
+
+    <h2 style="margin-top:22px">후기</h2>
+    <div class="card" id="reviews"></div>
+  </div>
+</div>
+
+<div class="cta" id="cta" style="display:none"><div class="in">
+  <button class="btn sec hidden" id="btn-phone">📞 전화</button>
+  <a class="btn" id="btn-app" href="https://browniebase.com/app?s=shop">앱에서 문의 · 신청</a>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL = 'https://gprgkcouugiwrfnbcsjz.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwcmdrY291dWdpd3JmbmJjc2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTUyMTksImV4cCI6MjA4OTkzMTIxOX0.E9EGnluU7JLqizT6X1CnjumoPzmsflSYnyqttklOgLg';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ACT = {scuba:'스쿠버', freedive:'프리다이빙', snorkel:'스노클링·체험', surf:'서핑', beach_swim:'해변수영'};
+const TYPE = {normal:'세션', lesson:'강습', trial:'체험', tour:'투어'};
+const KIND = {condition:'오늘 바다', graduation:'수료', notice:'공지'};
+const RENTAL = {full:'풀세트 대여', partial:'부분 대여', none:'대여 없음'};
+const fmt = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+const fmtD = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()}`; };
+const won = v => v == null || v === '' ? '문의' : (Number(String(v).replace(/[^0-9]/g,'')) || 0).toLocaleString() + '원';
+// 전화 탭 계측용 기기 식별자 — 개인정보 아님(무작위). 파트너 리포트의 「전화 n회」 분모.
+const deviceId = (() => { try { let d = localStorage.getItem('bp_dev'); if (!d) { d = 'web-' + Math.random().toString(36).slice(2, 12) + Date.now().toString(36); localStorage.setItem('bp_dev', d); } return d; } catch (e) { return 'web-' + Date.now(); } })();
+
+let phone = null, pid = null;
+
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
+  for (const k of ['about','courses','schedule','posts']) $('sec-' + k).classList.toggle('hidden', t.dataset.t !== k);
+});
+
+(async () => {
+  pid = new URLSearchParams(location.search).get('p');
+  const { data, error } = pid ? await sb.rpc('shop_page', { p_partner: pid }) : { data: null };
+  $('loading').classList.add('hidden');
+  if (error || !data || !data.ok) { $('notfound').classList.remove('hidden'); return; }
+  render(data);
+})();
+
+function render(d) {
+  const s = d.shop || {}, p = d.profile || {}, b = d.badges || {};
+  document.title = (s.name || '샵') + ' — 바다퐁';
+  $('name').textContent = s.name || '';
+  $('addr').textContent = s.address || '';
+  $('avatar').src = p.avatar_url || (p.photos && p.photos[0]) || '/badapong-icon.png';
+  $('photos').innerHTML = (p.photos || []).map(u => `<img src="${esc(u)}" alt="" loading="lazy" />`).join('');
+  $('badges').innerHTML =
+    (b.business ? '<span class="badge">✓ 사업자</span>' : '') + (b.cert ? '<span class="badge">✓ 자격</span>' : '') +
+    (b.insurance ? '<span class="badge">✓ 보험</span>' : '') +
+    (d.activities || []).map(a => `<span class="chip">${ACT[a] || a}</span>`).join('') +
+    (d.favorites ? `<span class="chip">♥ 단골 ${d.favorites}</span>` : '');
+  if (p.notice) { $('notice').textContent = p.notice; $('notice').classList.remove('hidden'); }
+
+  // 소개
+  $('intro').innerHTML = (p.intro || p.free_text)
+    ? `<div style="white-space:pre-wrap">${esc(p.intro || p.free_text)}</div>` : '<div class="empty">소개가 아직 없습니다.</div>';
+  const ins = Array.isArray(p.instructors) ? p.instructors : [];
+  $('instructors').innerHTML = ins.length ? '<div class="card">' + ins.map(i =>
+    `<div class="row"><span><b>${esc(i.name)}</b> ${esc([i.agency, i.level].filter(Boolean).join(' · '))}</span><span class="muted">${i.years ? esc(i.years) + '년' : ''}</span></div>`).join('') + '</div>'
+    : '<div class="empty">등록된 강사 정보가 없습니다.</div>';
+  const f = p.facilities || {}, eq = p.equipment || {};
+  const fac = [
+    ['대여', RENTAL[p.rental_scope] || null], ['슈트 사이즈', (p.suit_sizes || []).join(' · ') || null],
+    ['슈트 두께', (eq.suit_mm || []).map(m => m + 'mm').join(' · ') || null],
+    ['샤워', {cold:'냉수', hot:'온수'}[f.shower] || null], ['탈의실', {shared:'공용', gendered:'남녀 분리'}[f.changing] || null],
+    ['주차', {paid:'유료', free:'무료'}[f.parking] || null], ['예약', p.reservation_required == null ? null : (p.reservation_required ? '사전 예약 필요' : '워크인 가능')],
+    ['언어', (p.languages || []).join(', ') || null], ['대여 가격', p.price_note || null],
+  ].filter(([, v]) => v);
+  $('facilities').innerHTML = fac.length ? fac.map(([k, v]) => `<div class="row"><span class="muted">${k}</span><b>${esc(v)}</b></div>`).join('') : '<div class="empty">정보 없음</div>';
+  const certs = Array.isArray(p.certs) ? p.certs : [];
+  $('certs').innerHTML = certs.length ? '<div class="card">' + certs.map(c =>
+    `<div class="row"><span>${esc([c.org, c.level].filter(Boolean).join(' '))}</span>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">조회</a>` : ''}</div>`).join('') + '</div>' : '<div class="empty">—</div>';
+  $('links').innerHTML = [s.website ? `<a href="${esc(s.website)}" target="_blank" rel="noopener">홈페이지</a>` : '',
+    s.instagram ? `<a href="${esc(s.instagram)}" target="_blank" rel="noopener">인스타그램</a>` : ''].filter(Boolean).join(' · ');
+
+  // 과정
+  const courses = Array.isArray(d.courses) ? d.courses.filter(c => c.name) : [];
+  $('courses').innerHTML = courses.length ? courses.map(c => `<div class="card">
+      <div style="display:flex;justify-content:space-between;gap:10px"><b>${esc(c.name)}</b><span class="price">${won(c.price)}</span></div>
+      <div class="muted">${esc([c.agency, c.days ? c.days + '일' : '', c.hours ? c.hours + '시간' : '', c.next_start ? '다음 개강 ' + c.next_start : '상시 접수'].filter(Boolean).join(' · '))}</div>
+      ${c.includes ? `<div class="muted">포함: ${esc(c.includes)}</div>` : ''}
+    </div>`).join('') : '<div class="empty">등록된 과정이 없습니다.</div>';
+
+  // 일정
+  const ses = d.sessions || [];
+  $('sessions').innerHTML = ses.length ? ses.map(m => `<div class="card">
+      <div style="display:flex;justify-content:space-between;gap:10px"><b>${esc(m.title)}</b><span class="price">${m.price ? won(m.price) : ''}</span></div>
+      <div class="muted">${esc([TYPE[m.meetup_type], ACT[m.activity], m.meet_point ? '집결 ' + m.meet_point : ''].filter(Boolean).join(' · '))}</div>
+      ${(m.slots || []).map(sl => `<div class="slot"><span>${fmt(sl.starts_at)}${sl.duration_min ? ' · ' + sl.duration_min + '분' : ''}</span>
+        <span class="seats">남은자리 <b>${sl.remaining}</b>/${sl.capacity}</span></div>`).join('')}
+    </div>`).join('') : '<div class="empty">예정된 세션이 없습니다.</div>';
+  const tours = d.tours || [];
+  $('tours').innerHTML = tours.length ? tours.map(m => `<div class="card">
+      <div style="display:flex;justify-content:space-between;gap:10px"><b>${esc(m.title)}</b><span class="price">${m.price ? won(m.price) : ''}</span></div>
+      <div class="muted">${fmtD(m.starts_at)} ~ ${m.ends_at ? fmtD(m.ends_at) : ''} · ${ACT[m.activity] || ''}${m.deposit_note ? ' · ' + esc(m.deposit_note) : ''}</div>
+      <div class="slot"><span>출발 ${fmt(m.starts_at)}</span><span class="seats">남은자리 <b>${m.remaining}</b>/${m.capacity}</span></div>
+    </div>`).join('') : '<div class="empty">예정된 투어가 없습니다.</div>';
+  $('policy').textContent = d.cancel_policy || '';
+
+  // 소식
+  const posts = d.posts || [];
+  $('posts').innerHTML = posts.length ? posts.map(x => `<div class="card post">
+      ${x.images && x.images[0] ? `<img src="${esc(x.images[0])}" alt="" loading="lazy" />` : '<div></div>'}
+      <div><div class="k">${KIND[x.kind] || x.kind} · ${fmt(x.created_at)}</div><div class="t">${esc(x.title)}</div>
+      ${x.body ? `<div class="b">${esc(x.body)}</div>` : ''}</div>
+    </div>`).join('') : '<div class="empty">아직 소식이 없습니다.</div>';
+
+  // 후기
+  const r = d.reviews || {};
+  $('reviews').innerHTML = (r.count > 0)
+    ? `<div class="row"><span class="muted">후기 ${r.count}건</span><b>강사·인솔 ${r.guide ?? '-'} · 안전 ${r.safety ?? '-'}${r.gear ? ' · 장비 ' + r.gear : ''}${r.facility ? ' · 시설 ' + r.facility : ''}</b></div>` +
+      (r.recent || []).map(x => `<div class="row"><span>${esc(x.body)}</span></div>`).join('')
+    : '<div class="empty">아직 후기가 없습니다. 세션에 참여하면 앱에서 후기를 남길 수 있어요.</div>';
+
+  // 전화 — RPC 가 phone_public 일 때만 내려준다.
+  phone = d.phone || null;
+  if (phone) {
+    $('btn-phone').classList.remove('hidden');
+    $('btn-phone').textContent = '📞 전화' + (d.phone_hours ? ' · ' + d.phone_hours : '');
+    $('btn-phone').onclick = () => { sb.rpc('log_shop_phone_tap', { p_partner: pid, p_device_id: deviceId }); location.href = 'tel:' + phone; };
+  }
+  $('cta').style.display = '';
+  $('page').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
