@@ -21,7 +21,7 @@ const GRADE_TONE: Record<string, string> = {
 
 const c = {
   ko: {
-    nav: { features: '주요 기능', regions: '지원 지역', activities: '활동', faq: 'FAQ', launch: '앱 다운로드', partners: '샵 제휴' },
+    nav: { features: '주요 기능', regions: '지원 지역', activities: '활동', faq: 'FAQ', launch: '앱 다운로드', partners: '파트너 제휴' },
     hero: {
       badge: 'iOS App Store · Google Play 정식 출시',
       headline: '들어가도 되는 바다인지,\n1분이면 압니다',
@@ -145,7 +145,7 @@ const c = {
     },
   },
   en: {
-    nav: { features: 'Features', regions: 'Regions', activities: 'Activities', faq: 'FAQ', launch: 'Get the App', partners: 'For Shops' },
+    nav: { features: 'Features', regions: 'Regions', activities: 'Activities', faq: 'FAQ', launch: 'Get the App', partners: 'For Partners' },
     hero: {
       badge: 'Now on App Store & Google Play',
       headline: 'Is the sea okay today?\nOne minute tells you',
@@ -315,8 +315,8 @@ export default function BadapongPage() {
               <button onClick={() => setLang('ko')} className={`px-3 py-1 rounded-full transition-all font-medium ${lang === 'ko' ? 'bg-[#7DBDFF]/20 text-[#7DBDFF]' : 'text-[#6B8AA8]'}`}>KO</button>
               <button onClick={() => setLang('en')} className={`px-3 py-1 rounded-full transition-all font-medium ${lang === 'en' ? 'bg-[#7DBDFF]/20 text-[#7DBDFF]' : 'text-[#6B8AA8]'}`}>EN</button>
             </div>
-            <a href={primary.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#1A73E8] to-[#14B8A6] text-white text-sm font-semibold px-3.5 sm:px-4 py-2 rounded-full hover:brightness-110 transition whitespace-nowrap">
-              {t.nav.launch}
+            <a href="/badapong/partners/" className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#1A73E8] to-[#14B8A6] text-white text-sm font-semibold px-3.5 sm:px-4 py-2 rounded-full hover:brightness-110 transition whitespace-nowrap">
+              {t.nav.partners}
             </a>
           </div>
         </div>
@@ -627,7 +627,7 @@ export default function BadapongPage() {
             </div>
             <div className="flex flex-wrap gap-6">
               <a href="/" className="text-[#6B8AA8] hover:text-white text-sm transition-colors">Browniebase</a>
-              <a href="/badapong/partners/" className="text-[#6B8AA8] hover:text-white text-sm transition-colors">{lang === 'ko' ? '샵 제휴' : 'For Shops'}</a>
+              <a href="/badapong/partners/" className="text-[#6B8AA8] hover:text-white text-sm transition-colors">{lang === 'ko' ? '파트너 제휴' : 'For Partners'}</a>
               <a href="/salpim/" className="text-[#6B8AA8] hover:text-white text-sm transition-colors">Salpim</a>
               <a href={lang === 'ko' ? '/privacy-badapong.html' : '/privacy-badapong-en.html'} className="text-[#6B8AA8] hover:text-white text-sm transition-colors">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
               <a href={lang === 'ko' ? '/terms-badapong.html' : '/terms-badapong-en.html'} className="text-[#6B8AA8] hover:text-white text-sm transition-colors">{lang === 'ko' ? '이용약관' : 'Terms'}</a>

@@ -70,7 +70,7 @@
   .badge.off { background:rgba(255,255,255,.06); color:var(--sub); font-weight:500; }
   .badge.pend { background:rgba(245,183,92,.14); color:var(--warn); }
   .badge.rej { background:rgba(248,113,113,.14); color:var(--bad); }
-  .tabs { display:flex; gap:8px; margin:22px 0 4px; flex-wrap:wrap; }
+  .tabs { display:flex; gap:8px; margin:22px 0 16px; flex-wrap:wrap; }
   .tab { border:1px solid var(--line); background:transparent; color:var(--body); border-radius:99px;
          padding:7px 18px; cursor:pointer; font-size:.9rem; }
   .tab.on { background:var(--sea); border-color:transparent; color:#fff; font-weight:800;
@@ -203,14 +203,25 @@
     </div>
   </div>
   <!-- 초대 없음 -->
+  <!-- [2026-09-20] 초대 링크 없이 바로 등록 — 등재된 샵을 찾아 잡거나, 새로 적는다. 초대 링크는 스태프 합류용으로만. -->
   <div id="view-noinvite" class="hidden">
-    <div class="card login">
-      <div class="orb">🔗</div>
-      <h2>연결된 샵이 없습니다</h2>
-      <p class="sub">이 포털은 초대 링크(1회용)로만 샵과 연결됩니다.<br/>받은 초대 링크를 다시 열거나, 아래에서 신청해 주세요.</p>
+    <div class="card login" style="max-width:520px">
+      <div class="orb">🏪</div>
+      <h2>내 샵 등록</h2>
+      <p class="sub">1분이면 됩니다. 상호를 검색해 이미 등재된 샵이면 그대로 잡고, 없으면 새로 적습니다.<br/>등록 뒤 <b>사업자 인증</b>을 마치면 앱에 노출되고 상품을 올릴 수 있습니다.</p>
       <div class="msg" id="invite-msg"></div>
-      <a class="btn sec" href="/badapong/partners/" style="display:block;text-align:center">파트너 신청하기</a>
-      <p style="margin-top:18px;text-align:center"><a class="muted" href="#" id="btn-logout2">로그아웃</a></p>
+      <label>상호 *</label>
+      <input id="rg-name" maxlength="80" placeholder="예: 해원다이브리조트" autocomplete="off" />
+      <div id="rg-hits" style="margin-top:6px"></div>
+      <div class="row2" style="margin-top:8px">
+        <div><label>종류 *</label><select id="rg-kind"><option value="dive">다이브샵 (스쿠버·프리다이빙)</option><option value="surf">서핑샵</option></select></div>
+        <div><label>주소 *</label><input id="rg-addr" maxlength="160" placeholder="도로명 주소" /></div>
+      </div>
+      <div class="msg" id="rg-msg"></div>
+      <button class="btn" id="btn-register" style="margin-top:12px;width:100%">이 샵으로 시작하기</button>
+      <p class="muted" style="margin-top:12px;font-size:.82rem">소속 강사로 합류하시나요? 대표가 포털에서 보낸 초대 링크로 들어오면 같은 샵에 연결됩니다.
+        이미 다른 계정이 잡은 샵이면 <a href="mailto:support@browniebase.com">support@browniebase.com</a> 으로 알려주세요.</p>
+      <p style="margin-top:14px;text-align:center"><a class="muted" href="#" id="btn-logout2">로그아웃</a></p>
     </div>
   </div>
   <!-- 대시보드 -->
@@ -236,7 +247,7 @@
     <!-- [2026-09-19] 어신 모델 개편 — 일정(세션·투어) · 소식 · 인증 · 샵 정보 · 멤버십.
          발행권 구매 탭은 없어졌다(충전형 → 연간 멤버십, PARTNER_MODEL_USIN_PHASE1_2026-09-19.md). -->
     <div class="tabs">
-      <button class="tab on" data-tab="meetups">일정</button>
+      <button class="tab on" data-tab="meetups">상품</button>
       <button class="tab" data-tab="posts">소식</button>
       <button class="tab" data-tab="verify">인증 · 배지</button>
       <button class="tab" data-tab="profile">샵 정보</button>
@@ -244,12 +255,12 @@
       <button class="tab" data-tab="inquiries">문의 <span id="inq-badge" class="state-chip" style="display:none"></span></button>
     </div>
 
-    <!-- ── 탭 1. 일정 (세션 · 투어) ─────────────────────────── -->
+    <!-- ── 탭 1. 상품 (펀다이빙 · 강습 · 체험 · 투어) ─────────────────────────── -->
     <div id="tab-meetups">
       <div class="card">
         <div style="display:flex;align-items:center;gap:10px">
-          <h2 style="margin:0">일정 · 투어</h2>
-          <button class="btn sm" id="btn-new" style="margin-left:auto">+ 새 일정</button>
+          <h2 style="margin:0">상품 (펀다이빙 · 강습 · 체험 · 투어)</h2>
+          <button class="btn sm" id="btn-new" style="margin-left:auto">+ 새 상품</button>
         </div>
         <div class="muted" style="margin-top:4px" id="credit-note">일정 = 날짜·정원이 정해진 모집(펀다이빙 · 강습 회차 · 체험 · 자유 서핑). 투어 = 기간·정원이 있는 원정·캠프. 상시 접수 과정은 「샵 정보」 탭의 과정 목록에 적습니다.</div>
         <div class="muted" id="free-note" style="margin-top:4px;color:#2bb5a0"></div>
@@ -259,7 +270,7 @@
 
       <!-- 작성 폼 -->
       <div class="card hidden" id="composer">
-        <h2 style="margin-top:0">일정 작성</h2>
+        <h2 style="margin-top:0">상품 작성</h2>
         <label>스팟 *</label>
         <input id="m-spot-q" placeholder="스팟 이름 검색 (예: 갈남항)" autocomplete="off" />
         <div id="m-spot-result"></div>
@@ -957,6 +968,52 @@ for (const id of ['em-id', 'em-pw']) {
 const logout = async e => { e.preventDefault(); await sb.auth.signOut(); location.href = location.pathname; };
 $('btn-logout').onclick = logout;
 $('btn-logout2').onclick = logout;
+
+// ── 샵 등록(초대 없이) — 상호로 등재 샵(spot_services, anon 공개) 검색 → 선택하면 주소가 채워진다 ──
+let rgTimer, rgPick = null;
+$('rg-name').addEventListener('input', e => {
+  clearTimeout(rgTimer); rgPick = null;
+  const q = e.target.value.trim();
+  if (q.length < 2) { $('rg-hits').innerHTML = ''; return; }
+  rgTimer = setTimeout(async () => {
+    const { data } = await sb.from('spot_services').select('name,address,lat,lon,service_type')
+      .in('service_type', ['dive_shop','surf_shop']).eq('is_active', true).ilike('name->>ko', `%${q}%`).limit(30);
+    const seen = new Set();
+    const hits = (data || []).filter(x => { const k = (x.name && x.name.ko) + '|' + (x.address || ''); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 5);
+    $('rg-hits').innerHTML = hits.map((x, i) => `<div class="stat-row" style="cursor:pointer;padding:7px 4px;border-bottom:1px solid var(--line)" data-i="${i}">
+        <span>🤿 ${esc(x.name && x.name.ko)}<br/><span class="muted">${esc(x.address || '')}</span></span><span class="muted">선택</span></div>`).join('')
+      || '<div class="muted">등재된 샵이 없습니다 — 아래에 새로 적어 주세요.</div>';
+    [...$('rg-hits').querySelectorAll('[data-i]')].forEach(el => el.onclick = () => {
+      const x = hits[+el.dataset.i]; rgPick = x;
+      $('rg-name').value = x.name && x.name.ko; $('rg-addr').value = x.address || '';
+      $('rg-kind').value = x.service_type === 'surf_shop' ? 'surf' : 'dive';
+      $('rg-hits').innerHTML = `<div class="muted">✓ ${esc(x.name && x.name.ko)} 선택됨</div>`;
+    });
+  }, 250);
+});
+$('btn-register').onclick = async () => {
+  const name = $('rg-name').value.trim(), addr = $('rg-addr').value.trim(), kind = $('rg-kind').value;
+  if (!name) { msg('rg-msg', '상호를 적어 주세요.', false); return; }
+  if (!rgPick && !addr) { msg('rg-msg', '새 샵은 주소가 필요합니다.', false); return; }
+  let lat = rgPick ? rgPick.lat : null, lon = rgPick ? rgPick.lon : null;
+  if (lat == null && addr) {
+    // 새 샵 좌표 — 지역 목록·지도 노출에 쓴다. 실패해도 등록은 진행(운영자가 보정).
+    try {
+      const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(addr), { headers: { 'Accept-Language': 'ko' } }).then(r => r.json());
+      if (r && r[0]) { lat = +r[0].lat; lon = +r[0].lon; }
+    } catch (e) {}
+  }
+  $('btn-register').disabled = true;
+  const { data, error } = await sb.rpc('register_partner_shop', { p_name: name, p_address: addr || null, p_kind: kind, p_lat: lat, p_lon: lon });
+  $('btn-register').disabled = false;
+  if (error || !data || !data.ok) {
+    const reason = (data && data.reason) || (error && error.message) || '';
+    msg('rg-msg', reason === 'shop_already_linked' ? '이미 다른 계정이 이 샵을 등록했습니다. 소속 강사라면 대표의 초대 링크로, 아니면 support 로 알려주세요.'
+      : reason === 'signup_required' ? '소셜 로그인 계정으로 다시 들어와 주세요.' : '등록 실패: ' + reason, false);
+    return;
+  }
+  location.reload();
+};
 
 // ── 대시보드 렌더 ────────────────────────────────────
 // 「다음 할 일」 — 어디서 뭘 해야 하는지 한 곳에(검수 4차 4번). 발행 수는 loadMeetups 가 채운다.
