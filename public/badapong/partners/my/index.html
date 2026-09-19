@@ -64,6 +64,7 @@
   .tier-sub { display:block; font-size:11px; font-weight:600; margin-top:2px;
               color:rgba(255,255,255,.82); }
   .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .row2 + .row2, .row2 + input { margin-top:8px; }   /* 연속된 2열 행(SNS 등)이 서로 붙지 않게 */
   .badge { display:inline-block; border-radius:99px; padding:2px 11px; font-size:.78rem; font-weight:700; }
   .badge.on { background:rgba(52,211,153,.14); color:var(--ok); }
   .badge.off { background:rgba(255,255,255,.06); color:var(--sub); font-weight:500; }
@@ -116,6 +117,11 @@
   .rows { display:flex; flex-direction:column; gap:6px; margin-top:6px; }
   .rows .r { display:grid; gap:6px; align-items:center; }
   .rows .r.cert { grid-template-columns:1fr 1fr 1fr 1.4fr 30px; }
+  .rows .r.instr { grid-template-columns:56px 1.2fr 1fr .8fr .6fr 30px; }
+  .instr-photo { position:relative; width:52px; height:52px; border-radius:50%; overflow:hidden; background:rgba(255,255,255,.06);
+    display:flex; align-items:center; justify-content:center; font-size:.7rem; }
+  .instr-photo img { width:100%; height:100%; object-fit:cover; }
+  .instr-photo input { position:absolute; inset:0; opacity:0; cursor:pointer; }
   .rows .r.course { grid-template-columns:1.4fr .8fr .6fr .6fr .8fr .9fr 30px; }
   .rows .r.instr  { grid-template-columns:1fr .8fr .8fr .5fr 30px; }
   .rows .r input { padding:8px 10px; font-size:.88rem; }
@@ -188,7 +194,7 @@
 
       <div class="note">연결 후 <b>사업자 인증(사업자등록증)</b>을 통과해야 모집글을 올릴 수 있습니다.
         <b>소속 강사</b>는 샵의 사업자 인증을 따르고 <b>본인 라이선스(자격) 인증</b>을 통과하면 각자 계정으로 올릴 수 있습니다.
-        <b>2026년 12월 31일까지 파일럿 무료</b> — 샵당 5건(첫 회차 7일 이내)까지 올릴 수 있습니다. 이후에는 연간 멤버십(330,000원·부가세 포함)으로 과정·세션·투어·소식을 제한 없이 올립니다. 설치비·수수료는 없습니다.</div>
+        <b>2026년 12월 31일까지 파일럿 무료</b> — 샵당 5건(첫 회차 7일 이내)까지 올릴 수 있습니다. 이후에는 연간 멤버십(330,000원·부가세 포함)으로 과정·일정·투어·소식을 제한 없이 올립니다. 설치비·수수료는 없습니다.</div>
       <p class="muted" style="margin-top:14px;text-align:center;font-size:12px">
         계속하면 <a href="/terms-badapong.html">이용약관</a>과
         <a href="/privacy-badapong.html">개인정보처리방침</a>에 동의하는 것으로 봅니다.</p>
@@ -238,12 +244,12 @@
     <div id="tab-meetups">
       <div class="card">
         <div style="display:flex;align-items:center;gap:10px">
-          <h2 style="margin:0">세션 · 투어</h2>
+          <h2 style="margin:0">일정 · 투어</h2>
           <button class="btn sm" id="btn-new" style="margin-left:auto">+ 새 일정</button>
         </div>
-        <div class="muted" style="margin-top:4px" id="credit-note">세션 = 날짜·정원이 정해진 모집(펀다이빙 출조·오션 세션·서핑 강습 회차·체험). 투어 = 기간·정원이 있는 원정·캠프. 상시 접수 과정은 「샵 정보」 탭의 과정 목록에 적습니다.</div>
+        <div class="muted" style="margin-top:4px" id="credit-note">일정 = 날짜·정원이 정해진 모집(펀다이빙 · 강습 회차 · 체험 · 자유 서핑). 투어 = 기간·정원이 있는 원정·캠프. 상시 접수 과정은 「샵 정보」 탭의 과정 목록에 적습니다.</div>
         <div class="muted" id="free-note" style="margin-top:4px;color:#2bb5a0"></div>
-        <div class="muted" style="margin-top:4px">발행한 글의 내용 수정은 <b>앱</b>에서 합니다 — 이 포털에는 수정 폼이 없습니다. 임시저장 글은 삭제하고 다시 작성해 주세요. 취소·환불 기준은 <b>바다퐁 표준</b>이 모든 세션·투어에 자동으로 붙습니다(아래 작성 폼 참고).</div>
+        <div class="muted" style="margin-top:4px">발행한 글의 내용 수정은 <b>앱</b>에서 합니다 — 이 포털에는 수정 폼이 없습니다. 임시저장 글은 삭제하고 다시 작성해 주세요. 취소·환불 기준은 <b>바다퐁 표준</b>이 모든 일정·투어에 자동으로 붙습니다(아래 작성 폼 참고).</div>
         <div id="meetup-list" style="margin-top:10px"><span class="muted">불러오는 중…</span></div>
       </div>
 
@@ -263,9 +269,9 @@
             </select></div>
           <div><label>유형</label>
             <select id="m-type">
-              <option value="normal">세션 · 펀다이빙 / 오션 세션</option>
-              <option value="lesson">세션 · 강습 회차</option>
-              <option value="trial">세션 · 체험</option>
+              <option value="normal">펀다이빙 · 자유 서핑 (정원제 일정)</option>
+              <option value="lesson">강습 회차</option>
+              <option value="trial">체험</option>
               <option value="tour">투어 · 캠프 (기간형)</option>
             </select></div>
         </div>
@@ -280,7 +286,33 @@
         <input id="m-title" maxlength="40" placeholder="예: 일요일 아침 갈남 펀다이빙 (2다이브)" />
         <label>회차 * <span class="muted" style="font-weight:400" id="slot-note">— 같은 글에 시간대 여러 개 가능</span></label>
         <div id="slot-box"></div>
-        <button class="btn sec sm" id="btn-add-slot" style="margin-top:8px">+ 회차 추가</button>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+          <button class="btn sec sm" id="btn-add-slot">+ 회차 1개 추가</button>
+          <button class="btn sec sm" id="btn-repeat-open" type="button">🔁 반복 회차 만들기 (요일·기간)</button>
+        </div>
+        <!-- [2026-09-20] 샵이 날짜·시간을 하나하나 넣는 게 번거롭다 — 기간·요일·시간으로 한 번에 만든다. -->
+        <div id="repeat-box" class="hidden" style="margin-top:8px;padding:10px 12px;border:1px dashed var(--line);border-radius:10px">
+          <div class="row2">
+            <div><label>시작일</label><input id="rp-from" type="date" /></div>
+            <div><label>종료일</label><input id="rp-to" type="date" /></div>
+          </div>
+          <label>요일</label>
+          <div class="chips" id="rp-days">
+            <label><input type="checkbox" value="1"/> 월</label><label><input type="checkbox" value="2"/> 화</label>
+            <label><input type="checkbox" value="3"/> 수</label><label><input type="checkbox" value="4"/> 목</label>
+            <label><input type="checkbox" value="5"/> 금</label><label><input type="checkbox" value="6" checked/> 토</label>
+            <label><input type="checkbox" value="0" checked/> 일</label>
+          </div>
+          <div class="row2">
+            <div><label>시간 <span class="muted" style="font-weight:400">(여러 개면 쉼표: 07:00, 13:00)</span></label><input id="rp-times" placeholder="07:00, 13:00" /></div>
+            <div><label>좌석</label><input id="rp-cap" type="number" min="1" max="40" placeholder="8" /></div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <button class="btn sm" id="btn-repeat-done" type="button">완료 — 회차 추가</button>
+            <button class="btn sec sm" id="btn-repeat-close" type="button">닫기</button>
+          </div>
+          <div class="muted" id="rp-msg" style="margin-top:4px"></div>
+        </div>
         <label>참가비(원)</label>
         <input id="m-price" type="number" min="0" step="1000" placeholder="예: 90000" />
         <div class="muted" style="margin-top:4px">참가비는 <b>샵이 직접</b> 받습니다. 바다퐁은 참가비를 받지 않고 결제를 중개하지 않으며, 앱에는 안내 금액만 표시됩니다.</div>
@@ -411,7 +443,11 @@
         <h2 style="margin-top:0">샵 정보</h2>
         <div class="muted">앱 샵 상세·「샵」 탭 카드에 바로 반영됩니다. 필수 3개만 채워도 됩니다.</div>
 
-        <label>활동 <span class="muted" style="font-weight:400">— 「샵」 탭 활동 필터에 잡힙니다. 비우면 샵 종류로 추정</span></label>
+        <label style="font-size:1.05rem">📣 샵 안내 <span class="muted" style="font-weight:400">— <b>앱에서 업체를 열면 사진과 함께 가장 먼저 보이는 글</b>입니다. 어떤 샵인지, 무엇을 하는지, 강점을 3~6줄로.</span></label>
+        <textarea id="p-intro" maxlength="600" rows="5" placeholder="예) 강릉 남애항에서 20년째 운영하는 다이브샵입니다. 초보 체험부터 어드밴스·다이브마스터까지, 보트 펀다이빙은 매주 토·일 07:00 출항합니다."></textarea>
+        <div class="muted" style="margin:4px 0 14px">사진은 아래 「홍보 사진」에서 올립니다(최대 6장 — 첫 장이 대표).</div>
+
+        <label>활동 <span class="muted" style="font-weight:400">— 「예약·강습」 탭 활동 필터에 잡힙니다. 비우면 샵 종류로 추정</span></label>
         <div class="chips" id="p-acts"></div>
         <label>공지 <span class="muted" style="font-weight:400">— 샵 상세 맨 위 (예: 10월 휴무, 시즌 오픈)</span></label>
         <input id="p-notice" maxlength="120" placeholder="비워두면 표시 안 됨" />
@@ -445,7 +481,7 @@
         <div class="chips" id="p-sizes"></div>
         <label>사전 예약 필요 *</label>
         <select id="p-resv"><option value="">선택</option><option value="true">예약 필요</option>
-          <option value="false">워크인 가능</option></select>
+          <option value="false">당일 · 현장 예약 가능</option></select>
 
         <label style="margin-top:18px">강습 가능 범위
           <span class="muted" style="font-weight:400">— 어디까지 가르치는지. 없는 등급은 직접 추가하세요</span></label>
@@ -568,7 +604,8 @@ const ACT_KO = {beach_swim:'해변수영',snorkel:'스노클링',freedive:'프�
 const SIZES = ['XS','S','M','L','XL','2XL','3XL'];
 // 2026-09-03 equipment jsonb — 값(key)은 앱 ProfileScreen 과 같아야 한다.
 const SUIT_MM = ['2','3','5','7'];
-const GEAR = {bcd:'BCD',regulator:'호흡기',computer:'다이브 컴퓨터',tank:'탱크',weights:'웨이트',mask_fins:'마스크·핀',torch:'수중 랜턴'};
+const GEAR = {bcd:'BCD',regulator:'호흡기',computer:'다이브 컴퓨터',tank:'탱크',weights:'웨이트',mask_fins:'마스크·핀',
+  suit:'슈트(웻·드라이)',hood_gloves:'후드·장갑',boots:'부츠',torch:'수중 랜턴',camera:'수중 카메라·하우징',dsmb:'SMB·릴',snorkel:'스노클',nitrox:'나이트록스 탱크'};
 const BOARDS = {soft:'소프트보드',long:'롱보드',fun:'펀보드',short:'숏보드',bodyboard:'바디보드',sup:'SUP'};
 let photos = [];   // partner_profiles.photos (공개 URL 배열)
 let certs = [], courses = [], instructors = [];   // 앱 ProfileScreen 과 같은 키
@@ -615,7 +652,25 @@ function renderRows(id, list, fields, cls) {
 }
 const renderCerts   = () => renderRows('p-certs', certs, CERT_F, 'cert');
 const renderCourses = () => renderRows('p-courses', courses, COURSE_F, 'course');
-const renderInstructors = () => renderRows('p-instructors', instructors, INSTR_F, 'instr');
+// 강사 행 = 입력칸들 + 사진(썸네일·업로드). 사진은 instructors[i].photo (공개 URL) — 앱 강사진 아바타.
+const renderInstructors = () => {
+  renderRows('p-instructors', instructors, INSTR_F, 'instr');
+  [...$('p-instructors').querySelectorAll('.r.instr')].forEach((row, i) => {
+    const ph = document.createElement('div');
+    ph.className = 'instr-photo';
+    ph.innerHTML = (instructors[i].photo ? `<img src="${instructors[i].photo}" alt="" />` : '<span class="muted">사진</span>') +
+      `<input type="file" accept="image/*" data-i="${i}" title="강사 사진 올리기" />`;
+    row.insertBefore(ph, row.firstChild);
+    ph.querySelector('input').onchange = async e => {
+      const file = e.target.files && e.target.files[0]; if (!file) return;
+      const path = `${uid}/instr-${Date.now()}.${(file.name.split('.').pop() || 'jpg').toLowerCase()}`;
+      const up = await sb.storage.from('meetup-images').upload(path, file, { contentType: file.type || 'image/jpeg' });
+      if (up.error) { alert('업로드 실패: ' + up.error.message); return; }
+      instructors[i].photo = sb.storage.from('meetup-images').getPublicUrl(path).data.publicUrl;
+      renderInstructors();
+    };
+  });
+};
 const renderPhotos = () => {
   $('p-photos').innerHTML = photos.map((u, i) =>
     `<figure><img src="${u}" alt="" /><button type="button" data-i="${i}">×</button></figure>`).join('');
@@ -668,7 +723,7 @@ async function init() {
       $('m-cancel-std').textContent = pol.standard_cancel_policy || '(표준 규정 미설정)';
       if (pol.free_period) {
         $('free-note').textContent = '🟢 파일럿 무료 기간' + (pol.paid_from ? ' (' + pol.paid_from + '까지)' : '') +
-          ' — 샵당 ' + pol.free_max_posts + '건까지(세션은 첫 회차 ' + pol.free_max_days + '일 이내, 투어는 예외). 이후엔 연간 멤버십으로 제한 없이 올립니다. 종료 7일 전에 앱 알림으로 안내드립니다.';
+          ' — 샵당 ' + pol.free_max_posts + '건까지(일정은 첫 회차 ' + pol.free_max_days + '일 이내, 투어는 예외). 이후엔 연간 멤버십으로 제한 없이 올립니다. 종료 7일 전에 앱 알림으로 안내드립니다.';
       }
     }
   } catch (e) {}
@@ -963,6 +1018,7 @@ function renderDash() {
   acts = Array.isArray(p.activities) ? p.activities.slice() : [];
   $('p-acts').innerHTML = chipsHtml('p-acts', ACTS, acts);
   $('p-notice').value = p.notice || '';
+  $('p-intro').value = p.intro || '';
   $('p-rep').value = p.representative || '';
   $('p-bank').value = p.bank_account || '';
   const sns = p.sns || {};
@@ -1114,7 +1170,7 @@ async function loadMeetups() {
   (rooms || []).forEach(r => roomBy[r.meetup_id] = r);
 
   const stateKo = { draft:'임시저장', published:'모집 중', closed:'마감', cancelled:'취소됨' };
-  const typeKo = { normal:'세션', lesson:'강습', trial:'체험', tour:'투어' };
+  const typeKo = { normal:'펀다이빙', lesson:'강습', trial:'체험', tour:'투어' };
   const memKo = { inquiry:'문의', joined:'신청', accepted:'확정', attended:'출석', no_show:'불참', left:'취소', rejected:'거절' };
   const cancelKo = { weather:'기상 악화', self:'자진 취소', shortfall:'인원 미달', shop:'주최 측 사정', policy:'운영 정책' };
   $('meetup-list').innerHTML = rows.map(r => {
@@ -1268,14 +1324,34 @@ $('m-type').onchange = () => {
   $('btn-add-slot').classList.toggle('hidden', tour);
   $('slot-note').textContent = tour ? '— 투어는 출발 일시·정원 1개' : '— 같은 글에 시간대 여러 개 가능';
 };
-function addSlotRow() {
+// 날짜와 시간을 따로 — 폰의 datetime-local 은 「완료」 없이 닫혀 헷갈렸다(2026-09-20 사용자). 값은 저장 때 합친다.
+function addSlotRow(date, time, cap) {
   const div = document.createElement('div');
   div.className = 'slot-row';
-  div.innerHTML = `<input type="datetime-local" class="s-dt" />
-    <input type="number" class="s-cap" min="1" max="40" placeholder="좌석" />
-    <button class="btn sec sm" onclick="this.parentElement.remove()">✕</button>`;
+  div.innerHTML = `<input type="date" class="s-date" value="${date || ''}" />
+    <input type="time" class="s-time" value="${time || ''}" />
+    <input type="number" class="s-cap" min="1" max="40" placeholder="좌석" value="${cap || ''}" />
+    <button class="btn sec sm" type="button" onclick="this.parentElement.remove()">✕</button>`;
   $('slot-box').appendChild(div);
 }
+$('btn-repeat-open').onclick = () => $('repeat-box').classList.toggle('hidden');
+$('btn-repeat-close').onclick = () => $('repeat-box').classList.add('hidden');
+$('btn-repeat-done').onclick = () => {
+  const from = $('rp-from').value, to = $('rp-to').value;
+  const days = [...document.querySelectorAll('#rp-days input:checked')].map(i => +i.value);
+  const times = $('rp-times').value.split(',').map(t => t.trim()).filter(t => /^\d{1,2}:\d{2}$/.test(t)).map(t => t.padStart(5, '0'));
+  const cap = $('rp-cap').value;
+  if (!from || !to || !days.length || !times.length || !cap) { $('rp-msg').textContent = '시작일·종료일·요일·시간·좌석을 모두 채워 주세요.'; return; }
+  let n = 0;
+  for (let d = new Date(from + 'T00:00'); d <= new Date(to + 'T00:00'); d.setDate(d.getDate() + 1)) {
+    if (!days.includes(d.getDay())) continue;
+    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    for (const t of times) { addSlotRow(ds, t, cap); n++; }
+    if (n > 200) break;
+  }
+  $('rp-msg').textContent = n ? `회차 ${n}개를 추가했습니다. 아래 목록에서 개별 삭제·수정할 수 있습니다.` : '조건에 맞는 날이 없습니다.';
+  if (n) $('repeat-box').classList.add('hidden');
+};
 
 // 스팟 검색 (spots 는 anon 공개 읽기)
 let spotTimer;
@@ -1301,7 +1377,7 @@ async function saveDraft() {
   const spot = $('m-spot-id').value;
   if (!spot) { msg('m-msg','스팟을 선택해 주세요.',false); return null; }
   if (!$('m-title').value.trim()) { msg('m-msg','제목을 입력해 주세요.',false); return null; }
-  const slots = [...document.querySelectorAll('.slot-row')].map(r => ({
+  const slots = [...document.querySelectorAll('.slot-row')].filter(r => r.querySelector('.s-date').value && r.querySelector('.s-time').value).map(r => ({
     starts_at: r.querySelector('.s-dt').value, capacity: +r.querySelector('.s-cap').value || 0 }))
     .filter(s => s.starts_at && s.capacity > 0);
   if (!slots.length) { msg('m-msg','회차(시각·좌석)를 1개 이상 넣어주세요.',false); return null; }
@@ -1459,6 +1535,7 @@ $('btn-save-profile').onclick = async () => {
                 .map(c => Object.fromEntries(Object.entries(c).filter(([, v]) => (v||'').trim()))),
     activities: checked('p-acts'),
     notice: $('p-notice').value.trim() || null,
+    intro: $('p-intro').value.trim() || null,
     representative: $('p-rep').value.trim() || null,
     bank_account: $('p-bank').value.trim() || null,
     sns: Object.fromEntries(['instagram','youtube','blog','kakao','website'].map(k => [k, $('p-sns-'+k).value.trim()]).filter(([, v]) => v)),
