@@ -231,6 +231,7 @@
       <button class="tab" data-tab="verify">인증 · 배지</button>
       <button class="tab" data-tab="profile">샵 정보</button>
       <button class="tab" data-tab="membership">멤버십</button>
+      <button class="tab" data-tab="inquiries">문의 <span id="inq-badge" class="state-chip" style="display:none"></span></button>
     </div>
 
     <!-- ── 탭 1. 일정 (세션 · 투어) ─────────────────────────── -->
@@ -415,6 +416,28 @@
         <label>공지 <span class="muted" style="font-weight:400">— 샵 상세 맨 위 (예: 10월 휴무, 시즌 오픈)</span></label>
         <input id="p-notice" maxlength="120" placeholder="비워두면 표시 안 됨" />
 
+        <!-- [2026-09-19] 어신 업체 페이지 구성 — 앱 소개 탭의 입금 계좌·SNS·서비스/안전 배지·사업자 정보 -->
+        <div class="row2">
+          <div><label>대표자명 <span class="muted" style="font-weight:400">— 앱 최하단 「사업자 정보」</span></label>
+            <input id="p-rep" maxlength="40" placeholder="예: 홍길동" /></div>
+          <div><label>입금 계좌 <span class="muted" style="font-weight:400">— 예약금 안내용</span></label>
+            <input id="p-bank" maxlength="80" placeholder="예: 농협 123-4567-8901-23 (예금주)" /></div>
+        </div>
+        <label>SNS · 링크 <span class="muted" style="font-weight:400">— 아이디만 적어도 됩니다</span></label>
+        <div class="row2">
+          <div><input id="p-sns-instagram" placeholder="Instagram @아이디" /></div>
+          <div><input id="p-sns-youtube" placeholder="YouTube @채널" /></div>
+        </div>
+        <div class="row2">
+          <div><input id="p-sns-blog" placeholder="블로그 URL" /></div>
+          <div><input id="p-sns-kakao" placeholder="카카오 채널 아이디" /></div>
+        </div>
+        <input id="p-sns-website" placeholder="홈페이지 URL" />
+        <label>서비스 <span class="muted" style="font-weight:400">— 앱 소개 탭 배지</span></label>
+        <div class="chips" id="p-amen-service"></div>
+        <label>안전 · 편의시설</label>
+        <div class="chips" id="p-amen-safety"></div>
+
         <label>대여 범위 *</label>
         <select id="p-rental"><option value="">선택</option><option value="full">풀세트</option>
           <option value="partial">부분</option><option value="none">없음</option></select>
@@ -484,6 +507,15 @@
     <!-- ── 탭 4. 멤버십 ───────────────────────────
          가격은 하드코딩하지 않는다. membership_products 가 단일 진실원천, 서버가 주문 금액을 찍는다.
          잔량·횟수 없음(기간만) — 토스 「충전 업종」 재분류를 피하는 조건. 자동갱신 없음. -->
+    <div id="tab-inquiries" class="hidden">
+      <div class="card">
+        <h2 style="margin-top:0">1:1 문의 · 과정 예약 신청</h2>
+        <div class="muted">앱 업체 페이지의 「문의」(쪽지)와 과정(상시 접수) 예약 신청이 여기로 옵니다. 답변하면 신청자에게 알림이 갑니다.
+          연락처는 답변·예약 확인에만 쓰고, 마케팅에 쓰면 안 됩니다.</div>
+        <div id="inq-list" style="margin-top:12px"></div>
+      </div>
+    </div>
+
     <div id="tab-membership" class="hidden">
       <div class="card" id="card-buy">
         <h2 style="margin-top:0">📅 파트너 멤버십</h2>
@@ -931,7 +963,18 @@ function renderDash() {
   acts = Array.isArray(p.activities) ? p.activities.slice() : [];
   $('p-acts').innerHTML = chipsHtml('p-acts', ACTS, acts);
   $('p-notice').value = p.notice || '';
+  $('p-rep').value = p.representative || '';
+  $('p-bank').value = p.bank_account || '';
+  const sns = p.sns || {};
+  for (const k of ['instagram','youtube','blog','kakao','website']) $('p-sns-'+k).value = sns[k] || '';
+  const amen = Array.isArray(p.amenities) ? p.amenities : [];
+  $('p-amen-service').innerHTML = chipsHtml('p-amen-service', AMEN_SERVICE, amen);
+  $('p-amen-safety').innerHTML  = chipsHtml('p-amen-safety',  AMEN_SAFETY,  amen);
 }
+// 앱 l10n 의 amenity_* 키와 같아야 한다 (shop_detail_screen.dart).
+const AMEN_SERVICE = { card_pay:'카드결제', rental:'장비대여', parking:'주차', shower:'샤워', hot_water:'온수', locker:'보관함',
+  changing_room:'탈의실', gear_wash:'장비세척', pickup:'픽업', lodging:'숙박', cafe:'카페·휴게', wifi:'와이파이', boat:'자체 보트' };
+const AMEN_SAFETY = { first_aid:'구급함', oxygen:'응급 산소', aed:'자동제세동기', lifeguard:'안전요원', radio:'무전기' };
 
 $('btn-add-teach').onclick = () => {
   const v = $('p-teach-new').value.trim();
@@ -1044,7 +1087,7 @@ $('p-photo-file').onchange = async e => {
 // 탭 전환
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
-  for (const k of ['meetups','posts','verify','profile','membership'])
+  for (const k of ['meetups','posts','verify','profile','membership','inquiries'])
     $('tab-'+k).classList.toggle('hidden', t.dataset.tab !== k);
 });
 
@@ -1171,7 +1214,48 @@ async function refreshAll() {
   const { data } = await sb.rpc('my_partner_account');
   if (data && data.ok) { me = data; renderDash(); }
   loadMeetups();
+  loadInquiries();
 }
+
+// ── 1:1 문의 · 과정 신청 (RLS: 이 샵 구성원만 읽는다) ─────────────
+const INQ_STATUS = { open:'답변 대기', replied:'답변 완료', confirmed:'확정', declined:'불가', closed:'종료' };
+async function loadInquiries() {
+  const { data, error } = await sb.from('shop_inquiries')
+    .select('id,kind,title,body,course_name,wanted_date,seats,contact_name,contact_phone,status,reply,replied_at,created_at')
+    .order('created_at', { ascending: false }).limit(100);
+  const el = $('inq-list'); if (!el) return;
+  if (error) { el.innerHTML = '<div class="muted">불러오기 실패: ' + esc(error.message) + '</div>'; return; }
+  const rows = data || [];
+  const open = rows.filter(r => r.status === 'open').length;
+  const b = $('inq-badge'); if (b) { b.textContent = open; b.style.display = open ? '' : 'none'; }
+  if (!rows.length) { el.innerHTML = '<div class="muted">아직 문의가 없습니다.</div>'; return; }
+  el.innerHTML = rows.map(r => `<div class="meetup-item">
+    <div class="meetup-head">
+      <span class="state-chip">${r.kind === 'course_request' ? '🎓 과정 신청' : '✉ 문의'}</span>
+      <b>${esc(r.title)}</b>
+      <span class="state-chip">${INQ_STATUS[r.status] || r.status}</span>
+      <span class="muted" style="margin-left:auto">${fmtDt(r.created_at)}</span>
+    </div>
+    ${r.kind === 'course_request' ? `<div class="muted" style="margin-top:4px">희망일 <b>${esc(r.wanted_date || '-')}</b> · 인원 <b>${r.seats || 1}명</b> ·
+      예약자 <b>${esc(r.contact_name || '')}</b> · <a href="tel:${esc(r.contact_phone || '')}">${esc(r.contact_phone || '')}</a></div>` : ''}
+    ${r.body ? `<div style="margin-top:6px;white-space:pre-wrap">${esc(r.body)}</div>` : ''}
+    ${r.reply ? `<div class="muted" style="margin-top:8px;padding:8px 10px;border-left:3px solid var(--sea);white-space:pre-wrap">↳ ${esc(r.reply)}</div>` : ''}
+    ${r.status === 'open' || r.status === 'replied' ? `<div style="margin-top:8px">
+      <textarea id="inq-reply-${r.id}" rows="2" placeholder="답변을 적어 주세요" style="width:100%">${esc(r.reply || '')}</textarea>
+      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+        <button class="btn sec sm" onclick="replyInquiry('${r.id}','replied')">답변 보내기</button>
+        ${r.kind === 'course_request' ? `<button class="btn sm" onclick="replyInquiry('${r.id}','confirmed')">예약 확정</button>
+        <button class="btn warn sm" onclick="replyInquiry('${r.id}','declined')">불가</button>` : ''}
+      </div></div>` : ''}
+  </div>`).join('');
+}
+window.replyInquiry = async (id, status) => {
+  const text = ($('inq-reply-' + id) || {}).value || '';
+  if (!text.trim() && status === 'replied') { alert('답변 내용을 적어 주세요.'); return; }
+  const { data, error } = await sb.rpc('reply_shop_inquiry', { p_id: id, p_reply: text, p_status: status });
+  if (error || !data || !data.ok) { alert('전송 실패: ' + ((data && data.reason) || (error && error.message))); return; }
+  loadInquiries();
+};
 
 // ── 작성 폼 ─────────────────────────────────────────
 $('btn-new').onclick = () => { $('composer').classList.remove('hidden'); addSlotRow(); window.scrollTo({top:$('composer').offsetTop-20,behavior:'smooth'}); };
@@ -1375,6 +1459,10 @@ $('btn-save-profile').onclick = async () => {
                 .map(c => Object.fromEntries(Object.entries(c).filter(([, v]) => (v||'').trim()))),
     activities: checked('p-acts'),
     notice: $('p-notice').value.trim() || null,
+    representative: $('p-rep').value.trim() || null,
+    bank_account: $('p-bank').value.trim() || null,
+    sns: Object.fromEntries(['instagram','youtube','blog','kakao','website'].map(k => [k, $('p-sns-'+k).value.trim()]).filter(([, v]) => v)),
+    amenities: checked('p-amen-service').concat(checked('p-amen-safety')),
     equipment: { suit_mm: checked('p-mm'), scuba_gear: checked('p-gear'), surf_boards: checked('p-boards') },
     updated_at: new Date().toISOString(),
   };
