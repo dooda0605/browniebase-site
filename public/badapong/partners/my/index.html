@@ -1064,8 +1064,9 @@ async function loadMeetups() {
 
   // [2026-09-19] 예약 현황판 — 방 멤버(신청자)를 회차별로. 호스트는 chat_members_room_read 정책으로 읽는다.
   //   이름은 chat_members.display_name(앱이 참여 시 적는다). 없으면 「참가자」.
+  //   예약 폼(앱 「신청」)으로 들어온 건은 인원(seats)·연락처(meetup_reservation_contacts, 호스트만 RLS 통과)가 붙는다.
   const { data: rooms } = await sb.from('chat_rooms')
-    .select('id,meetup_id,chat_members(auth_user_id,display_name,state,slot_id,joined_at,is_host)').in('meetup_id', ids);
+    .select('id,meetup_id,chat_members(auth_user_id,display_name,state,slot_id,joined_at,is_host,seats,meetup_reservation_contacts(contact_name,contact_phone,note))').in('meetup_id', ids);
   const roomBy = {};
   (rooms || []).forEach(r => roomBy[r.meetup_id] = r);
 
@@ -1077,11 +1078,13 @@ async function loadMeetups() {
     const room = roomBy[r.id];
     const members = ((room && room.chat_members) || []).filter(m => !m.is_host && m.state !== 'left' && m.state !== 'rejected');
     const ss = (slotsBy[r.id] || []).sort((a,b)=>a.starts_at<b.starts_at?-1:1).map(s => {
-      const who = members.filter(m => m.slot_id === s.id).map(m =>
-        `<span class="state-chip">${esc(m.display_name || '참가자')} · ${memKo[m.state] || m.state}` +
+      const who = members.filter(m => m.slot_id === s.id).map(m => {
+        const c = Array.isArray(m.meetup_reservation_contacts) ? m.meetup_reservation_contacts[0] : m.meetup_reservation_contacts;
+        const contact = c ? ` · <a href="tel:${esc(c.contact_phone)}">${esc(c.contact_phone)}</a>${c.note ? ' · ' + esc(c.note) : ''}` : '';
+        return `<span class="state-chip">${esc((c && c.contact_name) || m.display_name || '참가자')}${(m.seats || 1) > 1 ? ' ' + m.seats + '명' : ''} · ${memKo[m.state] || m.state}${contact}` +
         (r.state === 'published' && ['joined','accepted'].includes(m.state)
           ? ` <a href="#" onclick="releaseMember('${room.id}','${m.auth_user_id}');return false" title="연락이 안 되면 좌석을 비웁니다">좌석 해제</a>` : '') +
-        `</span>`).join(' ');
+        `</span>`; }).join(' ');
       return `${fmtDt(s.starts_at)}${r.meetup_type === 'tour' && r.ends_at ? ' ~ ' + fmtDate(r.ends_at) : ''} · 잔여 ${s.seats_left}/${s.capacity}` +
         (who ? '<div style="margin:3px 0 0 8px;display:flex;gap:4px;flex-wrap:wrap">' + who + '</div>' : '');
     }).join('<br/>');
