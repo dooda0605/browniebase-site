@@ -222,6 +222,10 @@
       </div>
       <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
         <span id="badge-box" style="display:flex;gap:6px"></span>
+      </div>
+      <!-- [2026-09-20] 가입 → 인증 → 샵 안내·사진 → 과정·일정 → 멤버십. 끝난 건 ✓, 남은 건 탭으로 바로 이동. -->
+      <div id="todo-box" class="muted" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px"></div>
+      <div style="display:none">
         <!-- [2026-09-12] 지역 인사이트 — 사업자 인증 파트너만 열린다(서버 RPC 가 검사) -->
         <a class="btn sec sm" href="/badapong/partners/insights/">📊 지역 인사이트</a>
         <!-- [2026-09-19] 웹 샵 페이지 — 인스타·카톡에 붙이는 링크. 앱 샵 상세와 같은 데이터. -->
@@ -955,7 +959,24 @@ $('btn-logout').onclick = logout;
 $('btn-logout2').onclick = logout;
 
 // ── 대시보드 렌더 ────────────────────────────────────
+// 「다음 할 일」 — 어디서 뭘 해야 하는지 한 곳에(검수 4차 4번). 발행 수는 loadMeetups 가 채운다.
+function renderTodo() {
+  if (!me) return;
+  const b = me.badges || {}, pf = me.profile || {};
+  const todo = [
+    ['사업자 인증', !!b.business, 'verify'],
+    ['샵 안내 글', !!(pf.intro || '').trim(), 'profile'],
+    ['홍보 사진', (pf.photos || []).length > 0, 'profile'],
+    ['과정 1개 이상', Array.isArray(pf.courses) && pf.courses.some(c => (c.name || '').trim()), 'profile'],
+    ['첫 일정 발행', (me.published_count || 0) > 0, 'meetups'],
+    ['멤버십', !!(me.membership && me.membership.active), 'membership'],
+  ];
+  $('todo-box').innerHTML = '<b style="margin-right:4px">다음 할 일</b>' + todo.map(([t, done, tab]) =>
+    done ? `<span class="badge on">✓ ${t}</span>`
+         : `<a href="#" class="badge off" onclick="document.querySelector('.tab[data-tab=${tab}]').click();return false">${t} →</a>`).join('');
+}
 function renderDash() {
+  renderTodo();
   $('shop-name').textContent = (me.shop && me.shop.name) || '내 샵';
   $('shop-addr').textContent = (me.shop && me.shop.address) || '';
   renderMembership();
@@ -1173,6 +1194,7 @@ async function loadMeetups() {
   const typeKo = { normal:'펀다이빙', lesson:'강습', trial:'체험', tour:'투어' };
   const memKo = { inquiry:'문의', joined:'신청', accepted:'확정', attended:'출석', no_show:'불참', left:'취소', rejected:'거절' };
   const cancelKo = { weather:'기상 악화', self:'자진 취소', shortfall:'인원 미달', shop:'주최 측 사정', policy:'운영 정책' };
+  me.published_count = rows.filter(r => r.state === 'published').length; renderTodo();
   $('meetup-list').innerHTML = rows.map(r => {
     const room = roomBy[r.id];
     const members = ((room && room.chat_members) || []).filter(m => !m.is_host && m.state !== 'left' && m.state !== 'rejected');
@@ -1378,7 +1400,7 @@ async function saveDraft() {
   if (!spot) { msg('m-msg','스팟을 선택해 주세요.',false); return null; }
   if (!$('m-title').value.trim()) { msg('m-msg','제목을 입력해 주세요.',false); return null; }
   const slots = [...document.querySelectorAll('.slot-row')].filter(r => r.querySelector('.s-date').value && r.querySelector('.s-time').value).map(r => ({
-    starts_at: r.querySelector('.s-dt').value, capacity: +r.querySelector('.s-cap').value || 0 }))
+    starts_at: r.querySelector('.s-date').value + 'T' + r.querySelector('.s-time').value, capacity: +r.querySelector('.s-cap').value || 0 }))
     .filter(s => s.starts_at && s.capacity > 0);
   if (!slots.length) { msg('m-msg','회차(시각·좌석)를 1개 이상 넣어주세요.',false); return null; }
   const isTour = $('m-type').value === 'tour';
