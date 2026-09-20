@@ -292,12 +292,15 @@
 
 <!-- ── 지역 수요 · 활동 구성 ─────────────────────────────────
      [2026-09-21] 「누가 오는가」를 숫자로.
-     ⚠ 활동 비율은 **기본값 편향을 걷어낸 표본**만 쓴다. 앱 활동 렌즈 기본값이 snorkel 이라
-     (app_providers.dart:79) 한 번도 안 고른 사용자가 전부 스노클로 집계된다 — 온보딩에
-     활동 선택 단계가 있지만 「건너뛰기」로 통째로 넘길 수 있다(onboarding_screen.dart:81).
-     그래서 90일간 **서로 다른 활동을 2개 이상 조회한 기기**(=렌즈를 실제로 조작한 것이
-     증명된 510대)만 남기고, 기기별 최다 조회 활동을 그 사람의 주력으로 집계했다.
-     이 표본에서도 스노클이 57.5% 로 1위다 — 기본값으로는 설명되지 않는 결과다.
+     활동 비율은 **두 가지로 세어 둘 다 같은 결론**인 것만 쓴다. 앱 렌즈 기본값이 snorkel 이고
+     (app_providers.dart:79) 온보딩 활동 선택은 「건너뛰기」로 넘길 수 있어(onboarding_screen.dart:81)
+     단순 집계는 스노클 쪽으로 부풀려진다.
+       ① 주력 기준(본문 수치) — 기기별 최다 조회 활동. 기본값을 안 바꾼 사람은 스노클로 센다.
+          「바꿀 필요를 못 느낀 것도 선택」이라는 판단(2026-09-21 사용자). 1,670대 → 스노클 63.2%.
+       ② 엄격 기준 — 90일간 서로 다른 활동을 2개 이상 조회한 510대(렌즈 조작이 증명된 기기)
+          만으로 같은 계산 → 스노클 57.5%.
+     두 기준의 폭이 57~63% 라 결론이 세는 방법에 좌우되지 않는다. 그래서 범위로 적는다.
+     ⚠ 단순 any-touch 집계(70.5%)는 쓰지 않는다 — 기본값이 그대로 들어간다.
      지역·조회 수는 ops_internal_actors 를 제외한 spot_view_hourly 실측. -->
 <section>
   <div class="wrap two">
@@ -324,19 +327,20 @@
   <div class="wrap two">
     <div>
       <div class="eyebrow">무엇을 하러 오는가</div>
-      <h2>절반 이상이 <span style="color:var(--teal)">스노클링</span>입니다</h2>
+      <h2>셋 중 둘은 <span style="color:var(--teal)">스노클링</span>입니다</h2>
       <div class="sub">스쿠버 자격자는 이미 다니던 샵이 있습니다. <b>강습으로 이어질 사람은
         아직 자격증이 없는 쪽</b>이고, 그게 바다퐁 사용자의 대부분입니다.</div>
-      <div class="muted" style="margin-top:12px">활동을 <b>직접 바꿔 본</b> 사용자 510명 기준(최근 90일).
-        앱 기본값이 스노클이라, 한 번도 안 바꾼 사용자는 집계에서 뺐습니다.</div>
+      <div class="muted" style="margin-top:12px">최근 90일 1,670명, 각자 <b>가장 많이 본 활동</b> 기준.
+        활동을 직접 바꿔 본 사용자 510명만 따로 세어도 스노클링은 <b>57.5%</b>로 1위입니다 —
+        세는 방법을 바꿔도 결론이 같습니다.</div>
     </div>
     <div class="card">
-      <div class="stat-row"><span>🤿 <b>스노클링</b></span><span class="ok">57.5%</span></div>
-      <div class="stat-row"><span>🧜 <b>프리다이빙</b></span><span class="ok">24.7%</span></div>
-      <div class="stat-row"><span>🏖 해변 수영</span><span>7.1%</span></div>
-      <div class="stat-row"><span>🐠 스쿠버다이빙</span><span>4.3%</span></div>
-      <div class="stat-row"><span>🦪 갯벌</span><span>3.5%</span></div>
-      <div class="stat-row"><span>🎣 낚시 · 🏄 서핑</span><span>3.0%</span></div>
+      <div class="stat-row"><span>🤿 <b>스노클링</b></span><span class="ok">63.2%</span></div>
+      <div class="stat-row"><span>🧜 <b>프리다이빙</b></span><span class="ok">19.1%</span></div>
+      <div class="stat-row"><span>🐠 스쿠버다이빙</span><span>5.9%</span></div>
+      <div class="stat-row"><span>🏖 해변 수영</span><span>4.6%</span></div>
+      <div class="stat-row"><span>🦪 갯벌</span><span>3.1%</span></div>
+      <div class="stat-row"><span>🎣 낚시 · 🏄 서핑</span><span>4.2%</span></div>
       <div class="muted" style="margin-top:12px">스노클링과 프리다이빙이 <b>82%</b>입니다.
         체험다이빙·오픈워터·레벨1 같은 <b>입문 과정</b>을 여기에 올리면 가장 가까운 손님을 만납니다.</div>
     </div>
