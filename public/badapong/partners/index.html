@@ -290,11 +290,15 @@
   </div>
 </section>
 
-<!-- ── 지역 수요 ──────────────────────────────────────────────
-     [2026-09-21] 「누가 오는가」를 숫자로. 활동별(스노클/스쿠버) 분해는 넣지 않는다 —
-     앱의 활동 렌즈 기본값이 snorkel 이라(app_providers.dart:79) 고르지 않은 사용자가 전부
-     스노클로 집계된다. 그 편향을 고치기 전에는 활동 비율을 대외 수치로 쓸 수 없다.
-     지역·조회 수는 ops_internal_actors 를 제외한 spot_view_hourly 7일 실측이다. -->
+<!-- ── 지역 수요 · 활동 구성 ─────────────────────────────────
+     [2026-09-21] 「누가 오는가」를 숫자로.
+     ⚠ 활동 비율은 **기본값 편향을 걷어낸 표본**만 쓴다. 앱 활동 렌즈 기본값이 snorkel 이라
+     (app_providers.dart:79) 한 번도 안 고른 사용자가 전부 스노클로 집계된다 — 온보딩에
+     활동 선택 단계가 있지만 「건너뛰기」로 통째로 넘길 수 있다(onboarding_screen.dart:81).
+     그래서 90일간 **서로 다른 활동을 2개 이상 조회한 기기**(=렌즈를 실제로 조작한 것이
+     증명된 510대)만 남기고, 기기별 최다 조회 활동을 그 사람의 주력으로 집계했다.
+     이 표본에서도 스노클이 57.5% 로 1위다 — 기본값으로는 설명되지 않는 결과다.
+     지역·조회 수는 ops_internal_actors 를 제외한 spot_view_hourly 실측. -->
 <section>
   <div class="wrap two">
     <div>
@@ -312,6 +316,29 @@
       <div class="stat-row"><span><b>울릉도</b></span><span class="ok">62명 · 169회</span></div>
       <div class="muted" style="margin-top:12px">내 샵 근처 스팟을 <b>몇 명이 언제 봤는지</b>는
         파트너 포털 「지역 인사이트」에서 요일·시간대까지 확인할 수 있습니다.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow">무엇을 하러 오는가</div>
+      <h2>절반 이상이 <span style="color:var(--teal)">스노클링</span>입니다</h2>
+      <div class="sub">스쿠버 자격자는 이미 다니던 샵이 있습니다. <b>강습으로 이어질 사람은
+        아직 자격증이 없는 쪽</b>이고, 그게 바다퐁 사용자의 대부분입니다.</div>
+      <div class="muted" style="margin-top:12px">활동을 <b>직접 바꿔 본</b> 사용자 510명 기준(최근 90일).
+        앱 기본값이 스노클이라, 한 번도 안 바꾼 사용자는 집계에서 뺐습니다.</div>
+    </div>
+    <div class="card">
+      <div class="stat-row"><span>🤿 <b>스노클링</b></span><span class="ok">57.5%</span></div>
+      <div class="stat-row"><span>🧜 <b>프리다이빙</b></span><span class="ok">24.7%</span></div>
+      <div class="stat-row"><span>🏖 해변 수영</span><span>7.1%</span></div>
+      <div class="stat-row"><span>🐠 스쿠버다이빙</span><span>4.3%</span></div>
+      <div class="stat-row"><span>🦪 갯벌</span><span>3.5%</span></div>
+      <div class="stat-row"><span>🎣 낚시 · 🏄 서핑</span><span>3.0%</span></div>
+      <div class="muted" style="margin-top:12px">스노클링과 프리다이빙이 <b>82%</b>입니다.
+        체험다이빙·오픈워터·레벨1 같은 <b>입문 과정</b>을 여기에 올리면 가장 가까운 손님을 만납니다.</div>
     </div>
   </div>
 </section>
@@ -353,7 +380,7 @@
           파일럿 기간에는 <b>연간 멤버십과 똑같이</b> 과정·세션·투어·소식을 올릴 수 있습니다 —
           건수 제한도, 날짜 제한도 없습니다.</p>
         <p style="margin-top:8px">파일럿이 끝나면 <b>연간 멤버십</b> 하나로 상품·과정·소식을 제한 없이 올립니다.
-          설치비·예약 수수료는 없습니다. 종료 7일 전에 파트너 전원에게 앱 알림과 포털로 안내드립니다 — 모르는 사이에 청구되는 일은 없습니다.</p>
+          설치비·예약 수수료는 없습니다. 종료 <b>30일 전</b>에 파트너 전원에게 앱 알림과 포털로 안내드립니다 — 모르는 사이에 청구되는 일은 없습니다.</p>
       </div>
     </div>
 
