@@ -236,7 +236,10 @@
       </div>
       <!-- [2026-09-20] 가입 → 인증 → 샵 안내·사진 → 과정·일정 → 멤버십. 끝난 건 ✓, 남은 건 탭으로 바로 이동. -->
       <div id="todo-box" class="muted" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px"></div>
-      <div style="display:none">
+      <!-- [2026-09-21] display:none 안에 묻혀 있던 것을 되살렸다 — 09-20 헤더 개편 때
+           인사이트와 「내 샵 페이지」가 통째로 가려져 포털에서 갈 길이 없어졌다(사용자 제보).
+           두 버튼 다 핸들러는 멀쩡히 살아 있었고, 감춰진 것만 문제였다. -->
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
         <!-- [2026-09-12] 지역 인사이트 — 사업자 인증 파트너만 열린다(서버 RPC 가 검사) -->
         <a class="btn sec sm" href="/badapong/partners/insights/">📊 지역 인사이트</a>
         <!-- [2026-09-19] 웹 샵 페이지 — 인스타·카톡에 붙이는 링크. 앱 샵 상세와 같은 데이터. -->
