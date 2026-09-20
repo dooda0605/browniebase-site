@@ -235,7 +235,7 @@
         <div class="demo-label">앱 「예약·강습」 탭에 이렇게 올라갑니다</div>
         <div class="meetup" style="padding:12px;display:flex;gap:12px;align-items:stretch">
           <div style="width:112px;flex:none;border-radius:12px;overflow:hidden;background:linear-gradient(160deg,#0b3d5e,#0e6a7a)">
-            <img src="/badapong/shots/shop-demo.jpg" alt="" style="width:100%;height:100%;object-fit:cover;display:block"
+            <img src="/badapong/shots/shop-demo.svg" alt="샵 사진 예시" style="width:100%;height:100%;object-fit:cover;display:block"
                  onerror="this.style.display='none'" />
           </div>
           <div style="flex:1;min-width:0">
@@ -286,6 +286,32 @@
         <p>앱 샵 상세와 같은 내용의 <b>웹 페이지</b>가 생깁니다. 인스타 프로필·카톡 채널에 링크 하나만 붙여두면
           상품·과정·소식이 항상 최신으로 보입니다.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 지역 수요 ──────────────────────────────────────────────
+     [2026-09-21] 「누가 오는가」를 숫자로. 활동별(스노클/스쿠버) 분해는 넣지 않는다 —
+     앱의 활동 렌즈 기본값이 snorkel 이라(app_providers.dart:79) 고르지 않은 사용자가 전부
+     스노클로 집계된다. 그 편향을 고치기 전에는 활동 비율을 대외 수치로 쓸 수 없다.
+     지역·조회 수는 ops_internal_actors 를 제외한 spot_view_hourly 7일 실측이다. -->
+<section>
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow">지난 7일 · 국내</div>
+      <h2>884명이 바다에 갈 날을 골랐습니다</h2>
+      <div class="sub">스팟 상세를 연 순 사용자 수입니다(운영자 제외). 배너를 스쳐 본 수가 아니라
+        <b>날짜와 장소를 정하려고 들어온 사람</b>의 수입니다.</div>
+    </div>
+    <div class="card">
+      <div class="stat-row"><span><b>동해 남부</b> <span class="muted">포항·경주·울산</span></span><span class="ok">414명 · 2,409회</span></div>
+      <div class="stat-row"><span><b>동해 북부</b> <span class="muted">속초·양양·강릉</span></span><span class="ok">325명 · 1,760회</span></div>
+      <div class="stat-row"><span><b>제주도</b></span><span class="ok">226명 · 1,618회</span></div>
+      <div class="stat-row"><span><b>남해</b> <span class="muted">거제·통영·여수</span></span><span class="ok">179명 · 634회</span></div>
+      <div class="stat-row"><span><b>서해</b></span><span class="ok">72명 · 168회</span></div>
+      <div class="stat-row"><span><b>울릉도</b></span><span class="ok">62명 · 169회</span></div>
+      <div class="muted" style="margin-top:12px">내 샵 근처 스팟을 <b>몇 명이 언제 봤는지</b>는
+        파트너 포털 「지역 인사이트」에서 요일·시간대까지 확인할 수 있습니다.</div>
     </div>
   </div>
 </section>
