@@ -206,23 +206,12 @@ function render(d) {
   const last = d.weekly[d.weekly.length - 1] || {};
   const prev = d.weekly[d.weekly.length - 2] || {};
   const delta = (a, b) => (a == null || b == null) ? '' : (a - b >= 0 ? ` <span style="color:var(--ok);font-size:.8rem">▲${a - b}</span>` : ` <span style="color:var(--bad);font-size:.8rem">▼${b - a}</span>`);
-  const lead = d.lead || {};
-  // 분모는 viewers 가 아니라 measured(계측된 기기)다. 예보 시점(max_day_offset)은
-  // 2026-09-12 부터 채워져서 4주 창에는 계측 이전 기기(pre)가 절반 넘게 섞인다.
-  // viewers 로 나누면 「3일+ 9%」가 「3%」로 보이고 칸 합이 100%가 안 된다.
-  const leadBase = lead.measured || 0;
-  const leadPct = k => leadBase ? Math.round(100 * (lead[k] || 0) / leadBase) : null;
-  // 「당일만」 = 예보 시점을 안 건드림(untouched = -1) + 오늘을 고름(d0). 둘 다 당일 조회다.
-  const leadSamePct = () => leadBase
-    ? Math.round(100 * ((lead.untouched || 0) + (lead.d0 || 0)) / leadBase) : null;
-
   let h = `<h2>${esc(d.region.name)} <small>이번 주 (${esc(last.from || '')}~${esc(last.to || '')}) vs 지난주</small></h2>
     <div class="kpis">
       <div class="kpi"><b>${n(last.viewers)}${delta(last.viewers, prev.viewers)}</b><span>본 사람</span></div>
       <div class="kpi"><b>${n(last.views)}${delta(last.views, prev.views)}</b><span>조회</span></div>
       <div class="kpi"><b>${n(last.favorites)}${delta(last.favorites, prev.favorites)}</b><span>즐겨찾기 등록</span></div>
       <div class="kpi"><b>${n(last.directions)}${delta(last.directions, prev.directions)}</b><span>길안내 탭</span></div>
-      <div class="kpi"><b>${pct(leadPct('d3plus'))}</b><span>3일+ 미리 보는 사용자 (${d.weeks}주)</span></div>
     </div>`;
 
   // 강습 잠재 고객 — 주력이 스노클·해변수영인 사람. 자격증이 필요 없는 활동이라
@@ -267,15 +256,6 @@ function render(d) {
           return `<div class="c" style="--a:${(0.12 + 0.88 * v / mx).toFixed(2)};${v ? '' : 'background:transparent'}" title="${dn[w]} ${b*3}~${b*3+3}시 · 조회 ${v}">${v || ''}</div>`; }).join('')).join('')
       + `</div><div class="note">문의가 몰리는 시간, 게시물 올릴 시간, 직원 배치의 근거로 쓰십시오. 진할수록 조회가 많습니다. 본 사람 ${d.kmin}명 미만인 칸은 비워 둡니다.</div></div>`;
   }
-
-  // 리드타임
-  h += `<h2>모객은 며칠 전에 <small>손님이 예보를 언제부터 보는지 · ${d.weeks}주 · 집계 ${n(lead.measured)}명</small></h2><div class="card tblwrap"><table>
-    <tr><th>당일에 정함</th><th>1~2일 전</th><th>3일 이상 전</th></tr>
-    <tr><td>${pct(leadSamePct())}</td><td>${pct(leadPct('d1_2'))}</td><td><b>${pct(leadPct('d3plus'))}</b></td></tr>
-    </table><div class="note"><b>3일 이상 전</b> 비율이 예약 리드타임의 근사치입니다 — 이 비율이 높을수록 미리 올려둔 일정이 눈에 띕니다.
-      낮으면 <b>회차를 임박해서 여러 번</b> 올리는 편이 낫습니다. 세 칸을 더하면 100%.
-      ⚠ 바다퐁 예보는 7일(참고 8~14일)까지라 그보다 먼 날짜는 등급 없이 보입니다 — 한 달 뒤 투어는 이 수치와 무관합니다.
-      예보 시점은 2026-09-12부터 집계돼, 그 이전에 다녀간 ${n(lead.pre)}명은 분모에서 뺐습니다.</div></div>`;
 
   // 스팟
   h += `<h2>많이 본 스팟 <small>본 사람 ${d.kmin}명 이상</small></h2><div class="card tblwrap"><table>
