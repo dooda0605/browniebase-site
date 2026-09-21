@@ -282,6 +282,9 @@
       <!-- 작성 폼 -->
       <div class="card hidden" id="composer">
         <h2 style="margin-top:0">상품 작성</h2>
+        <!-- [2026-09-21 사용자] 「설명칸이 왜 제일 아래야?」 — 폼 순서를 앱 상세 순서와
+             똑같이 맞췄다. 적는 순서와 보이는 순서가 다르면 어디에 뭘 적어야 할지 감이 안 온다. -->
+        <div class="muted" style="margin-bottom:10px">아래 순서 그대로 <b>앱 상품 상세</b>에 보입니다 — 사진 → 제목 → 소개 → 일정 → 대상 → 포함 → 비용 → 집결지 → 취소 기준.</div>
         <label>스팟 *</label>
         <input id="m-spot-q" placeholder="스팟 이름 검색 (예: 갈남항)" autocomplete="off" />
         <div id="m-spot-result"></div>
@@ -312,6 +315,12 @@
         <div class="muted" id="m-photo-msg" style="margin-top:4px"></div>
         <label>제목 *</label>
         <input id="m-title" maxlength="40" placeholder="예: 일요일 아침 갈남 펀다이빙 (2다이브)" />
+        <label>소개 · 상세 설명 <span class="muted" style="font-weight:400">— 손님이 제목 다음으로 읽는 칸입니다. 최대 1,000자, 줄바꿈·• 기호 그대로 앱에 보입니다</span></label>
+        <textarea id="m-body" maxlength="1000" rows="8" placeholder="예)
+오전 7시 집결, 보트로 15분 이동해 2탱크 다이빙합니다.
+• 준비물: 로그북, 자격증(C카드), 수영복
+• 오픈워터 이상이면 참가 가능합니다
+• 파도가 1.2m 를 넘으면 전날 저녁에 연락드립니다"></textarea>
         <label>회차 * <span class="muted" style="font-weight:400" id="slot-note">— 같은 글에 시간대 여러 개 가능</span></label>
         <div id="slot-box"></div>
         <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
@@ -341,13 +350,6 @@
           </div>
           <div class="muted" id="rp-msg" style="margin-top:4px"></div>
         </div>
-        <label>참가비(원)</label>
-        <input id="m-price" type="number" min="0" step="1000" placeholder="예: 90000" />
-        <div class="muted" style="margin-top:4px">참가비는 <b>샵이 직접</b> 받습니다. 바다퐁은 참가비를 받지 않고 결제를 중개하지 않으며, 앱에는 안내 금액만 표시됩니다.</div>
-        <label>가격 안내 <span class="muted" style="font-weight:400">— 금액 옆에 작게 붙습니다</span></label>
-        <input id="m-price-note" maxlength="60" placeholder="예: 장비 지참 시 1만원 할인 · 점심 별도" />
-        <label>집결지</label>
-        <input id="m-meet" maxlength="60" placeholder="예: 샵 앞 주차장 05:40" />
         <div class="row2">
           <div><label>대상</label>
             <select id="m-level">
@@ -359,14 +361,15 @@
           <div><label>포함 <span class="muted" style="font-weight:400">— 쉼표로 구분</span></label>
             <input id="m-includes" maxlength="120" placeholder="보트비, 2탱크 공기, 풀장비 대여, 가이드" /></div>
         </div>
+        <label>참가비(원)</label>
+        <input id="m-price" type="number" min="0" step="1000" placeholder="예: 90000" />
+        <div class="muted" style="margin-top:4px">참가비는 <b>샵이 직접</b> 받습니다. 바다퐁은 참가비를 받지 않고 결제를 중개하지 않으며, 앱에는 안내 금액만 표시됩니다.</div>
+        <label>가격 안내 <span class="muted" style="font-weight:400">— 금액 옆에 작게 붙습니다</span></label>
+        <input id="m-price-note" maxlength="60" placeholder="예: 장비 지참 시 1만원 할인 · 점심 별도" />
+        <label>집결지</label>
+        <input id="m-meet" maxlength="60" placeholder="예: 샵 앞 주차장 05:40" />
         <label>취소 · 환불 기준 <span class="muted" style="font-weight:400">— 바다퐁 표준(모든 샵 동일). 발행 시 자동으로 붙고 카드 하단에 항상 노출됩니다</span></label>
         <pre id="m-cancel-std" class="muted" style="white-space:pre-wrap;font:inherit;font-size:.84rem;border:1px dashed var(--line);border-radius:10px;padding:10px 12px">불러오는 중…</pre>
-        <label>소개 <span class="muted" style="font-weight:400">— 최대 1,000자. 줄바꿈·• 기호 그대로 앱에 보입니다</span></label>
-        <textarea id="m-body" maxlength="1000" rows="8" placeholder="예)
-오전 7시 집결, 보트로 15분 이동해 2탱크 다이빙합니다.
-• 준비물: 로그북, 자격증(C카드), 수영복
-• 오픈워터 이상이면 참가 가능합니다
-• 파도가 1.2m 를 넘으면 전날 저녁에 연락드립니다"></textarea>
         <div class="msg" id="m-msg"></div>
         <div style="display:flex;gap:8px;margin-top:14px">
           <button class="btn" id="btn-publish">발행</button>
