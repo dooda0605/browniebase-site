@@ -321,6 +321,17 @@
               <option value="tour">투어 · 캠프 (기간형)</option>
             </select></div>
         </div>
+        <!-- [2026-09-21 사용자] 배우는 상품의 보이는 이름은 샵이 고른다 — 업계마다 말이 다르다
+             (홈페이지 121곳: 다이브샵 교육 63%·과정 31%·강습 11% / 서핑샵 강습 49%).
+             고정 3종이라 앱 10개 언어로 번역된다. 분류가 아니라 이름일 뿐. -->
+        <div id="label-box" class="hidden">
+          <label>표시 이름 <span class="muted" style="font-weight:400">— 앱 상품 카드 배지에 이렇게 보입니다. 다이빙은 보통 「교육」, 서핑은 「강습」</span></label>
+          <div class="chips" id="m-label">
+            <label><input type="radio" name="m-label" value="lesson" /> 강습</label>
+            <label><input type="radio" name="m-label" value="education" /> 교육</label>
+            <label><input type="radio" name="m-label" value="course" /> 과정</label>
+          </div>
+        </div>
         <!-- 투어만: 종료일·예약금 안내. 회차 1개(출발일·정원)로 올린다. -->
         <div class="row2 hidden" id="tour-box">
           <div><label>투어 종료일 *</label><input id="m-ends" type="date" /></div>
@@ -775,7 +786,7 @@ const renderCourses = () => {
   const list = courses.map((c, i) => [c, i]).filter(([c]) => (c.name || '').trim());
   box.innerHTML = list.map(([c, i]) => `<div class="meetup-item">
       <div class="meetup-head">
-        <span class="state-chip">🎓 상시 과정</span>
+        <span class="state-chip">🎓 상시 ${LABEL_KO[c.label_word || defaultLabel(c.activity)]}</span>
         <b>${esc(c.name)}</b>
         ${c.price ? `<span class="muted">${Number(String(c.price).replace(/[^0-9]/g,'')).toLocaleString()}원</span>` : ''}
         <span style="margin-left:auto;display:flex;gap:6px">
@@ -808,6 +819,8 @@ window.editCourse = i => {
   const c = courses[i]; editingCourse = i;
   openComposer('always');
   $('m-activity').value = c.activity || $('m-activity').value;
+  labelTouched = !!c.label_word;
+  setLabel(c.label_word || defaultLabel($('m-activity').value));
   $('m-title').value = c.name || '';
   $('m-body').value = c.body || '';
   $('m-agency').value = c.agency || '';
@@ -1455,7 +1468,7 @@ document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
 // ── 모집글 목록 ──────────────────────────────────────
 async function loadMeetups() {
   const { data: rows, error } = await sb.from('meetups')
-    .select('id,title,activity,state,meetup_type,ends_at,first_starts_at,cancel_reason')
+    .select('id,title,activity,state,meetup_type,ends_at,first_starts_at,cancel_reason,label_word')
     .eq('creator_user_id', uid).order('created_at', { ascending: false }).limit(30);
   if (error) { $('meetup-list').innerHTML = '<span class="muted">불러오기 실패</span>'; return; }
   if (!rows.length) { $('meetup-list').innerHTML = '<span class="muted">아직 없습니다. 첫 일정을 올려보세요.</span>'; return; }
@@ -1495,7 +1508,7 @@ async function loadMeetups() {
     }).join('<br/>');
     return `<div class="meetup-item">
       <div class="meetup-head">
-        <span class="state-chip">${typeKo[r.meetup_type] || r.meetup_type}</span>
+        <span class="state-chip">${r.meetup_type === 'lesson' ? LABEL_KO[r.label_word || defaultLabel(r.activity)] : (typeKo[r.meetup_type] || r.meetup_type)}</span>
         <b>${esc(r.title || '(제목 없음)')}</b>
         <span class="state-chip">${stateKo[r.state]||r.state}${r.cancel_reason?' · '+(cancelKo[r.cancel_reason]||r.cancel_reason):''}</span>
         <span style="margin-left:auto;display:flex;gap:6px">
@@ -1630,6 +1643,21 @@ const fillInstructorList = () => {
     .map(i => (i.name || '').trim()).filter(Boolean)
     .map(n => `<option value="${n}"></option>`).join('');
 };
+// 표시 이름 — 상시 접수이거나 「강습 회차」일 때만. 샵이 직접 고르기 전까지는 활동으로 기본값.
+const LABEL_KO = { lesson: '강습', education: '교육', course: '과정' };
+const defaultLabel = act => ['scuba', 'freedive'].includes(act) ? 'education' : 'lesson';
+let labelTouched = false;
+const setLabel = v => { const r = document.querySelector(`input[name="m-label"][value="${v}"]`); if (r) r.checked = true; };
+const curLabel = () => (document.querySelector('input[name="m-label"]:checked') || {}).value || defaultLabel($('m-activity').value);
+const syncLabel = () => {
+  const always = document.querySelector('input[name="m-mode"]:checked').value === 'always';
+  $('label-box').classList.toggle('hidden', !(always || $('m-type').value === 'lesson'));
+  if (!labelTouched) setLabel(defaultLabel($('m-activity').value));
+};
+document.querySelectorAll('input[name="m-label"]').forEach(r => r.addEventListener('change', () => { labelTouched = true; }));
+$('m-activity').addEventListener('change', syncLabel);
+$('m-type').addEventListener('change', syncLabel);
+
 // 일정 방식 전환 — 상시면 스팟·유형·회차를 숨기고 기간·개강을 보인다.
 const setMode = mode => {
   const always = mode === 'always';
@@ -1645,16 +1673,18 @@ const setMode = mode => {
   $('m-meet').placeholder = always ? '예: 용인 딥스테이션 · 강릉 사천항' : '예: 샵 앞 주차장 05:40';
   $('m-price-label').textContent = always ? '수강료(원)' : '참가비(원)';
   $('m-title').placeholder = always ? '예: PADI 오픈워터 (3일 과정)' : '예: 일요일 아침 갈남 펀다이빙 (2다이브)';
+  syncLabel();
 };
 document.querySelectorAll('input[name="m-mode"]').forEach(r => r.onchange = () => setMode(r.value));
 const openComposer = mode => {
   $('composer').classList.remove('hidden'); fillInstructorList();
   $('composer-title').textContent = '상품 작성';
+  labelTouched = false;
   setMode(mode);
   window.scrollTo({ top: $('composer').offsetTop - 20, behavior: 'smooth' });
 };
 $('btn-new').onclick = () => { editingCourse = null; openComposer('dated'); addSlotRow(); };
-$('btn-cancel-compose').onclick = () => { $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; meetupPhotos = []; renderMeetupPhotos(); $('m-photo-msg').textContent=''; $('m-instructor').value=''; editingCourse = null; legacyLevel = null;
+$('btn-cancel-compose').onclick = () => { $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; meetupPhotos = []; renderMeetupPhotos(); $('m-photo-msg').textContent=''; $('m-instructor').value=''; editingCourse = null; legacyLevel = null; labelTouched = false;
   for (const k of ['m-title','m-body','m-agency','m-next','m-days','m-hours','m-includes','m-price','m-price-note','m-meet']) $(k).value = '';
   $('m-level').value = 'any'; };
 $('btn-add-slot').onclick = addSlotRow;
@@ -1747,6 +1777,7 @@ async function saveDraft() {
     price: +$('m-price').value || null,
     price_note: $('m-price-note').value.trim() || null,
     instructor: $('m-instructor').value.trim() || null,
+    label_word: $('m-type').value === 'lesson' ? curLabel() : null,
     includes: $('m-includes').value.split(',').map(s => s.trim()).filter(Boolean),
     meetup_type: $('m-type').value,
     meet_point: $('m-meet').value.trim() || null,
@@ -1788,6 +1819,7 @@ async function saveAlwaysCourse() {
     place: $('m-meet').value.trim() || undefined,
     images: meetupPhotos.length ? meetupPhotos.slice() : undefined,
     photo: meetupPhotos[0] || undefined,          // 추천 강습 카드 썸네일(list_courses 의 photo)
+    label_word: curLabel(),
   };
   Object.keys(row).forEach(k => row[k] === undefined && delete row[k]);
   const backup = courses.slice();

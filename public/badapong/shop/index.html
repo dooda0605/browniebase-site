@@ -149,7 +149,11 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;
 const ACT = {scuba:'스쿠버', freedive:'프리다이빙', snorkel:'스노클링·체험', surf:'서핑', beach_swim:'해변수영'};
 // 「세션」은 쓰지 않는다(2026-09-20 사용자) — 앱 productTypeLabel 과 같은 말. normal 은 활동에 따라 펀다이빙/자유 서핑.
 const TYPE = {normal:'펀다이빙', lesson:'강습', trial:'체험', tour:'투어'};
-const typeOf = m => m.meetup_type === 'normal' && m.activity === 'surf' ? '자유 서핑' : (TYPE[m.meetup_type] || '');
+// 배우는 상품의 표시 이름 — 샵이 포털에서 고른 label_word(없으면 다이빙=교육, 그 외=강습). 앱 learnLabel 과 같다.
+const LEARN = { lesson: '강습', education: '교육', course: '과정' };
+const learnOf = x => LEARN[x.label_word || (['scuba', 'freedive'].includes(x.activity) ? 'education' : 'lesson')];
+const typeOf = m => m.meetup_type === 'lesson' ? learnOf(m)
+  : m.meetup_type === 'normal' && m.activity === 'surf' ? '자유 서핑' : (TYPE[m.meetup_type] || '');
 const KIND = {condition:'오늘 바다', graduation:'수료', notice:'공지'};
 const RENTAL = {full:'풀세트 대여', partial:'부분 대여', none:'대여 없음'};
 const fmt = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
@@ -248,7 +252,7 @@ function render(d) {
       <div class="muted">${fmtD(m.starts_at)} ~ ${m.ends_at ? fmtD(m.ends_at) : ''} · ${ACT[m.activity] || ''}${m.deposit_note ? ' · ' + esc(m.deposit_note) : ''}</div>
       <div class="slot"><span>출발 ${fmt(m.starts_at)}</span><span class="seats">남은자리 <b>${m.remaining}</b>/${m.capacity}</span></div>
     </div>`);
-  const courses = (Array.isArray(d.courses) ? d.courses.filter(c => c.name) : []).map(c => `<div class="card">${cover(c)}${head('과정', c.name, won(c.price))}
+  const courses = (Array.isArray(d.courses) ? d.courses.filter(c => c.name) : []).map(c => `<div class="card">${cover(c)}${head(learnOf(c), c.name, won(c.price))}
       <div class="muted">${esc([c.agency, c.days ? c.days + '일' : '', c.hours ? c.hours + '시간' : '', c.next_start ? '다음 개강 ' + c.next_start : '상시 접수'].filter(Boolean).join(' · '))}</div>
       ${c.place ? `<div class="muted">장소: ${esc(c.place)}</div>` : ''}
       ${c.includes ? `<div class="muted">포함: ${esc(c.includes)}</div>` : ''}
