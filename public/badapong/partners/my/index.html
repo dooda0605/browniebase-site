@@ -306,8 +306,10 @@
           <div><label>투어 종료일 *</label><input id="m-ends" type="date" /></div>
           <div><label>예약금 안내</label><input id="m-deposit" maxlength="80" placeholder="예: 예약금 20만원, 잔금 출발 전 현장" /></div>
         </div>
-        <label>대표 사진 <span class="muted" style="font-weight:400">— 목록 카드에 걸립니다</span></label>
-        <input id="m-thumb" type="file" accept="image/*" />
+        <label>사진 <span class="muted" style="font-weight:400">— 최대 6장. 첫 장이 목록 카드에 걸립니다</span></label>
+        <div id="m-photos" class="photos"></div>
+        <input id="m-photo-file" type="file" accept="image/*" multiple style="margin-top:8px" />
+        <div class="muted" id="m-photo-msg" style="margin-top:4px"></div>
         <label>제목 *</label>
         <input id="m-title" maxlength="40" placeholder="예: 일요일 아침 갈남 펀다이빙 (2다이브)" />
         <label>회차 * <span class="muted" style="font-weight:400" id="slot-note">— 같은 글에 시간대 여러 개 가능</span></label>
@@ -342,12 +344,29 @@
         <label>참가비(원)</label>
         <input id="m-price" type="number" min="0" step="1000" placeholder="예: 90000" />
         <div class="muted" style="margin-top:4px">참가비는 <b>샵이 직접</b> 받습니다. 바다퐁은 참가비를 받지 않고 결제를 중개하지 않으며, 앱에는 안내 금액만 표시됩니다.</div>
+        <label>가격 안내 <span class="muted" style="font-weight:400">— 금액 옆에 작게 붙습니다</span></label>
+        <input id="m-price-note" maxlength="60" placeholder="예: 장비 지참 시 1만원 할인 · 점심 별도" />
         <label>집결지</label>
         <input id="m-meet" maxlength="60" placeholder="예: 샵 앞 주차장 05:40" />
+        <div class="row2">
+          <div><label>대상</label>
+            <select id="m-level">
+              <option value="any">지정 안 함</option>
+              <option value="beginner">입문·체험자</option>
+              <option value="intermediate">자격자·경험자</option>
+              <option value="advanced">숙련자</option>
+            </select></div>
+          <div><label>포함 <span class="muted" style="font-weight:400">— 쉼표로 구분</span></label>
+            <input id="m-includes" maxlength="120" placeholder="보트비, 2탱크 공기, 풀장비 대여, 가이드" /></div>
+        </div>
         <label>취소 · 환불 기준 <span class="muted" style="font-weight:400">— 바다퐁 표준(모든 샵 동일). 발행 시 자동으로 붙고 카드 하단에 항상 노출됩니다</span></label>
         <pre id="m-cancel-std" class="muted" style="white-space:pre-wrap;font:inherit;font-size:.84rem;border:1px dashed var(--line);border-radius:10px;padding:10px 12px">불러오는 중…</pre>
-        <label>소개</label>
-        <textarea id="m-body" maxlength="100" placeholder="일정, 준비물, 수준 안내 등"></textarea>
+        <label>소개 <span class="muted" style="font-weight:400">— 최대 1,000자. 줄바꿈·• 기호 그대로 앱에 보입니다</span></label>
+        <textarea id="m-body" maxlength="1000" rows="8" placeholder="예)
+오전 7시 집결, 보트로 15분 이동해 2탱크 다이빙합니다.
+• 준비물: 로그북, 자격증(C카드), 수영복
+• 오픈워터 이상이면 참가 가능합니다
+• 파도가 1.2m 를 넘으면 전날 저녁에 연락드립니다"></textarea>
         <div class="msg" id="m-msg"></div>
         <div style="display:flex;gap:8px;margin-top:14px">
           <button class="btn" id="btn-publish">발행</button>
@@ -1183,6 +1202,36 @@ $('btn-save-contact').onclick = async () => {
   refreshAll();
 };
 
+// ── 상품 사진 ───────────────────────────────────────
+// [2026-09-21 사용자] 대표 사진 1장이었던 걸 6장으로. meetups.images 는 원래 배열이고
+//   앱 상세도 가로 스크롤로 다 보여준다. 첫 장이 목록 카드 썸네일(images[1]).
+let meetupPhotos = [];
+const renderMeetupPhotos = () => {
+  $('m-photos').innerHTML = meetupPhotos.map((u, i) =>
+    `<figure><img src="${u}" alt="" /><button type="button" data-i="${i}">×</button></figure>`).join('');
+  [...$('m-photos').querySelectorAll('button')].forEach(b => b.onclick = () => { meetupPhotos.splice(+b.dataset.i, 1); renderMeetupPhotos(); });
+};
+$('m-photo-file').onchange = async e => {
+  const files = [...(e.target.files || [])];
+  if (!files.length) return;
+  const room = 6 - meetupPhotos.length;
+  if (room <= 0) { $('m-photo-msg').textContent = '사진은 최대 6장입니다.'; e.target.value = ''; return; }
+  $('m-photo-msg').textContent = '업로드 중…';
+  let err = '';
+  for (const file of files.slice(0, room)) {
+    if (file.size > 5 * 1024 * 1024) { err = '5MB 이하 파일만 올릴 수 있습니다.'; continue; }
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    // 경로 첫 칸이 uid 여야 스토리지 정책(meetup_images_own_write)을 통과한다.
+    const path = `${uid}/meetup/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+    const up = await sb.storage.from('meetup-images').upload(path, file, { contentType: file.type || 'image/jpeg' });
+    if (up.error) { err = '업로드 실패: ' + up.error.message; continue; }
+    meetupPhotos.push(sb.storage.from('meetup-images').getPublicUrl(path).data.publicUrl);
+  }
+  renderMeetupPhotos();
+  e.target.value = '';
+  $('m-photo-msg').textContent = err;
+};
+
 // ── 소식 (shop_posts) ─────────────────────────────────
 let postPhotos = [];
 const renderPostPhotos = () => {
@@ -1441,7 +1490,7 @@ window.replyInquiry = async (id, status) => {
 
 // ── 작성 폼 ─────────────────────────────────────────
 $('btn-new').onclick = () => { $('composer').classList.remove('hidden'); addSlotRow(); window.scrollTo({top:$('composer').offsetTop-20,behavior:'smooth'}); };
-$('btn-cancel-compose').onclick = () => { $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; $('m-thumb').value=''; };
+$('btn-cancel-compose').onclick = () => { $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; meetupPhotos = []; renderMeetupPhotos(); $('m-photo-msg').textContent=''; };
 $('btn-add-slot').onclick = addSlotRow;
 // 투어는 회차 1개(출발일·정원) + 종료일. 유형을 바꾸면 안내만 바뀐다.
 $('m-type').onchange = () => {
@@ -1519,26 +1568,19 @@ async function saveDraft() {
     if (new Date($('m-ends').value + 'T23:59') <= new Date(slots[0].starts_at)) { msg('m-msg','종료일은 출발보다 뒤여야 합니다.',false); return null; }
   }
 
-  // 대표 사진은 글 행을 만들기 전에 올린다 — 실패하면 아예 저장하지 않는다.
-  let images = [];
-  const file = $('m-thumb').files && $('m-thumb').files[0];
-  if (file) {
-    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-    // 경로 첫 칸이 uid 여야 스토리지 정책(meetup_images_own_write)을 통과한다.
-    const path = `${uid}/meetup/new/${Date.now()}.${ext}`;
-    const up = await sb.storage.from('meetup-images')
-      .upload(path, file, { contentType: file.type || 'image/jpeg' });
-    if (up.error) { msg('m-msg','사진 업로드 실패: '+up.error.message,false); return null; }
-    images = [sb.storage.from('meetup-images').getPublicUrl(path).data.publicUrl];
-  }
+  // 사진은 고를 때 이미 올라갔다(meetupPhotos) — 여기선 URL 배열만 싣는다.
+  const images = meetupPhotos.slice();
 
   const { data: mrow, error } = await sb.from('meetups').insert({
     host_kind: 'shop', partner_id: me.partner_id, creator_user_id: uid,
     spot_id: spot, activity: $('m-activity').value,
     title: $('m-title').value.trim(), body: $('m-body').value.trim() || null,
-    // level·price_note·includes 는 앱 어디에도 표시되지 않아 입력을 뺐다(2026-09-03).
-    // level 은 컬럼 제약이 있어 폼 기본값이던 'any' 를 그대로 보낸다.
-    level: 'any', price: +$('m-price').value || null,
+    // [2026-09-21 복구] 09-03 에 「앱에 안 보인다」는 이유로 뺐던 셋이다.
+    //   상품 상세(shop_product_screen)가 지금은 세 개 전부 그린다.
+    level: $('m-level').value || 'any',
+    price: +$('m-price').value || null,
+    price_note: $('m-price-note').value.trim() || null,
+    includes: $('m-includes').value.split(',').map(s => s.trim()).filter(Boolean),
     meetup_type: $('m-type').value,
     meet_point: $('m-meet').value.trim() || null,
     // 취소 규정은 발행 시 서버가 표준으로 덮어쓴다(publish_meetup). 여기선 비워 둔다.
@@ -1566,7 +1608,7 @@ $('btn-publish').onclick = async () => {
   let m = '발행 완료! 표준 취소 규정이 자동으로 붙었습니다.';
   if (data.interested > 0) m += ` · 관심 사용자 ${data.interested}명에게 알림 대상`;
   msg('m-msg', m, true);
-  $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; $('m-thumb').value='';
+  $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; meetupPhotos = []; renderMeetupPhotos(); $('m-photo-msg').textContent='';
   refreshAll();
 };
 
