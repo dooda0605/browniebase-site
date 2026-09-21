@@ -439,20 +439,22 @@
         <div class="muted">오늘 바다 컨디션·수료 인증·공지. 앱 샵 상세와 「샵」 탭 전체 소식에 보입니다.
           <b>내 샵 단골</b>에게 알림이 가고, 아래에서 <b>스팟을 고르면</b> 그 스팟을 찜해 둔 사람에게도 함께 갑니다.
           글은 하루 3건까지 올릴 수 있고, <b>알림은 하루 한 번</b>만 나갑니다(여러 건을 올려도 첫 건 기준).</div>
+        <!-- [2026-09-21 사용자] 순서 = 앱 소식 글 화면과 같게: 종류·제목 → 사진 → 내용. 종류는 선택. -->
         <div class="row2">
-          <div><label>종류 *</label>
+          <div><label>종류 <span class="muted" style="font-weight:400">(선택)</span></label>
             <select id="sp-kind">
+              <option value="">선택 안 함</option>
               <option value="condition">오늘 바다 컨디션</option>
               <option value="graduation">수료 · 인증</option>
               <option value="notice">공지</option>
             </select></div>
           <div><label>제목 *</label><input id="sp-title" maxlength="80" placeholder="예: 오늘 시야 15m, 수온 24도" /></div>
         </div>
-        <label>내용</label>
-        <textarea id="sp-body" maxlength="1000" placeholder="자유롭게. 시야·수온·파도는 샵이 본 대로 적어주세요."></textarea>
         <label>사진 <span class="muted" style="font-weight:400">— 최대 6장</span></label>
         <div id="sp-photos" class="photos"></div>
         <input id="sp-photo-file" type="file" accept="image/*" multiple style="margin-top:8px" />
+        <label>내용</label>
+        <textarea id="sp-body" maxlength="1000" placeholder="자유롭게. 시야·수온·파도는 샵이 본 대로 적어주세요."></textarea>
         <div class="msg" id="sp-msg"></div>
         <button class="btn" id="btn-post" style="margin-top:12px">게시</button>
       </div>
@@ -564,13 +566,13 @@
           🎓 과정 · 프로그램은 <b>「상품」 탭</b>에서 올립니다.</div>
 
         <div style="margin:24px 0 2px;padding-top:14px;border-top:1px solid var(--line);font-weight:800;font-size:.98rem">① 사진 · 설명</div>
-        <label style="font-size:1.05rem">📣 샵 안내 <span class="muted" style="font-weight:400">— <b>앱에서 업체를 열면 사진과 함께 가장 먼저 보이는 글</b>입니다. 어떤 샵인지, 무엇을 하는지, 강점을 3~6줄로.</span></label>
-        <textarea id="p-intro" maxlength="600" rows="5" placeholder="예) 강릉 남애항에서 20년째 운영하는 다이브샵입니다. 초보 체험부터 어드밴스·다이브마스터까지, 보트 펀다이빙은 매주 토·일 07:00 출항합니다."></textarea>
-        <label>홍보 사진 <span class="muted" style="font-weight:400">— 앱 샵 정보 화면에 보입니다 · 최대 6장</span></label>
+        <label>홍보 사진 <span class="muted" style="font-weight:400">— 앱에서 업체를 열면 <b>가장 먼저</b> 보입니다 · 최대 6장, 첫 장이 대표</span></label>
         <div id="p-photos" class="photos"></div>
         <input id="p-photo-file" type="file" accept="image/*" multiple style="margin-top:8px" />
         <div class="muted" id="p-photo-msg" style="margin-top:4px"></div>
 
+        <label style="font-size:1.05rem">📣 샵 안내 <span class="muted" style="font-weight:400">— <b>앱에서 업체를 열면 사진과 함께 가장 먼저 보이는 글</b>입니다. 어떤 샵인지, 무엇을 하는지, 강점을 3~6줄로.</span></label>
+        <textarea id="p-intro" maxlength="600" rows="5" placeholder="예) 강릉 남애항에서 20년째 운영하는 다이브샵입니다. 초보 체험부터 어드밴스·다이브마스터까지, 보트 펀다이빙은 매주 토·일 07:00 출항합니다."></textarea>
         <div style="margin:24px 0 2px;padding-top:14px;border-top:1px solid var(--line);font-weight:800;font-size:.98rem">② 인증 배지 · 공지</div>
         <div class="muted" style="margin-bottom:4px">배지(✓ 사업자 · 자격 · 보험)는 「사업자 · 자격증 인증」 탭을 통과하면 자동으로 붙습니다.</div>
         <label>활동 <span class="muted" style="font-weight:400">— 「예약·강습」 탭 활동 필터에 잡힙니다. 비우면 샵 종류로 추정</span></label>
@@ -1408,7 +1410,7 @@ $('btn-post').onclick = async () => {
   if (title.length < 2) { msg('sp-msg', '제목을 2자 이상 적어주세요.', false); return; }
   $('btn-post').disabled = true;
   const { data, error } = await sb.rpc('publish_shop_post', {
-    p_kind: $('sp-kind').value, p_title: title, p_body: $('sp-body').value.trim() || null, p_images: postPhotos });
+    p_kind: $('sp-kind').value || null, p_title: title, p_body: $('sp-body').value.trim() || null, p_images: postPhotos });
   $('btn-post').disabled = false;
   if (error || !data || !data.ok) { msg('sp-msg', POST_REASON[data && data.reason] || '게시 실패: ' + ((data && data.reason) || (error && error.message)), false); return; }
   msg('sp-msg', '게시했습니다 — 단골에게 알림이 갑니다.', true);
@@ -1422,7 +1424,7 @@ async function loadPosts() {
   const posts = (data && data.ok && data.posts) || [];
   if (!posts.length) { $('post-list').innerHTML = '<span class="muted">아직 없습니다.</span>'; return; }
   $('post-list').innerHTML = posts.map(p => `<div class="meetup-item">
-    <div class="meetup-head"><span class="state-chip">${POST_KIND[p.kind] || p.kind}</span><b>${esc(p.title)}</b>
+    <div class="meetup-head">${p.kind ? `<span class="state-chip">${POST_KIND[p.kind] || p.kind}</span>` : ''}<b>${esc(p.title)}</b>
       <span class="muted" style="margin-left:auto">${fmtDt(p.created_at)} · 조회 ${p.views}</span>
       <button class="btn warn sm" onclick="deletePost('${p.id}')">삭제</button></div>
     ${p.body ? '<div class="muted">' + esc(p.body) + '</div>' : ''}

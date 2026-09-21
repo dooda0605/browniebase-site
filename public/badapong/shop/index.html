@@ -265,7 +265,7 @@ function render(d) {
   const posts = d.posts || [];
   $('posts').innerHTML = posts.length ? posts.map(x => `<div class="card post">
       ${x.images && x.images[0] ? `<img src="${esc(x.images[0])}" alt="" loading="lazy" />` : '<div></div>'}
-      <div><div class="k">${KIND[x.kind] || x.kind} · ${fmt(x.created_at)}</div><div class="t">${esc(x.title)}</div>
+      <div><div class="k">${x.kind ? (KIND[x.kind] || x.kind) + ' · ' : ''}${fmt(x.created_at)}</div><div class="t">${esc(x.title)}</div>
       ${x.body ? `<div class="b">${esc(x.body)}</div>` : ''}</div>
     </div>`).join('') : '<div class="empty">아직 소식이 없습니다.</div>';
 
