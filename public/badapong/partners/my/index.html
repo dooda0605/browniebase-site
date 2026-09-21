@@ -116,18 +116,21 @@
   /* 자격증·강습 행 편집기 (2026-09-03) */
   .rows { display:flex; flex-direction:column; gap:6px; margin-top:6px; }
   .rows .r { display:grid; gap:6px; align-items:center; }
-  .rows .r.cert { grid-template-columns:1fr 1fr 1fr 1.4fr 30px; }
-  .rows .r.instr { grid-template-columns:56px 1.2fr 1fr .8fr .6fr 30px; }
+  /* [2026-09-21] 필드 수가 늘어(과정 10·강사 6) 한 줄 그리드를 버렸다.
+     .r = [내용 | 삭제], .f 안에서 auto-fill 로 알아서 접힌다. */
+  .rows .r { grid-template-columns:1fr 30px; align-items:start; }
+  .rows .f { display:grid; grid-template-columns:repeat(auto-fill, minmax(148px, 1fr)); gap:6px; }
+  .rows .r.instr .f { grid-template-columns:56px repeat(auto-fill, minmax(148px, 1fr)); }
   .instr-photo { position:relative; width:52px; height:52px; border-radius:50%; overflow:hidden; background:rgba(255,255,255,.06);
     display:flex; align-items:center; justify-content:center; font-size:.7rem; }
   .instr-photo img { width:100%; height:100%; object-fit:cover; }
   .instr-photo input { position:absolute; inset:0; opacity:0; cursor:pointer; }
-  .rows .r.course { grid-template-columns:1.4fr .8fr .6fr .6fr .8fr .9fr 30px; }
-  .rows .r.instr  { grid-template-columns:1fr .8fr .8fr .5fr 30px; }
+  .rows .r button { align-self:center; }
   .rows .r input { padding:8px 10px; font-size:.88rem; }
   .rows .r button { background:transparent; border:1px solid var(--line-input); color:var(--sub);
                     border-radius:8px; height:34px; cursor:pointer; }
-  @media (max-width:640px){ .rows .r.cert, .rows .r.course, .rows .r.instr { grid-template-columns:1fr 1fr 30px; } }
+  @media (max-width:640px){ .rows .f { grid-template-columns:1fr 1fr; }
+                            .rows .r.instr .f { grid-template-columns:56px 1fr; } }
   /* 홍보 사진 — 업로드 즉시 미리보기, ×로 제거 후 저장 (2026-09-03) */
   .photos { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
   .photos figure { position:relative; width:96px; height:96px; border-radius:12px; overflow:hidden;
@@ -653,7 +656,10 @@ let photos = [];   // partner_profiles.photos (공개 URL 배열)
 let certs = [], courses = [], instructors = [];   // 앱 ProfileScreen 과 같은 키
 const CERT_F   = [['org','발급 단체'],['level','등급'],['no','자격번호'],['url','인증 조회 URL']];
 // [2026-09-19] 강사진 — partner_profiles.instructors jsonb [{name, agency, level, years}]
-const INSTR_F  = [['name','이름'],['agency','단체 (PADI·AIDA…)'],['level','레벨'],['years','경력(년)']];
+// [2026-09-21] bio·instagram 추가. DB(jsonb)엔 원래 있던 자리인데 입력 폼이 안 받아
+//   앱에 이름·단체·레벨만 나갔다. 프리다이빙은 「누가 가르치나」가 선택의 핵심이다.
+const INSTR_F  = [['name','이름'],['agency','단체 (PADI·AIDA…)'],['level','레벨'],['years','경력(년)'],
+  ['instagram','Instagram @아이디'],['bio','한 줄 소개 (어떤 수업을 하는지)']];
 // 샵 활동 — 값(키)은 meetups.activity 와 같다. 「샵」 탭 활동 필터·과정 활동 추정에 쓰인다.
 const ACTS = {scuba:'스쿠버', freedive:'프리다이빙', snorkel:'스노클링·체험', surf:'서핑'};
 let acts = [];
@@ -677,14 +683,22 @@ function renderTeach() {
   });
 }
 // [2026-09-19] 과정 = 상시 접수 교육. agency/days/next_start/includes 추가 — 앱 「샵」탭 과정 카드·list_courses RPC 가 읽는다.
-const COURSE_F = [['name','과정명 (오픈워터·Level 1…)'],['agency','단체'],['days','일수'],['hours','총 시간'],['price','가격(원)'],['next_start','다음 개강 (비우면 상시)']];
+// [2026-09-21] 장소·레벨·담당 강사·포함 추가. 강습을 고르는 기준은 가격만이 아니라
+//   「어디서·누가·누구를 대상으로·무엇이 포함되는지」다(풍덩 벤치마크). 전부 jsonb 안이라 스키마 변경 0.
+//   instructor 는 강사진 명부의 이름과 맞추면 list_courses 가 그 강사 프로필(사진·소개·인스타)을 같이 내려준다.
+const COURSE_F = [['name','과정명 (오픈워터·Level 1…)'],['agency','단체'],['level','대상 (입문·자격자…)'],
+  ['place','장소 (용인 딥스테이션·갈남항…)'],['instructor','담당 강사 (강사진 이름과 동일하게)'],
+  ['days','일수'],['hours','총 시간'],['price','가격(원)'],['includes','포함 (교재·장비·입장료)'],
+  ['next_start','다음 개강 (비우면 상시)']];
 function renderRows(id, list, fields, cls) {
   const el = $(id);
+  // [2026-09-21] 입력칸을 .f 하위 그리드로 감싼다. 과정 10칸·강사 6칸으로 늘면서
+  //   한 줄 grid-template-columns 로는 감당이 안 됐다 — auto-fill 로 알아서 줄바꿈.
   el.innerHTML = list.map((row, i) =>
-    `<div class="r ${cls}">` +
+    `<div class="r ${cls}"><div class="f">` +
     fields.map(([k, ph]) =>
       `<input data-i="${i}" data-k="${k}" placeholder="${ph}" value="${(row[k]||'').replace(/"/g,'&quot;')}" />`).join('') +
-    `<button type="button" data-del="${i}">×</button></div>`).join('');
+    `</div><button type="button" data-del="${i}">×</button></div>`).join('');
   [...el.querySelectorAll('input')].forEach(inp => {
     inp.oninput = () => { list[+inp.dataset.i][inp.dataset.k] = inp.value; };
   });
@@ -702,7 +716,9 @@ const renderInstructors = () => {
     ph.className = 'instr-photo';
     ph.innerHTML = (instructors[i].photo ? `<img src="${instructors[i].photo}" alt="" />` : '<span class="muted">사진</span>') +
       `<input type="file" accept="image/*" data-i="${i}" title="강사 사진 올리기" />`;
-    row.insertBefore(ph, row.firstChild);
+    // [2026-09-21] 입력칸이 .f 로 감싸지면서 첫 자식이 .f 가 됐다 — 사진은 그 안 맨 앞으로.
+    const f = row.querySelector('.f');
+    f.insertBefore(ph, f.firstChild);
     ph.querySelector('input').onchange = async e => {
       const file = e.target.files && e.target.files[0]; if (!file) return;
       const path = `${uid}/instr-${Date.now()}.${(file.name.split('.').pop() || 'jpg').toLowerCase()}`;
