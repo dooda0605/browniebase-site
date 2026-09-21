@@ -70,6 +70,16 @@
   th,td { padding:7px 10px; border-bottom:1px solid var(--line2); text-align:left; white-space:nowrap; }
   th { color:var(--sub); font-weight:700; font-size:.78rem; }
   td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  /* [2026-09-21] 강습 잠재 고객 블록 — 파트너 랜딩의 .bignum/.stat-row 와 같은 문법.
+     이 페이지엔 두 클래스가 없어서 여기에만 따로 둔다(두 페이지가 CSS 를 공유하지 않는다). */
+  .bignum { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+  .bignum .n { font-size:3rem; font-weight:900; line-height:1; font-variant-numeric:tabular-nums;
+               background:linear-gradient(135deg,#69F0AE,#2DD4BF);
+               -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .bignum .n small { font-size:.9rem; font-weight:700; -webkit-text-fill-color:var(--sub); }
+  .bignum .t { flex:1; min-width:240px; font-size:.93rem; line-height:1.6; }
+  .stat-row { display:flex; justify-content:space-between; align-items:center; gap:10px;
+              padding:10px 0; border-top:1px solid var(--line); margin-top:14px; }
   .bar { display:inline-block; height:8px; background:var(--teal); border-radius:4px; vertical-align:middle; margin-right:6px; }
   .note { font-size:.78rem; color:var(--sub); margin-top:8px; line-height:1.5; }
   .heat { display:grid; grid-template-columns:44px repeat(8,1fr); gap:3px; font-size:.74rem; }
@@ -264,12 +274,30 @@ function render(d) {
       + `</div><div class="note">문의가 몰리는 시간, 게시물 올릴 시간, 직원 배치의 근거로 쓰십시오. 진할수록 조회가 많습니다. 본 사람 ${d.kmin}명 미만인 칸은 비워 둡니다.</div></div>`;
   }
 
+  // 강습 잠재 고객 — 주력이 스노클·해변수영인 사람. 자격증이 필요 없는 활동이라
+  // 체험·오픈워터·레벨1 의 가장 가까운 후보다(2026-09-21).
+  const ls = d.lesson;
+  if (ls && ls.total) {
+    h += `<h2>강습 잠재 고객 <small>주력 활동 기준 · 최근 ${d.weeks}주</small></h2>
+      <div class="card">
+        <div class="bignum"><div class="n">${n(ls.lead)}<small>명</small></div>
+          <div class="t">이 지역을 본 <b>${n(ls.total)}명</b> 중 <b>${pct(ls.lead_share)}</b>가
+            스노클링·해변 수영을 주로 봅니다 — <b>자격증이 필요 없는 활동</b>입니다.<br>
+            체험다이빙·오픈워터·레벨1 같은 <b>입문 과정</b>의 가장 가까운 손님입니다.</div></div>
+        <div class="stat-row"><span>이미 자격자로 보이는 사람 <span class="muted">(스쿠버·프리다이빙 주력)</span></span>
+          <span class="num">${n(ls.certified)}명</span></div>
+      </div>`;
+  }
+
   // 활동별
   h += `<h2>활동별 <small>누가 무엇으로 보나</small></h2><div class="card tblwrap"><table>
-    <tr><th>활동</th><th class="num">본 사람</th><th class="num">조회</th><th class="num">본 스팟</th><th class="num">조회 시 A·B</th></tr>`
-    + (d.activities.length ? d.activities.map(a => `<tr><td>${esc(ACT[a.activity] || a.activity)}</td><td class="num">${n(a.viewers)}</td><td class="num">${n(a.views)}</td><td class="num">${n(a.spots)}</td><td class="num">${pct(a.ab_share)}</td></tr>`).join('')
-       : `<tr><td colspan="5" class="muted">표본 부족</td></tr>`)
-    + `</table></div>`;
+    <tr><th>활동</th><th class="num">주력 <small>사람</small></th><th class="num">주력 비중</th><th class="num">본 사람</th><th class="num">조회</th><th class="num">본 스팟</th><th class="num">조회 시 A·B</th></tr>`
+    + (d.activities.length ? d.activities.map(a => `<tr><td>${esc(ACT[a.activity] || a.activity)}</td><td class="num">${n(a.dom_devices)}</td><td class="num">${pct(a.dom_share)}</td><td class="num">${n(a.viewers)}</td><td class="num">${n(a.views)}</td><td class="num">${n(a.spots)}</td><td class="num">${pct(a.ab_share)}</td></tr>`).join('')
+       : `<tr><td colspan="7" class="muted">표본 부족</td></tr>`)
+    + `</table></div>
+    <div class="muted" style="margin:-6px 0 18px">「본 사람」은 <b>조회 시점의 활동 선택</b> 기준이라 한 사람이 여러 활동에 겹쳐 잡히고,
+      앱 기본값(스노클링)을 한 번도 바꾸지 않은 사용자도 포함됩니다.
+      「주력」은 그 사람이 <b>가장 많이 본 활동</b> 하나로만 세므로 활동끼리 비교할 때는 이쪽을 보세요.</div>`;
 
   // 등급별
   h += `<h2>예보 등급별 행동 <small>어떤 조건일 때 찜하고, 출발하나</small></h2><div class="card tblwrap"><table>
