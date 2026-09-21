@@ -203,7 +203,7 @@
            바뀌면서 그 이유가 사라졌다. 강사진은 「샵 정보」의 강사진 목록으로, 자격은 샵이 올린다. -->
       <div class="note">연결 후 <b>사업자 인증(사업자등록증)</b>을 통과해야 모집글을 올릴 수 있습니다.
         계정은 <b>샵당 하나</b>이고, 소속 강사는 「샵 정보」의 <b>강사진</b>에 등록하시면 앱에 함께 보입니다.
-        <b>2026년 12월 31일까지 파일럿 무료</b> — 멤버십과 <b>똑같이</b> 제한 없이 올릴 수 있습니다. 이후에는 연간 멤버십(550,000원·부가세 포함, <b>한 달 약 4.6만원</b>)으로 과정·일정·투어·소식을 제한 없이 올립니다. 설치비·수수료는 없습니다.</div>
+        <b>사업자 인증을 마치면 1개월 무료 체험</b> — 멤버십과 <b>똑같이</b> 제한 없이 올릴 수 있습니다. 체험이 끝나면 연간 멤버십(550,000원·부가세 포함, <b>한 달 약 4.6만원</b>)으로 과정·일정·투어·소식을 제한 없이 올립니다. 설치비·수수료는 없습니다.</div>
       <p class="muted" style="margin-top:14px;text-align:center;font-size:12px">
         계속하면 <a href="/terms-badapong.html">이용약관</a>과
         <a href="/privacy-badapong.html">개인정보처리방침</a>에 동의하는 것으로 봅니다.</p>
@@ -915,10 +915,11 @@ async function init() {
       .select('free_period,free_max_days,free_max_posts,paid_from,standard_cancel_policy').limit(1).maybeSingle();
     if (pol) {
       $('m-cancel-std').textContent = pol.standard_cancel_policy || '(표준 규정 미설정)';
+      // [2026-09-21] 전체 무료(파일럿)는 끝났다 — 샵별 무료 체험은 renderMembership 이 안내한다.
+      //   (옛 스위치가 다시 켜지는 경우만 대비해 남겨 둔다)
       if (pol.free_period) {
-        // [2026-09-21] 무료 기간 = 멤버십 무상 제공. 건수·일수 상한은 발행권 시절 잔재라 폐지했다.
-        $('free-note').textContent = '🟢 파일럿 무료 기간' + (pol.paid_from ? ' (' + pol.paid_from + '까지)' : '') +
-          ' — 멤버십과 동일하게 과정·세션·투어·소식을 제한 없이 올릴 수 있습니다. 종료 30일 전에 앱 알림으로 안내드립니다.';
+        $('free-note').textContent = '🟢 전체 무료 기간' + (pol.paid_from ? ' (' + pol.paid_from + '까지)' : '') +
+          ' — 멤버십과 동일하게 과정·세션·투어·소식을 제한 없이 올릴 수 있습니다.';
       }
     }
   } catch (e) {}
@@ -1009,17 +1010,36 @@ function renderMembership() {
   const m = me.membership || {};
   const pill = $('hd-credit');
   pill.classList.remove('hidden');
-  if (m.active) {
+  const dLeft = m.ends_at ? Math.max(0, Math.ceil((new Date(m.ends_at) - Date.now()) / 86400000)) : 0;
+  if (m.active && m.source === 'trial') {
+    // [2026-09-21] 샵별 무료 체험 — 사업자 인증 시 30일(meetup_policy.trial_days)
+    pill.textContent = '🎁 무료 체험 D-' + dLeft;
+    $('free-note').textContent = '🎁 무료 체험 중 — ' + fmtDate(m.ends_at) + '까지(' + dLeft + '일 남음). 멤버십과 똑같이 제한 없이 올릴 수 있습니다.';
+    $('mem-status').innerHTML = '<b style="color:var(--ok)">🎁 무료 체험 중</b> · ' + fmtDate(m.starts_at) + ' ~ <b>' + fmtDate(m.ends_at) + '</b> (' + dLeft + '일 남음)' +
+      '<br/>지금 결제해도 손해가 없습니다 — 체험이 끝난 <b>다음 날부터</b> 12개월이 시작됩니다. 종료 7일 전·1일 전에 앱 알림을 드립니다.';
+  } else if (m.active && m.starts_at && new Date(m.starts_at) > new Date()) {
+    // 체험 중에 결제 → 유료 멤버십이 체험 종료일 뒤로 예약돼 있다
+    pill.textContent = '📅 멤버십 ~' + fmtDate(m.ends_at);
+    $('mem-status').innerHTML = '<b style="color:var(--ok)">✓ 결제 완료</b> · 무료 체험이 끝난 뒤 ' + fmtDate(m.starts_at) + ' ~ <b>' + fmtDate(m.ends_at) + '</b>';
+  } else if (m.active) {
     pill.textContent = '📅 멤버십 ~' + fmtDate(m.ends_at);
     $('mem-status').innerHTML = '<b style="color:var(--ok)">✓ 활성</b> · ' + fmtDate(m.starts_at) + ' ~ <b>' + fmtDate(m.ends_at) + '</b>' +
       ' · 지금 결제하면 만료일 뒤로 12개월이 이어집니다.';
   } else if (m.free_period) {
-    pill.textContent = '🟢 파일럿 무료';
-    $('mem-status').innerHTML = '<b style="color:var(--ok)">파일럿 무료 기간</b>' + (m.paid_from ? ' — ' + m.paid_from + '까지' : '') +
-      '. 지금은 멤버십 없이 올릴 수 있습니다. 미리 결제하면 파일럿이 끝난 뒤가 아니라 <b>결제일부터</b> 12개월이 시작되니, 종료 알림을 받은 뒤 결제하시는 게 유리합니다.';
+    // 옛 「전체 무료」 스위치(meetup_policy.free_period) — 2026-09-21 부터 꺼져 있다. 다시 켜는 경우만 대비.
+    pill.textContent = '🟢 전체 무료';
+    $('mem-status').innerHTML = '<b style="color:var(--ok)">전체 무료 기간</b>' + (m.paid_from ? ' — ' + m.paid_from + '까지' : '') +
+      '. 지금은 멤버십 없이 올릴 수 있습니다.';
   } else {
     pill.textContent = '📅 멤버십 없음';
-    $('mem-status').innerHTML = '<b style="color:var(--warn)">멤버십 없음</b> — 세션·투어·소식을 올리려면 연간 멤버십이 필요합니다. 이미 올린 글은 그대로 유지됩니다.';
+    // 사업자 인증 전이면 체험 안내를, 인증 후(체험·멤버십 끝)면 결제 안내를
+    if (!(me.badges || {}).business) {
+      pill.textContent = '🎁 1개월 무료 체험';
+      $('mem-status').innerHTML = '<b style="color:var(--ok)">사업자 인증을 마치면 1개월 무료 체험</b>이 바로 시작됩니다 — 「사업자 · 자격증 인증」 탭.';
+    } else {
+      $('mem-status').innerHTML = '<b style="color:var(--warn)">멤버십 없음</b> — 새 상품·소식을 올리려면 연간 멤버십이 필요합니다. ' +
+        '이미 올린 글은 종료일로부터 <b>30일(유예)</b> 동안 앱에 보이고, 그 뒤 숨겨집니다.';
+    }
   }
 }
 
