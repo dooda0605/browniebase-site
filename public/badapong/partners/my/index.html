@@ -391,7 +391,7 @@
           <div><label>포함 <span class="muted" style="font-weight:400">— 쉼표로 구분</span></label>
             <input id="m-includes" maxlength="120" placeholder="보트비, 2탱크 공기, 풀장비 대여, 가이드" /></div>
         </div>
-        <label>참가비(원)</label>
+        <label id="m-price-label">참가비(원)</label>
         <input id="m-price" type="number" min="0" step="1000" placeholder="예: 90000" />
         <div class="muted" style="margin-top:4px">참가비는 <b>샵이 직접</b> 받습니다. 바다퐁은 참가비를 받지 않고 결제를 중개하지 않으며, 앱에는 안내 금액만 표시됩니다.</div>
         <label>가격 안내 <span class="muted" style="font-weight:400">— 금액 옆에 작게 붙습니다</span></label>
@@ -1635,6 +1635,8 @@ const setMode = mode => {
   $('btn-publish').textContent = always ? '저장 · 게시' : '발행';
   $('m-meet-label').textContent = always ? '장소' : '집결지';
   $('m-meet').placeholder = always ? '예: 용인 딥스테이션 · 강릉 사천항' : '예: 샵 앞 주차장 05:40';
+  $('m-price-label').textContent = always ? '수강료(원)' : '참가비(원)';
+  $('m-title').placeholder = always ? '예: PADI 오픈워터 (3일 과정)' : '예: 일요일 아침 갈남 펀다이빙 (2다이브)';
 };
 document.querySelectorAll('input[name="m-mode"]').forEach(r => r.onchange = () => setMode(r.value));
 const openComposer = mode => {
