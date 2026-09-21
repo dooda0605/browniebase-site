@@ -91,10 +91,8 @@
         <div>
           <h1 id="name"></h1>
           <div class="muted" id="addr"></div>
-          <div class="badges" id="badges"></div>
         </div>
       </div>
-      <div class="notice hidden" id="notice"></div>
     </div>
 
     <div class="tabs">
@@ -104,12 +102,19 @@
       <button class="tab" data-t="posts">소식</button>
     </div>
 
+    <!-- [2026-09-21 사용자] 앱 샵 상세 「소개」·포털 「샵 정보」와 같은 순서.
+         「기본 정보」 3칸 요약·자유 소개는 앱에서 뺐고 여기엔 원래 없다. 후기는 탭 밖에서 소개 안으로. -->
     <section id="sec-about">
       <div class="card" id="intro"></div>
+      <div class="badges" id="badges" style="margin-top:10px"></div>
+      <div class="notice hidden" id="notice"></div>
       <h2>강사진</h2><div id="instructors"></div>
-      <h2>시설 · 대여</h2><div class="card" id="facilities"></div>
-      <h2>보유 자격</h2><div id="certs"></div>
-      <div id="links" class="muted" style="margin-top:8px"></div>
+      <h2>샵 카드</h2><div class="card" id="facilities"></div><div id="certs"></div>
+      <div id="amenities"></div>
+      <h2>후기</h2><div class="card" id="reviews"></div>
+      <h2>위치</h2><div class="card" id="loc"></div>
+      <div id="links" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"></div>
+      <h2>사업자 정보</h2><div class="card" id="biz" style="font-size:.86rem"></div>
     </section>
 
     <section id="sec-courses" class="hidden">
@@ -129,8 +134,6 @@
       <div id="posts"></div>
     </section>
 
-    <h2 style="margin-top:22px">후기</h2>
-    <div class="card" id="reviews"></div>
   </div>
 </div>
 
@@ -165,7 +168,8 @@ document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
 
 (async () => {
   pid = new URLSearchParams(location.search).get('p');
-  const { data, error } = pid ? await sb.rpc('shop_page', { p_partner: pid }) : { data: null };
+  // v2 = shop_page + sns · amenities · representative · bank_account (앱 소개 탭과 같은 원천). anon 실행 가능 확인.
+  const { data, error } = pid ? await sb.rpc('shop_page_v2', { p_partner: pid }) : { data: null };
   $('loading').classList.add('hidden');
   if (error || !data || !data.ok) { $('notfound').classList.remove('hidden'); return; }
   render(data);
@@ -185,12 +189,13 @@ function render(d) {
     (d.favorites ? `<span class="chip">♥ 단골 ${d.favorites}</span>` : '');
   if (p.notice) { $('notice').textContent = p.notice; $('notice').classList.remove('hidden'); }
 
-  // 소개
-  $('intro').innerHTML = (p.intro || p.free_text)
-    ? `<div style="white-space:pre-wrap">${esc(p.intro || p.free_text)}</div>` : '<div class="empty">소개가 아직 없습니다.</div>';
+  // ① 설명 — 자유 소개(free_text)는 앱에서 뺐다. 여기도 intro 만.
+  $('intro').innerHTML = p.intro
+    ? `<div style="white-space:pre-wrap">${esc(p.intro)}</div>` : '<div class="empty">소개가 아직 없습니다.</div>';
   const ins = Array.isArray(p.instructors) ? p.instructors : [];
+  // ③ 강사진 — 앱처럼 사진이 있으면 얼굴부터
   $('instructors').innerHTML = ins.length ? '<div class="card">' + ins.map(i =>
-    `<div class="row"><span><b>${esc(i.name)}</b> ${esc([i.agency, i.level].filter(Boolean).join(' · '))}</span><span class="muted">${i.years ? esc(i.years) + '년' : ''}</span></div>`).join('') + '</div>'
+    `<div class="row"><span style="display:flex;align-items:center;gap:10px">${i.photo ? `<img src="${esc(i.photo)}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover" loading="lazy" />` : ''}<span><b>${esc(i.name)}</b> ${esc([i.agency, i.level].filter(Boolean).join(' · '))}</span></span><span class="muted">${i.years ? esc(i.years) + '년' : ''}</span></div>`).join('') + '</div>'
     : '<div class="empty">등록된 강사 정보가 없습니다.</div>';
   const f = p.facilities || {}, eq = p.equipment || {};
   const fac = [
@@ -202,10 +207,33 @@ function render(d) {
   ].filter(([, v]) => v);
   $('facilities').innerHTML = fac.length ? fac.map(([k, v]) => `<div class="row"><span class="muted">${k}</span><b>${esc(v)}</b></div>`).join('') : '<div class="empty">정보 없음</div>';
   const certs = Array.isArray(p.certs) ? p.certs : [];
-  $('certs').innerHTML = certs.length ? '<div class="card">' + certs.map(c =>
-    `<div class="row"><span>${esc([c.org, c.level].filter(Boolean).join(' '))}</span>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">조회</a>` : ''}</div>`).join('') + '</div>' : '<div class="empty">—</div>';
-  $('links').innerHTML = [s.website ? `<a href="${esc(s.website)}" target="_blank" rel="noopener">홈페이지</a>` : '',
-    s.instagram ? `<a href="${esc(s.instagram)}" target="_blank" rel="noopener">인스타그램</a>` : ''].filter(Boolean).join(' · ');
+  // ④ 샵 카드 안 「보유 자격」 — 없으면 줄 자체를 안 그린다(앱과 같게)
+  $('certs').innerHTML = certs.length ? '<div class="card"><div class="muted" style="margin-bottom:4px">보유 자격</div>' + certs.map(c =>
+    `<div class="row"><span>${esc([c.org, c.level].filter(Boolean).join(' '))}</span>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">조회</a>` : ''}</div>`).join('') + '</div>' : '';
+
+  // ④-2 서비스 · 안전/편의시설 — 포털 AMEN_SERVICE/AMEN_SAFETY 와 같은 키
+  const AMEN_SERVICE = { card_pay:'카드결제', rental:'장비대여', parking:'주차', shower:'샤워', hot_water:'온수', locker:'보관함',
+    changing_room:'탈의실', gear_wash:'장비세척', pickup:'픽업', lodging:'숙박', cafe:'카페·휴게', wifi:'와이파이', boat:'자체 보트' };
+  const AMEN_SAFETY = { first_aid:'구급함', oxygen:'응급 산소', aed:'자동제세동기', lifeguard:'안전요원', radio:'무전기' };
+  const amen = Array.isArray(p.amenities) ? p.amenities : [];
+  const svc = amen.filter(k => AMEN_SERVICE[k]).map(k => AMEN_SERVICE[k]);
+  const saf = amen.filter(k => AMEN_SAFETY[k]).map(k => AMEN_SAFETY[k]).concat(b.insurance ? ['배상책임보험'] : []);
+  $('amenities').innerHTML =
+    (svc.length ? '<h2>서비스</h2><div class="badges">' + svc.map(x => `<span class="chip">✓ ${esc(x)}</span>`).join('') + '</div>' : '') +
+    (saf.length ? '<h2>안전 · 편의시설</h2><div class="badges">' + saf.map(x => `<span class="chip">🛟 ${esc(x)}</span>`).join('') + '</div>' : '');
+
+  // ⑥ 위치 · SNS
+  $('loc').innerHTML = s.address
+    ? `<div class="row"><span>📍 ${esc(s.address)}</span><a href="https://maps.google.com/?q=${encodeURIComponent(s.lat && s.lon ? s.lat + ',' + s.lon : s.address)}" target="_blank" rel="noopener">지도</a></div>`
+    : '<div class="empty">주소 정보가 없습니다.</div>';
+  const sns = Object.assign({}, p.sns || {});
+  if (!sns.website && s.website) sns.website = s.website;
+  if (!sns.instagram && s.instagram) sns.instagram = s.instagram;
+  const SNS_URL = { instagram: v => 'https://instagram.com/' + v.replace(/^@/, ''), youtube: v => 'https://youtube.com/' + (v.startsWith('@') ? v : '@' + v),
+    kakao: v => 'https://pf.kakao.com/' + v.replace(/^@/, ''), blog: v => v, website: v => v };
+  const SNS_KO = { instagram:'Instagram', youtube:'YouTube', blog:'블로그', kakao:'카카오톡 채널', website:'홈페이지' };
+  $('links').innerHTML = Object.entries(sns).filter(([k, v]) => v && SNS_URL[k]).map(([k, v]) =>
+    `<a class="chip" href="${esc(v.startsWith('http') ? v : SNS_URL[k](v))}" target="_blank" rel="noopener">${SNS_KO[k]}</a>`).join('');
 
   // 과정
   const courses = Array.isArray(d.courses) ? d.courses.filter(c => c.name) : [];
@@ -253,6 +281,12 @@ function render(d) {
     $('btn-phone').textContent = '📞 전화' + (d.phone_hours ? ' · ' + d.phone_hours : '');
     $('btn-phone').onclick = () => { sb.rpc('log_shop_phone_tap', { p_partner: pid, p_device_id: deviceId }); location.href = 'tel:' + phone; };
   }
+  // ⑦ 사업자 정보 — 상호 · 대표자 · 연락처(공개 시) · 주소 · 입금 계좌
+  const bizRows = [['상호', s.name], ['대표자', p.representative], ['연락처', phone], ['주소', s.address], ['입금 계좌', p.bank_account]]
+    .filter(([, v]) => v);
+  $('biz').innerHTML = bizRows.map(([k, v]) => `<div class="row"><span class="muted">${k}</span><span>${esc(v)}</span></div>`).join('') +
+    '<div class="muted" style="margin-top:8px;font-size:.8rem">서비스 제공 주체는 이 샵이며, 바다퐁은 모집 정보를 게시하는 플랫폼입니다. 참가비는 샵에 직접 결제합니다.</div>';
+
   $('cta').style.display = '';
   $('page').classList.remove('hidden');
 }
