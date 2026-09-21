@@ -51,6 +51,8 @@
   .row:first-child { border-top:0; }
   .row b { color:var(--ink); }
   .price { color:var(--teal-l); font-weight:800; }
+  .cover { width:100%; height:160px; object-fit:cover; border-radius:12px; margin-bottom:10px; display:block; }
+  .kind { font-size:.72rem; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(74,144,226,.18); color:#9cc6ff; margin-right:6px; }
   .slot { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-top:1px solid var(--line2); font-size:.9rem; }
   .seats { font-size:.82rem; color:var(--body); }
   .seats b { color:var(--ok); }
@@ -97,8 +99,7 @@
 
     <div class="tabs">
       <button class="tab on" data-t="about">소개</button>
-      <button class="tab" data-t="courses">과정</button>
-      <button class="tab" data-t="schedule">일정</button>
+      <button class="tab" data-t="products">상품</button>
       <button class="tab" data-t="posts">소식</button>
     </div>
 
@@ -117,14 +118,10 @@
       <h2>사업자 정보</h2><div class="card" id="biz" style="font-size:.86rem"></div>
     </section>
 
-    <section id="sec-courses" class="hidden">
-      <div class="muted">상시 접수 교육입니다. 일정은 샵과 상담해 정합니다.</div>
-      <div id="courses"></div>
-    </section>
-
-    <section id="sec-schedule" class="hidden">
-      <h2>세션</h2><div id="sessions"></div>
-      <h2>투어 · 캠프</h2><div id="tours"></div>
+    <!-- [2026-09-21 사용자] 과정·일정 두 탭을 「상품」 하나로 — 앱·포털과 같게.
+         카드마다 종류 칩(펀다이빙·강습·체험·투어·과정)으로 구분한다. -->
+    <section id="sec-products" class="hidden">
+      <div id="products"></div>
       <h2>취소 · 환불 기준 (바다퐁 표준)</h2>
       <pre class="policy" id="policy"></pre>
       <div class="muted" style="margin-top:8px">서비스 제공 주체는 이 샵이며, 바다퐁은 모집 정보를 게시하는 플랫폼입니다. 참가비는 샵에 직접 결제합니다.</div>
@@ -150,7 +147,9 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ACT = {scuba:'스쿠버', freedive:'프리다이빙', snorkel:'스노클링·체험', surf:'서핑', beach_swim:'해변수영'};
-const TYPE = {normal:'세션', lesson:'강습', trial:'체험', tour:'투어'};
+// 「세션」은 쓰지 않는다(2026-09-20 사용자) — 앱 productTypeLabel 과 같은 말. normal 은 활동에 따라 펀다이빙/자유 서핑.
+const TYPE = {normal:'펀다이빙', lesson:'강습', trial:'체험', tour:'투어'};
+const typeOf = m => m.meetup_type === 'normal' && m.activity === 'surf' ? '자유 서핑' : (TYPE[m.meetup_type] || '');
 const KIND = {condition:'오늘 바다', graduation:'수료', notice:'공지'};
 const RENTAL = {full:'풀세트 대여', partial:'부분 대여', none:'대여 없음'};
 const fmt = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
@@ -163,7 +162,7 @@ let phone = null, pid = null;
 
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
-  for (const k of ['about','courses','schedule','posts']) $('sec-' + k).classList.toggle('hidden', t.dataset.t !== k);
+  for (const k of ['about','products','posts']) $('sec-' + k).classList.toggle('hidden', t.dataset.t !== k);
 });
 
 (async () => {
@@ -235,28 +234,27 @@ function render(d) {
   $('links').innerHTML = Object.entries(sns).filter(([k, v]) => v && SNS_URL[k]).map(([k, v]) =>
     `<a class="chip" href="${esc(v.startsWith('http') ? v : SNS_URL[k](v))}" target="_blank" rel="noopener">${SNS_KO[k]}</a>`).join('');
 
-  // 과정
-  const courses = Array.isArray(d.courses) ? d.courses.filter(c => c.name) : [];
-  $('courses').innerHTML = courses.length ? courses.map(c => `<div class="card">
-      <div style="display:flex;justify-content:space-between;gap:10px"><b>${esc(c.name)}</b><span class="price">${won(c.price)}</span></div>
-      <div class="muted">${esc([c.agency, c.days ? c.days + '일' : '', c.hours ? c.hours + '시간' : '', c.next_start ? '다음 개강 ' + c.next_start : '상시 접수'].filter(Boolean).join(' · '))}</div>
-      ${c.includes ? `<div class="muted">포함: ${esc(c.includes)}</div>` : ''}
-    </div>`).join('') : '<div class="empty">등록된 과정이 없습니다.</div>';
-
-  // 일정
-  const ses = d.sessions || [];
-  $('sessions').innerHTML = ses.length ? ses.map(m => `<div class="card">
-      <div style="display:flex;justify-content:space-between;gap:10px"><b>${esc(m.title)}</b><span class="price">${m.price ? won(m.price) : ''}</span></div>
-      <div class="muted">${esc([TYPE[m.meetup_type], ACT[m.activity], m.meet_point ? '집결 ' + m.meet_point : ''].filter(Boolean).join(' · '))}</div>
+  // 상품 — 일정 → 투어 → 과정 (앱 _products 와 같은 순서)
+  const cover = x => { const u = x.image || x.photo || (Array.isArray(x.images) && x.images[0]) || '';
+    return u ? `<img class="cover" src="${esc(u)}" alt="" loading="lazy" />` : ''; };
+  const head = (kind, title, price) => `<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+      <span><span class="kind">${esc(kind)}</span><b>${esc(title)}</b></span><span class="price">${price}</span></div>`;
+  const ses = (d.sessions || []).map(m => `<div class="card">${cover(m)}${head(typeOf(m), m.title, m.price ? won(m.price) : '')}
+      <div class="muted">${esc([ACT[m.activity], m.meet_point ? '집결 ' + m.meet_point : ''].filter(Boolean).join(' · '))}</div>
       ${(m.slots || []).map(sl => `<div class="slot"><span>${fmt(sl.starts_at)}${sl.duration_min ? ' · ' + sl.duration_min + '분' : ''}</span>
         <span class="seats">남은자리 <b>${sl.remaining}</b>/${sl.capacity}</span></div>`).join('')}
-    </div>`).join('') : '<div class="empty">예정된 세션이 없습니다.</div>';
-  const tours = d.tours || [];
-  $('tours').innerHTML = tours.length ? tours.map(m => `<div class="card">
-      <div style="display:flex;justify-content:space-between;gap:10px"><b>${esc(m.title)}</b><span class="price">${m.price ? won(m.price) : ''}</span></div>
+    </div>`);
+  const tours = (d.tours || []).map(m => `<div class="card">${cover(m)}${head('투어', m.title, m.price ? won(m.price) : '')}
       <div class="muted">${fmtD(m.starts_at)} ~ ${m.ends_at ? fmtD(m.ends_at) : ''} · ${ACT[m.activity] || ''}${m.deposit_note ? ' · ' + esc(m.deposit_note) : ''}</div>
       <div class="slot"><span>출발 ${fmt(m.starts_at)}</span><span class="seats">남은자리 <b>${m.remaining}</b>/${m.capacity}</span></div>
-    </div>`).join('') : '<div class="empty">예정된 투어가 없습니다.</div>';
+    </div>`);
+  const courses = (Array.isArray(d.courses) ? d.courses.filter(c => c.name) : []).map(c => `<div class="card">${cover(c)}${head('과정', c.name, won(c.price))}
+      <div class="muted">${esc([c.agency, c.days ? c.days + '일' : '', c.hours ? c.hours + '시간' : '', c.next_start ? '다음 개강 ' + c.next_start : '상시 접수'].filter(Boolean).join(' · '))}</div>
+      ${c.place ? `<div class="muted">장소: ${esc(c.place)}</div>` : ''}
+      ${c.includes ? `<div class="muted">포함: ${esc(c.includes)}</div>` : ''}
+    </div>`);
+  const all = ses.concat(tours, courses);
+  $('products').innerHTML = all.length ? all.join('') : '<div class="empty">등록된 상품이 없습니다.</div>';
   $('policy').textContent = d.cancel_policy || '';
 
   // 소식
@@ -272,7 +270,7 @@ function render(d) {
   $('reviews').innerHTML = (r.count > 0)
     ? `<div class="row"><span class="muted">후기 ${r.count}건</span><b>강사·인솔 ${r.guide ?? '-'} · 안전 ${r.safety ?? '-'}${r.gear ? ' · 장비 ' + r.gear : ''}${r.facility ? ' · 시설 ' + r.facility : ''}</b></div>` +
       (r.recent || []).map(x => `<div class="row"><span>${esc(x.body)}</span></div>`).join('')
-    : '<div class="empty">아직 후기가 없습니다. 세션에 참여하면 앱에서 후기를 남길 수 있어요.</div>';
+    : '<div class="empty">아직 후기가 없습니다. 펀다이빙·강습에 참여하면 앱에서 후기를 남길 수 있어요.</div>';
 
   // 전화 — RPC 가 phone_public 일 때만 내려준다.
   phone = d.phone || null;
