@@ -225,16 +225,19 @@ function render(d) {
       <div class="kpi"><b>${pct(leadPct('d3plus'))}</b><span>3일+ 미리 보는 사용자 (${d.weeks}주)</span></div>
     </div>`;
 
-  // ③ 지역 순위 (최근 7일 vs 직전 7일)
-  const rk = d.rank || {};
-  const own = (rk.list || []).find(r => r.own);
-  const arrow = (a, b) => (a == null || b == null) ? '' : a < b ? `<span class="up">▲${b - a}</span>` : a > b ? `<span class="down">▼${a - b}</span>` : '<span class="muted">−</span>';
-  if (rk.list && rk.list.length) {
-    h += `<h2>지역 순위 <small>최근 7일 본 사람 기준 · 이 기간 집계된 ${n(rk.total)}개 지역</small></h2><div class="card tblwrap">`
-      + (own ? `<div style="margin-bottom:8px"><b>${esc(d.region.name)}</b> ${n(own.rank_now)}위 ${arrow(own.rank_now, own.rank_prev)} <span class="muted">(지난주 ${n(own.rank_prev)}위 · 본 사람 ${n(own.now)} ← ${n(own.prev)})</span></div>` : '')
-      + `<table><tr><th class="num">순위</th><th>지역</th><th class="num">본 사람</th><th class="num">지난주</th><th class="num">변동</th></tr>`
-      + rk.list.map(r => `<tr class="${r.own ? 'rank-own' : ''}"><td class="num">${n(r.rank_now)}</td><td>${esc(r.name)}</td><td class="num">${n(r.now)}</td><td class="num">${n(r.prev)}</td><td class="num">${arrow(r.rank_now, r.rank_prev)}</td></tr>`).join('')
-      + `</table><div class="note">상위 10개 지역과 현재 지역만 표시합니다. 지역 수가 위 선택 목록보다 적은 것은 여기만 최근 7일 기준이기 때문입니다(선택 목록은 ${d.weeks}주). 다른 샵의 실적은 제공하지 않습니다.</div></div>`;
+  // 강습 잠재 고객 — 주력이 스노클·해변수영인 사람. 자격증이 필요 없는 활동이라
+  // 체험·오픈워터·레벨1 의 가장 가까운 후보다(2026-09-21).
+  const ls = d.lesson;
+  if (ls && ls.total) {
+    h += `<h2>강습 잠재 고객 <small>주력 활동 기준 · 최근 ${d.weeks}주</small></h2>
+      <div class="card">
+        <div class="bignum"><div class="n">${n(ls.lead)}<small>명</small></div>
+          <div class="t">이 지역을 본 <b>${n(ls.total)}명</b> 중 <b>${pct(ls.lead_share)}</b>가
+            스노클링·해변 수영을 주로 봅니다 — <b>자격증이 필요 없는 활동</b>입니다.<br>
+            체험다이빙·오픈워터·레벨1 같은 <b>입문 과정</b>의 가장 가까운 손님입니다.</div></div>
+        <div class="stat-row"><span>이미 자격자로 보이는 사람 <span class="muted">(스쿠버·프리다이빙 주력)</span></span>
+          <span class="num">${n(ls.certified)}명</span></div>
+      </div>`;
   }
 
   // ② 이번 주말 수요 예측
@@ -252,15 +255,6 @@ function render(d) {
       + `<div class="note">「찜해 둔 사람」은 예보가 좋아지면 다시 열어보는 비율이 높은 집단입니다(등급별 행동 표 참고). 예보는 매 3시간 갱신되므로 주말이 가까울수록 정확합니다.</div></div>`;
   }
 
-  // 주간 추이
-  const maxU = Math.max(1, ...d.weekly.map(w => w.viewers || 0));
-  h += `<h2>주간 추이 <small>${d.weeks}주</small></h2><div class="card tblwrap"><table>
-    <tr><th>주</th><th>본 사람</th><th class="num">조회</th><th class="num">즐겨찾기 +</th><th class="num">길안내</th><th class="num">3일+ 미리 봄</th></tr>`
-    + d.weekly.map(w => `<tr><td>${esc(w.from)}~${esc(w.to)}</td>
-        <td><span class="bar" style="width:${Math.round(120 * (w.viewers || 0) / maxU)}px"></span>${n(w.viewers)}</td>
-        <td class="num">${n(w.views)}</td><td class="num">${n(w.favorites)}</td><td class="num">${n(w.directions)}</td><td class="num">${n(w.ahead3)}</td></tr>`).join('')
-    + `</table></div>`;
-
   // ① 요일 × 시간대 히트맵
   const ht = d.heat || {};
   if (ht.cells && ht.cells.length) {
@@ -274,21 +268,21 @@ function render(d) {
       + `</div><div class="note">문의가 몰리는 시간, 게시물 올릴 시간, 직원 배치의 근거로 쓰십시오. 진할수록 조회가 많습니다. 본 사람 ${d.kmin}명 미만인 칸은 비워 둡니다.</div></div>`;
   }
 
-  // 강습 잠재 고객 — 주력이 스노클·해변수영인 사람. 자격증이 필요 없는 활동이라
-  // 체험·오픈워터·레벨1 의 가장 가까운 후보다(2026-09-21).
-  const ls = d.lesson;
-  if (ls && ls.total) {
-    h += `<h2>강습 잠재 고객 <small>주력 활동 기준 · 최근 ${d.weeks}주</small></h2>
-      <div class="card">
-        <div class="bignum"><div class="n">${n(ls.lead)}<small>명</small></div>
-          <div class="t">이 지역을 본 <b>${n(ls.total)}명</b> 중 <b>${pct(ls.lead_share)}</b>가
-            스노클링·해변 수영을 주로 봅니다 — <b>자격증이 필요 없는 활동</b>입니다.<br>
-            체험다이빙·오픈워터·레벨1 같은 <b>입문 과정</b>의 가장 가까운 손님입니다.</div></div>
-        <div class="stat-row"><span>이미 자격자로 보이는 사람 <span class="muted">(스쿠버·프리다이빙 주력)</span></span>
-          <span class="num">${n(ls.certified)}명</span></div>
-      </div>`;
-  }
+  // 리드타임
+  h += `<h2>모객은 며칠 전에 <small>손님이 예보를 언제부터 보는지 · ${d.weeks}주 · 집계 ${n(lead.measured)}명</small></h2><div class="card tblwrap"><table>
+    <tr><th>당일에 정함</th><th>1~2일 전</th><th>3일 이상 전</th></tr>
+    <tr><td>${pct(leadSamePct())}</td><td>${pct(leadPct('d1_2'))}</td><td><b>${pct(leadPct('d3plus'))}</b></td></tr>
+    </table><div class="note"><b>3일 이상 전</b> 비율이 예약 리드타임의 근사치입니다 — 이 비율이 높을수록 미리 올려둔 일정이 눈에 띕니다.
+      낮으면 <b>회차를 임박해서 여러 번</b> 올리는 편이 낫습니다. 세 칸을 더하면 100%.
+      ⚠ 바다퐁 예보는 7일(참고 8~14일)까지라 그보다 먼 날짜는 등급 없이 보입니다 — 한 달 뒤 투어는 이 수치와 무관합니다.
+      예보 시점은 2026-09-12부터 집계돼, 그 이전에 다녀간 ${n(lead.pre)}명은 분모에서 뺐습니다.</div></div>`;
 
+  // 스팟
+  h += `<h2>많이 본 스팟 <small>본 사람 ${d.kmin}명 이상</small></h2><div class="card tblwrap"><table>
+    <tr><th>스팟</th><th class="num">본 사람</th><th class="num">조회</th><th class="num">조회 시 평균 점수</th><th class="num">A·B 비중</th><th class="num">즐겨찾기 +</th><th class="num">길안내</th></tr>`
+    + (d.top_spots.length ? d.top_spots.map(s => `<tr><td>${esc(s.spot)}</td><td class="num">${n(s.viewers)}</td><td class="num">${n(s.views)}</td><td class="num">${n(s.score)}</td><td class="num">${pct(s.ab_share)}</td><td class="num">${n(s.favorites)}</td><td class="num">${n(s.directions)}</td></tr>`).join('')
+       : `<tr><td colspan="7" class="muted">표본 부족</td></tr>`)
+    + `</table></div>`;
   // 활동별
   h += `<h2>활동별 <small>누가 무엇으로 보나</small></h2><div class="card tblwrap"><table>
     <tr><th>활동</th><th class="num">주력 <small>사람</small></th><th class="num">주력 비중</th><th class="num">본 사람</th><th class="num">조회</th><th class="num">본 스팟</th><th class="num">조회 시 A·B</th></tr>`
@@ -298,6 +292,27 @@ function render(d) {
     <div class="muted" style="margin:-6px 0 18px">「본 사람」은 <b>조회 시점의 활동 선택</b> 기준이라 한 사람이 여러 활동에 겹쳐 잡히고,
       앱 기본값(스노클링)을 한 번도 바꾸지 않은 사용자도 포함됩니다.
       「주력」은 그 사람이 <b>가장 많이 본 활동</b> 하나로만 세므로 활동끼리 비교할 때는 이쪽을 보세요.</div>`;
+
+  // ③ 지역 순위 (최근 7일 vs 직전 7일)
+  const rk = d.rank || {};
+  const own = (rk.list || []).find(r => r.own);
+  const arrow = (a, b) => (a == null || b == null) ? '' : a < b ? `<span class="up">▲${b - a}</span>` : a > b ? `<span class="down">▼${a - b}</span>` : '<span class="muted">−</span>';
+  if (rk.list && rk.list.length) {
+    h += `<h2>지역 순위 <small>최근 7일 본 사람 기준 · 이 기간 집계된 ${n(rk.total)}개 지역</small></h2><div class="card tblwrap">`
+      + (own ? `<div style="margin-bottom:8px"><b>${esc(d.region.name)}</b> ${n(own.rank_now)}위 ${arrow(own.rank_now, own.rank_prev)} <span class="muted">(지난주 ${n(own.rank_prev)}위 · 본 사람 ${n(own.now)} ← ${n(own.prev)})</span></div>` : '')
+      + `<table><tr><th class="num">순위</th><th>지역</th><th class="num">본 사람</th><th class="num">지난주</th><th class="num">변동</th></tr>`
+      + rk.list.map(r => `<tr class="${r.own ? 'rank-own' : ''}"><td class="num">${n(r.rank_now)}</td><td>${esc(r.name)}</td><td class="num">${n(r.now)}</td><td class="num">${n(r.prev)}</td><td class="num">${arrow(r.rank_now, r.rank_prev)}</td></tr>`).join('')
+      + `</table><div class="note">상위 10개 지역과 현재 지역만 표시합니다. 지역 수가 위 선택 목록보다 적은 것은 여기만 최근 7일 기준이기 때문입니다(선택 목록은 ${d.weeks}주). 다른 샵의 실적은 제공하지 않습니다.</div></div>`;
+  }
+
+  // 주간 추이
+  const maxU = Math.max(1, ...d.weekly.map(w => w.viewers || 0));
+  h += `<h2>주간 추이 <small>${d.weeks}주</small></h2><div class="card tblwrap"><table>
+    <tr><th>주</th><th>본 사람</th><th class="num">조회</th><th class="num">즐겨찾기 +</th><th class="num">길안내</th><th class="num">3일+ 미리 봄</th></tr>`
+    + d.weekly.map(w => `<tr><td>${esc(w.from)}~${esc(w.to)}</td>
+        <td><span class="bar" style="width:${Math.round(120 * (w.viewers || 0) / maxU)}px"></span>${n(w.viewers)}</td>
+        <td class="num">${n(w.views)}</td><td class="num">${n(w.favorites)}</td><td class="num">${n(w.directions)}</td><td class="num">${n(w.ahead3)}</td></tr>`).join('')
+    + `</table></div>`;
 
   // 등급별
   h += `<h2>예보 등급별 행동 <small>어떤 조건일 때 찜하고, 출발하나</small></h2><div class="card tblwrap"><table>
@@ -315,18 +330,6 @@ function render(d) {
       + `</table><div class="note">A·B 에 몰리는 활동은 「좋은 날에만 오는」 손님, D·E 에서도 보는 활동은 「예보와 무관하게 계획하는」 손님입니다. 활동별로 홍보 시점을 다르게 잡는 근거입니다.</div></div>`;
   }
 
-  // 리드타임
-  h += `<h2>예보를 며칠 앞까지 보나 <small>${d.weeks}주 · 집계된 사용자 ${n(lead.measured)}</small></h2><div class="card tblwrap"><table>
-    <tr><th>당일만</th><th>1~2일 앞</th><th>3일 이상 앞</th></tr>
-    <tr><td>${pct(leadSamePct())}</td><td>${pct(leadPct('d1_2'))}</td><td><b>${pct(leadPct('d3plus'))}</b></td></tr>
-    </table><div class="note">세 칸을 더하면 100%입니다. 3일 이상 앞을 보는 비율이 예약 리드타임의 근사치예요. 예보 시점은 2026-09-12부터 집계돼, 그 이전에 다녀간 ${n(lead.pre)}명은 분모에서 뺐습니다.</div></div>`;
-
-  // 스팟
-  h += `<h2>많이 본 스팟 <small>본 사람 ${d.kmin}명 이상</small></h2><div class="card tblwrap"><table>
-    <tr><th>스팟</th><th class="num">본 사람</th><th class="num">조회</th><th class="num">조회 시 평균 점수</th><th class="num">A·B 비중</th><th class="num">즐겨찾기 +</th><th class="num">길안내</th></tr>`
-    + (d.top_spots.length ? d.top_spots.map(s => `<tr><td>${esc(s.spot)}</td><td class="num">${n(s.viewers)}</td><td class="num">${n(s.views)}</td><td class="num">${n(s.score)}</td><td class="num">${pct(s.ab_share)}</td><td class="num">${n(s.favorites)}</td><td class="num">${n(s.directions)}</td></tr>`).join('')
-       : `<tr><td colspan="7" class="muted">표본 부족</td></tr>`)
-    + `</table></div>`;
   $('body').innerHTML = h;
 }
 
