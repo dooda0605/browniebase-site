@@ -355,6 +355,9 @@
           </div>
           <div class="muted" id="rp-msg" style="margin-top:4px"></div>
         </div>
+        <label>담당 강사 <span class="muted" style="font-weight:400">— 「샵 정보」 탭 강사진의 이름과 똑같이 적으면 사진·소개가 함께 나옵니다</span></label>
+        <input id="m-instructor" maxlength="40" placeholder="예: 김바다" list="m-instructor-list" />
+        <datalist id="m-instructor-list"></datalist>
         <div class="row2">
           <div><label>대상</label>
             <select id="m-level">
@@ -734,7 +737,28 @@ function renderRows(id, list, fields, cls) {
   });
 }
 const renderCerts   = () => renderRows('p-certs', certs, CERT_F, 'cert');
-const renderCourses = () => renderRows('p-courses', courses, COURSE_F, 'course');
+// 과정 행 = 입력칸들 + 사진. [2026-09-21 사용자] 「강습 배지도 사진이 들어가게」 —
+// 앱 추천 강습 카드 왼쪽 썸네일(courses[i].photo)로 쓴다. 강사 행과 같은 구조.
+const renderCourses = () => {
+  renderRows('p-courses', courses, COURSE_F, 'course');
+  [...$('p-courses').querySelectorAll('.r.course')].forEach((row, i) => {
+    const ph = document.createElement('div');
+    ph.className = 'instr-photo';
+    ph.innerHTML = (courses[i].photo ? `<img src="${courses[i].photo}" alt="" />` : '<span class="muted">사진</span>') +
+      `<input type="file" accept="image/*" data-i="${i}" title="과정 사진 올리기" />`;
+    const f = row.querySelector('.f');
+    f.insertBefore(ph, f.firstChild);
+    ph.querySelector('input').onchange = async e => {
+      const file = e.target.files && e.target.files[0]; if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { alert('5MB 이하 파일만 올릴 수 있습니다.'); return; }
+      const path = `${uid}/course-${Date.now()}.${(file.name.split('.').pop() || 'jpg').toLowerCase()}`;
+      const up = await sb.storage.from('meetup-images').upload(path, file, { contentType: file.type || 'image/jpeg' });
+      if (up.error) { alert('업로드 실패: ' + up.error.message); return; }
+      courses[i].photo = sb.storage.from('meetup-images').getPublicUrl(path).data.publicUrl;
+      renderCourses();
+    };
+  });
+};
 // 강사 행 = 입력칸들 + 사진(썸네일·업로드). 사진은 instructors[i].photo (공개 URL) — 앱 강사진 아바타.
 const renderInstructors = () => {
   renderRows('p-instructors', instructors, INSTR_F, 'instr');
@@ -1531,8 +1555,15 @@ window.replyInquiry = async (id, status) => {
 };
 
 // ── 작성 폼 ─────────────────────────────────────────
-$('btn-new').onclick = () => { $('composer').classList.remove('hidden'); addSlotRow(); window.scrollTo({top:$('composer').offsetTop-20,behavior:'smooth'}); };
-$('btn-cancel-compose').onclick = () => { $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; meetupPhotos = []; renderMeetupPhotos(); $('m-photo-msg').textContent=''; };
+// 담당 강사 후보 = 「샵 정보」 탭에 등록한 강사진. 이름이 명부와 같아야 프로필이 붙으므로
+// 직접 치지 말고 고르게 한다(오타가 나면 이름만 나오고 사진·소개가 안 붙는다).
+const fillInstructorList = () => {
+  $('m-instructor-list').innerHTML = (instructors || [])
+    .map(i => (i.name || '').trim()).filter(Boolean)
+    .map(n => `<option value="${n}"></option>`).join('');
+};
+$('btn-new').onclick = () => { $('composer').classList.remove('hidden'); fillInstructorList(); addSlotRow(); window.scrollTo({top:$('composer').offsetTop-20,behavior:'smooth'}); };
+$('btn-cancel-compose').onclick = () => { $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; meetupPhotos = []; renderMeetupPhotos(); $('m-photo-msg').textContent=''; $('m-instructor').value=''; };
 $('btn-add-slot').onclick = addSlotRow;
 // 투어는 회차 1개(출발일·정원) + 종료일. 유형을 바꾸면 안내만 바뀐다.
 $('m-type').onchange = () => {
@@ -1622,6 +1653,7 @@ async function saveDraft() {
     level: $('m-level').value || 'any',
     price: +$('m-price').value || null,
     price_note: $('m-price-note').value.trim() || null,
+    instructor: $('m-instructor').value.trim() || null,
     includes: $('m-includes').value.split(',').map(s => s.trim()).filter(Boolean),
     meetup_type: $('m-type').value,
     meet_point: $('m-meet').value.trim() || null,
