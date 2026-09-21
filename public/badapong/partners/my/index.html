@@ -270,10 +270,10 @@
     <div id="tab-meetups">
       <div class="card">
         <div style="display:flex;align-items:center;gap:10px">
-          <h2 style="margin:0">상품 (펀다이빙 · 강습 · 체험 · 투어)</h2>
+          <h2 style="margin:0">일정 상품 <span class="muted" style="font-weight:400;font-size:.9rem">— 날짜·정원이 정해진 것</span></h2>
           <button class="btn sm" id="btn-new" style="margin-left:auto">+ 새 상품</button>
         </div>
-        <div class="muted" style="margin-top:4px" id="credit-note">일정 = 날짜·정원이 정해진 모집(펀다이빙 · 강습 회차 · 체험 · 자유 서핑). 투어 = 기간·정원이 있는 원정·캠프. 상시 접수 과정은 「샵 정보」 탭의 과정 목록에 적습니다.</div>
+        <div class="muted" style="margin-top:4px" id="credit-note">펀다이빙 · 강습 회차 · 체험 · 자유 서핑처럼 <b>날짜와 정원이 정해진</b> 모집입니다. 투어 = 기간·정원이 있는 원정·캠프.<br/>날짜를 정하지 않고 <b>상시 접수</b>하는 교육은 이 탭 아래 「상시 과정」에 적습니다.</div>
         <div class="muted" id="free-note" style="margin-top:4px;color:#2bb5a0"></div>
         <div class="muted" style="margin-top:4px">발행한 글의 내용 수정은 <b>앱</b>에서 합니다 — 이 포털에는 수정 폼이 없습니다. 임시저장 글은 삭제하고 다시 작성해 주세요. 취소·환불 기준은 <b>바다퐁 표준</b>이 모든 일정·투어에 자동으로 붙습니다(아래 작성 폼 참고).</div>
         <div id="meetup-list" style="margin-top:10px"><span class="muted">불러오는 중…</span></div>
@@ -384,6 +384,24 @@
           <button class="btn sec" id="btn-draft">임시저장</button>
           <button class="btn sec" id="btn-cancel-compose" style="margin-left:auto">닫기</button>
         </div>
+      </div>
+
+      <!-- ── 상시 과정 ─────────────────────────────────────────
+           [2026-09-21 사용자] 「샵 정보」 탭에 있던 과정 목록을 여기로 옮겼다.
+           앱은 이미 샵 상세 「상품」 탭에서 일정·투어·과정을 한 목록으로 보여준다 —
+           포털만 두 탭으로 갈라져 있어 샵이 어디에 적어야 할지 헷갈렸다.
+           저장은 이 카드 전용 버튼이 courses 만 쓴다(샵 정보 저장과 서로 안 건드린다). -->
+      <div class="card">
+        <h2 style="margin-top:0">상시 과정 <span class="muted" style="font-weight:400;font-size:.9rem">— 날짜 없이 언제든 접수</span></h2>
+        <div class="muted">오픈워터 · Level 1 · 입문 강습처럼 <b>날짜를 정하지 않는</b> 교육입니다.
+          앱 「예약·강습」 탭 <b>추천 강습</b>과 샵 상세 상품 목록에 가격순으로 보이고, 가격이 없으면 뒤로 갑니다.<br/>
+          담당 강사는 <b>「샵 정보」 탭 강사진</b>의 이름과 똑같이 적어야 사진·소개가 함께 붙습니다.</div>
+        <div id="p-courses" class="rows" style="margin-top:10px"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+          <button type="button" class="btn sec sm" id="btn-add-course">+ 과정 추가</button>
+          <button class="btn sm" id="btn-save-courses" style="margin-left:auto">저장</button>
+        </div>
+        <div class="msg" id="c-msg"></div>
       </div>
     </div>
 
@@ -589,9 +607,9 @@
         <div id="p-certs" class="rows"></div>
         <button type="button" class="btn sec sm" id="btn-add-cert" style="margin-top:6px">+ 자격증 추가</button>
 
-        <label style="margin-top:18px">과정 · 프로그램 <span class="muted" style="font-weight:400">— 상시 접수 교육(오픈워터·Level 1·입문 강습). 「샵」 탭 「과정」에 가격순으로 보이고, 가격이 없으면 뒤로 갑니다</span></label>
-        <div id="p-courses" class="rows"></div>
-        <button type="button" class="btn sec sm" id="btn-add-course" style="margin-top:6px">+ 과정 추가</button>
+        <!-- [2026-09-21 사용자] 과정은 「상품」 탭으로 옮겼다 — 상품이 두 탭에 갈라져 있었다. -->
+        <div class="muted" style="margin:18px 0 0">🎓 <b>과정 · 프로그램</b>은 <b>「상품」 탭</b>으로 옮겼습니다 —
+          일정 상품과 한자리에서 관리합니다.</div>
 
         <label style="margin-top:18px">강사진 <span class="muted" style="font-weight:400">— 프리다이빙은 강사가 곧 샵입니다. 이름·단체·레벨·경력(년)</span></label>
         <div id="p-instructors" class="rows"></div>
@@ -1119,7 +1137,7 @@ function renderTodo() {
     ['사업자 인증', !!b.business, 'verify'],
     ['샵 안내 글', !!(pf.intro || '').trim(), 'profile'],
     ['홍보 사진', (pf.photos || []).length > 0, 'profile'],
-    ['과정 1개 이상', Array.isArray(pf.courses) && pf.courses.some(c => (c.name || '').trim()), 'profile'],
+    ['과정 1개 이상', Array.isArray(pf.courses) && pf.courses.some(c => (c.name || '').trim()), 'meetups'],
     ['첫 일정 발행', (me.published_count || 0) > 0, 'meetups'],
     ['멤버십', !!(me.membership && me.membership.active), 'membership'],
   ];
@@ -1764,6 +1782,22 @@ $('btn-verify-ins').onclick = async () => {
 };
 
 // ── STEP 3 샵 카드 저장 ──────────────────────────────
+// 상시 과정 저장 — courses 만 쓴다. 다른 칸을 건드리지 않으므로 샵 정보 탭과 독립이다.
+// upsert 를 쓰는 이유: 프로필 행이 아직 없는 새 샵에서도 만들어진다.
+//   partner_profiles 의 NOT NULL 컬럼은 전부 기본값이 있어 이 3칸만 보내도 안전하다(확인함).
+$('btn-save-courses').onclick = async () => {
+  const rows = courses.filter(c => (c.name || '').trim())
+    .map(c => Object.fromEntries(Object.entries(c).filter(([, v]) => (v || '').trim())));
+  const { error } = await sb.from('partner_profiles').upsert({
+    // 강사 계정은 프로필을 샵 owner 기준으로 읽는다(09-03 감사) — 저장도 같은 키로.
+    partner_id: me.card_partner_id || me.partner_id,
+    courses: rows,
+    updated_at: new Date().toISOString(),
+  });
+  msg('c-msg', error ? '저장 실패: ' + error.message : '저장 완료 — 앱에 바로 반영됩니다.', !error);
+  if (!error) refreshAll();
+};
+
 $('btn-save-profile').onclick = async () => {
   const sizes = [...document.querySelectorAll('#p-sizes input:checked')].map(i => i.value);
   const facilities = Object.assign({}, (me.profile && me.profile.facilities) || {});
