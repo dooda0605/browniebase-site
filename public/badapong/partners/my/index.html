@@ -203,7 +203,7 @@
            바뀌면서 그 이유가 사라졌다. 강사진은 「샵 정보」의 강사진 목록으로, 자격은 샵이 올린다. -->
       <div class="note">연결 후 <b>사업자 인증(사업자등록증)</b>을 통과해야 모집글을 올릴 수 있습니다.
         계정은 <b>샵당 하나</b>이고, 소속 강사는 「샵 정보」의 <b>강사진</b>에 등록하시면 앱에 함께 보입니다.
-        <b>사업자 인증을 마치면 1개월 무료 체험</b> — 멤버십과 <b>똑같이</b> 제한 없이 올릴 수 있습니다. 체험이 끝나면 연간 멤버십(550,000원·부가세 포함, <b>한 달 약 4.6만원</b>)으로 과정·일정·투어·소식을 제한 없이 올립니다. 설치비·수수료는 없습니다.</div>
+        <b>사업자 인증을 마치면 무료 체험</b>(10월 31일까지 인증 시 6개월) — 멤버십과 <b>똑같이</b> 제한 없이 올릴 수 있습니다. 체험이 끝나면 연간 멤버십(550,000원·부가세 포함, <b>한 달 약 4.6만원</b>)으로 과정·일정·투어·소식을 제한 없이 올립니다. 설치비·수수료는 없습니다.</div>
       <p class="muted" style="margin-top:14px;text-align:center;font-size:12px">
         계속하면 <a href="/terms-badapong.html">이용약관</a>과
         <a href="/privacy-badapong.html">개인정보처리방침</a>에 동의하는 것으로 봅니다.</p>
@@ -681,7 +681,7 @@
       <div class="card" id="card-buy">
         <h2 style="margin-top:0">📅 파트너 멤버십</h2>
         <div id="mem-status" class="muted" style="margin-bottom:8px">확인 중…</div>
-        <div class="muted" id="buy-note">연간 멤버십 하나입니다 — 기간 안에 세션·투어·과정·소식을 <b>제한 없이</b> 올립니다. 설치비·예약 수수료 없음. 표시 금액은 <b>부가세 포함 최종 결제금액</b>이며 자동갱신되지 않습니다(만료 7일 전 앱 알림 → 다시 결제하면 만료일 뒤로 이어집니다).<br/>카드로 결제하시면 <b>카드매출전표</b>가 세금계산서를 갈음합니다(매입세액공제 가능). 세금계산서가 따로 필요하시면 결제 후 사업자등록번호와 함께 support@browniebase.com 으로 알려주세요.<br/><b>환불</b> — 결제 7일 이내·미사용이면 전액, 그 뒤에는 남은 기간을 일할 계산해 돌려드립니다(위약금 없음). <a href="https://browniebase.com/terms-badapong.html" target="_blank" rel="noopener" style="color:#8ab4f8">약관 4-3</a></div>
+        <div class="muted" id="buy-note">연간 멤버십 하나입니다 — 기간 안에 세션·투어·과정·소식을 <b>제한 없이</b> 올립니다. 설치비·예약 수수료 없음. 표시 금액은 <b>부가세 포함 최종 결제금액</b>이며 자동갱신되지 않습니다(<b>결제일부터 12개월</b> · 이용 중에는 다시 결제할 수 없음 · 만료 7일 전 앱 알림 · 만료 후 30일간 게시물 유지).<br/>카드로 결제하시면 <b>카드매출전표</b>가 세금계산서를 갈음합니다(매입세액공제 가능). 세금계산서가 따로 필요하시면 결제 후 사업자등록번호와 함께 support@browniebase.com 으로 알려주세요.<br/><b>환불</b> — 결제 7일 이내·미사용이면 전액, 그 뒤에는 남은 기간을 일할 계산해 돌려드립니다(위약금 없음). <a href="https://browniebase.com/terms-badapong.html" target="_blank" rel="noopener" style="color:#8ab4f8">약관 4-3</a></div>
         <div id="buy-msg" style="margin-top:8px"></div>
         <div id="buy-tiers" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
 
@@ -1018,10 +1018,11 @@ function renderMembership() {
   const dLeft = m.ends_at ? Math.max(0, Math.ceil((new Date(m.ends_at) - Date.now()) / 86400000)) : 0;
   if (m.active && m.source === 'trial') {
     // [2026-09-21] 샵별 무료 체험 — 사업자 인증 시 30일(meetup_policy.trial_days)
+    //   [2026-09-25] 10/31(KST)까지 인증하면 180일(meetup_policy.promo_trial_days·promo_until)
     pill.textContent = '🎁 무료 체험 D-' + dLeft;
     $('free-note').textContent = '🎁 무료 체험 중 — ' + fmtDate(m.ends_at) + '까지(' + dLeft + '일 남음). 멤버십과 똑같이 제한 없이 올릴 수 있습니다.';
     $('mem-status').innerHTML = '<b style="color:var(--ok)">🎁 무료 체험 중</b> · ' + fmtDate(m.starts_at) + ' ~ <b>' + fmtDate(m.ends_at) + '</b> (' + dLeft + '일 남음)' +
-      '<br/>지금 결제해도 손해가 없습니다 — 체험이 끝난 <b>다음 날부터</b> 12개월이 시작됩니다. 종료 7일 전·1일 전에 앱 알림을 드립니다.';
+      '<br/>결제하면 <b>그날부터</b> 12개월이 시작되고 남은 체험 기간은 없어집니다 — 체험이 끝날 무렵 결제하시면 됩니다. 종료 7일 전·1일 전에 앱 알림을 드립니다.';
   } else if (m.active && m.starts_at && new Date(m.starts_at) > new Date()) {
     // 체험 중에 결제 → 유료 멤버십이 체험 종료일 뒤로 예약돼 있다
     pill.textContent = '📅 멤버십 ~' + fmtDate(m.ends_at);
@@ -1029,7 +1030,7 @@ function renderMembership() {
   } else if (m.active) {
     pill.textContent = '📅 멤버십 ~' + fmtDate(m.ends_at);
     $('mem-status').innerHTML = '<b style="color:var(--ok)">✓ 활성</b> · ' + fmtDate(m.starts_at) + ' ~ <b>' + fmtDate(m.ends_at) + '</b>' +
-      ' · 지금 결제하면 만료일 뒤로 12개월이 이어집니다.';
+      ' · 만료 후 다시 결제할 수 있습니다(만료 후 30일간 게시물 유지).';
   } else if (m.free_period) {
     // 옛 「전체 무료」 스위치(meetup_policy.free_period) — 2026-09-21 부터 꺼져 있다. 다시 켜는 경우만 대비.
     pill.textContent = '🟢 전체 무료';
@@ -1039,8 +1040,8 @@ function renderMembership() {
     pill.textContent = '📅 멤버십 없음';
     // 사업자 인증 전이면 체험 안내를, 인증 후(체험·멤버십 끝)면 결제 안내를
     if (!(me.badges || {}).business) {
-      pill.textContent = '🎁 1개월 무료 체험';
-      $('mem-status').innerHTML = '<b style="color:var(--ok)">사업자 인증을 마치면 1개월 무료 체험</b>이 바로 시작됩니다 — 「사업자 · 자격증 인증」 탭.';
+      pill.textContent = '🎁 무료 체험';
+      $('mem-status').innerHTML = '<b style="color:var(--ok)">사업자 인증을 마치면 무료 체험</b>(10월 31일까지 인증 시 6개월)이 바로 시작됩니다 — 「사업자 · 자격증 인증」 탭.';
     } else {
       $('mem-status').innerHTML = '<b style="color:var(--warn)">멤버십 없음</b> — 새 상품·소식을 올리려면 연간 멤버십이 필요합니다. ' +
         '이미 올린 글은 종료일로부터 <b>30일(유예)</b> 동안 앱에 보이고, 그 뒤 숨겨집니다.';
@@ -1089,6 +1090,13 @@ async function initMembership() {
     $('buy-tiers').innerHTML += '<div class="muted" style="width:100%">멤버십은 <b>샵 단위</b>입니다. 계정 하나로 과정·일정·투어·소식을 모두 올립니다.</div>';
   }
 
+  // [2026-09-25] 유료 멤버십 이용 중엔 결제 불가 — 토스 조건 「결제일부터 최대 12개월」.
+  //   서버(create_membership_order)도 active_membership 으로 거절한다. 체험 중엔 결제 가능.
+  const mem = me.membership || {};
+  if (mem.active && mem.source && mem.source !== 'trial') {
+    $('buy-tiers').innerHTML = '<div class="muted" style="width:100%">멤버십 이용 중입니다(~' + fmtDate(mem.ends_at) +
+      '). 만료 후 다시 결제할 수 있고, 만료 후 30일 동안은 게시물이 그대로 보입니다.</div>';
+  }
   $('buy-tiers').querySelectorAll('button').forEach(b =>
     b.onclick = () => startPurchase(b.dataset.code));
   $('btn-pay-cancel').onclick = () => { $('buy-pay').classList.add('hidden'); pendingOrder = null; };
@@ -1104,6 +1112,7 @@ async function startPurchase(code) {
     $('buy-msg').textContent = reason === 'not_approved'
       ? '사업자 인증이 끝난 계정만 결제할 수 있습니다. 「사업자 · 자격증 인증」 탭을 먼저 확인해 주세요.'
       : reason === 'owner_only' ? '멤버십은 샵 대표 계정에서 결제합니다.'
+      : reason === 'active_membership' ? '멤버십 이용 중에는 다시 결제할 수 없습니다. 만료 후 결제해 주세요(만료 후 30일간 게시물 유지).'
       : ('주문을 만들지 못했습니다 (' + reason + ')');
     return;
   }
