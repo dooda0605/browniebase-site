@@ -97,6 +97,9 @@
 
 <header>
   <h1>🐚 문의함</h1>
+  <button class="chip on" id="srcApp">앱</button>
+  <button class="chip" id="srcSocial">인스타·스레드 <span id="cSocial">·</span></button>
+  <span style="width:6px"></span>
   <button class="chip on" id="fUnread">미답변 <span id="cUnread">·</span></button>
   <button class="chip" id="fAll">전체</button>
   <button class="chip" id="fArch">숨김 <span id="cArch">·</span></button>
@@ -222,6 +225,7 @@ function visible() {
 }
 
 function renderList() {
+  if (source === 'social') return;   // 앱 문의 재로드가 소셜 목록을 덮어쓰지 않게
   const unread = threads.filter(t => !t.archived_at && (t.operator_unread || 0) > 0).length;
   $('cUnread').textContent = unread;
   $('cArch').textContent = threads.filter(t => t.archived_at).length;
@@ -377,22 +381,152 @@ async function send(threadId) {
   }
 }
 
+// ── 인스타·스레드 (2026-09-25) ───────────────────────────────────────────────
+// 수집·분류·초안은 edge fn `social`(5분 크론)이 social_inbox 에 넣는다. 여기서는 읽고, 초안을 고쳐 보낸다.
+// ⚠ 「보내기」만이 실제 발송이다. 자동 발송 경로는 없다(Meta 스팸 제재·정보통신망법 50조).
+// 미답변 = 들어온 것(in) 중 new, 숨김 = skipped(스팸은 분류기가 바로 여기로 보낸다).
+const FN = SUPABASE_URL + '/functions/v1/social';
+const PLAT = { ig: '인스타', threads: '스레드' };
+const KIND = { dm: 'DM', comment: '댓글', reply: '답글', mention: '멘션' };
+const CAT = { inquiry: '문의', partner: '제휴', bug: '버그', praise: '칭찬', spam: '스팸', other: '기타' };
+let source = 'app', social = [];
+
+async function loadSocial() {
+  showErr('');
+  try {
+    social = await api('social_inbox?select=*&order=created_at.desc&limit=500');
+    if (social.length) sawAnyRow = true;
+    renderSocialList();
+  } catch (e) { showErr('소셜 불러오기 실패: ' + e.message); }
+}
+
+function socialVisible() {
+  const inbound = social.filter(r => r.direction === 'in');
+  return mode === 'archived' ? inbound.filter(r => r.status === 'skipped')
+       : mode === 'unread'   ? inbound.filter(r => r.status === 'new')
+       :                       inbound.filter(r => r.status !== 'skipped');
+}
+
+function renderSocialList() {
+  const unread = social.filter(r => r.direction === 'in' && r.status === 'new').length;
+  $('cSocial').textContent = unread;
+  if (source !== 'social') return;
+  $('cUnread').textContent = unread;
+  $('cArch').textContent = social.filter(r => r.direction === 'in' && r.status === 'skipped').length;
+  const rs = socialVisible();
+  if (!rs.length) {
+    $('list').innerHTML = '<div class="empty">' + (mode === 'unread' ? '새 메시지 없음 👏' : '없음') + '</div>';
+    return;
+  }
+  $('list').innerHTML = rs.map(r =>
+    '<div class="row' + (selected === 's' + r.id ? ' sel' : '') + '" data-sid="' + r.id + '">'
+    + '<div class="top">'
+    + (r.status === 'new' ? '<span class="badge">새 메시지</span>' : r.status === 'replied' ? '<span class="badge ok">답장함</span>' : '')
+    + '<span class="badge act">' + PLAT[r.platform] + ' ' + (KIND[r.kind] || r.kind) + '</span>'
+    + (r.category ? '<span class="badge res">' + esc(CAT[r.category] || r.category) + '</span>' : '')
+    + '<span class="time">' + ago(r.created_at) + '</span></div>'
+    + '<div class="prev"><b>@' + esc(r.author_name || '?') + '</b> ' + esc(r.body || '') + '</div></div>'
+  ).join('');
+  [...document.querySelectorAll('[data-sid]')].forEach(el => el.onclick = () => openSocial(+el.dataset.sid));
+}
+
+function openSocial(id) {
+  const r = social.find(x => x.id === id);
+  if (!r) return;
+  selected = 's' + id;
+  document.body.classList.add('detail-open');
+  renderSocialList();
+  // 같은 대화(DM 방·게시물·원글)를 시간순으로 — 앞뒤 맥락을 보고 답하도록
+  const conv = social.filter(x => x.platform === r.platform && x.thread_key === r.thread_key
+                              && (r.kind !== 'dm' || x.kind === 'dm'))
+                     .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  const dmOld = r.kind === 'dm' && Date.now() - new Date(r.created_at) > 24 * 3600e3;
+  let html = '<div class="pad">'
+    + '<button class="back" onclick="document.body.classList.remove(\'detail-open\')">← 목록</button>'
+    + '<button class="back" id="skip" style="display:inline-block;margin-left:6px">'
+    + (r.status === 'skipped' ? '되돌리기' : '건너뛰기') + '</button>'
+    + '<div class="card" style="margin-top:10px"><h3>' + PLAT[r.platform] + ' ' + (KIND[r.kind] || r.kind)
+    + (r.category ? ' · ' + esc(CAT[r.category] || r.category) : '') + ' · ' + kst(r.created_at) + '</h3>'
+    + (r.context ? '<div class="kv" style="color:var(--dim)">📝 원글: ' + esc(r.context) + '</div>' : '')
+    + (r.permalink ? '<div class="kv"><a target="_blank" rel="noopener" href="' + esc(r.permalink) + '">원문 열기 ↗</a></div>' : '')
+    + (dmOld ? '<div class="kv" style="color:var(--warn)">⚠ 24시간 지난 DM — 인스타 정책상 답장이 거절될 수 있어요</div>' : '')
+    + '</div>'
+    + conv.map(m => '<div class="msg ' + (m.direction === 'out' ? 'operator' : 'user') + '"><div>'
+        + '<div class="b">' + (m.direction === 'in' ? '<b>@' + esc(m.author_name || '?') + '</b>\n' : '') + esc(m.body || '') + '</div>'
+        + '<div class="t" style="text-align:' + (m.direction === 'out' ? 'right' : 'left') + '">' + kst(m.created_at) + '</div></div></div>').join('')
+    + '</div><div id="composer">'
+    + '<textarea id="body" rows="5" placeholder="답장 (초안을 고쳐서 보내세요)">' + esc(r.status === 'new' ? (r.draft || '') : '') + '</textarea>'
+    + '<button class="send" id="send">보내기</button></div>';
+  $('detail').innerHTML = html;
+  $('send').onclick = () => sendSocial(r);
+  $('skip').onclick = () => skipSocial(r);
+}
+
+async function sendSocial(r) {
+  const text = $('body').value.trim();
+  if (!text) return;
+  if (!confirm(PLAT[r.platform] + '에 실제로 게시·발송됩니다. 보낼까요?')) return;
+  const btn = $('send'); btn.disabled = true;
+  try {
+    const res = await fetch(FN, { method: 'POST', headers: H,
+      body: JSON.stringify({ action: 'reply', id: r.id, text }) });
+    const j = await res.json();
+    if (!res.ok || j.error) throw new Error(j.error || res.status);
+    await loadSocial(); openSocial(r.id);
+  } catch (e) { showErr('발송 실패: ' + e.message); }
+  finally { btn.disabled = false; }
+}
+
+async function skipSocial(r) {
+  const next = r.status === 'skipped' ? 'new' : 'skipped';
+  try {
+    await api('social_inbox?id=eq.' + r.id, { method: 'PATCH', headers: H,
+      body: JSON.stringify({ status: next, handled_at: next === 'skipped' ? new Date().toISOString() : null }) });
+    r.status = next; selected = null;
+    document.body.classList.remove('detail-open');
+    $('detail').innerHTML = '<div class="empty">' + (next === 'skipped' ? '건너뛰었습니다 — 「숨김」에서 되돌릴 수 있어요' : '되돌렸습니다') + '</div>';
+    renderSocialList();
+  } catch (e) { showErr('처리 실패: ' + e.message); }
+}
+
+// ↻ 는 소셜일 때 즉시 수집부터 돌린다(크론 5분을 기다리지 않게)
+async function syncSocial() {
+  $('list').innerHTML = '<div class="empty">인스타·스레드에서 가져오는 중…</div>';
+  try {
+    const j = await fetch(FN, { method: 'POST', headers: H, body: JSON.stringify({ action: 'sync' }) }).then(x => x.json());
+    if (j.errs && j.errs.length) showErr('일부 수집 실패: ' + j.errs.join(' / '));
+  } catch (e) { showErr('수집 실패: ' + e.message); }
+  await loadSocial();
+}
+
+function setSource(s) {
+  source = s; selected = null;
+  document.body.classList.remove('detail-open');
+  $('srcApp').classList.toggle('on', s === 'app');
+  $('srcSocial').classList.toggle('on', s === 'social');
+  $('detail').innerHTML = '<div class="empty">왼쪽에서 대화를 선택하세요</div>';
+  s === 'social' ? loadSocial() : renderList();
+}
+$('srcApp').onclick    = () => setSource('app');
+$('srcSocial').onclick = () => setSource('social');
+
 // ── 필터·초기화 ─────────────────────────────────────────────────────────────
 function setMode(m) {
   mode = m;
   [['unread','fUnread'],['all','fAll'],['archived','fArch']].forEach(([k, id]) =>
     $(id).classList.toggle('on', k === m));
-  renderList();
+  source === 'social' ? renderSocialList() : renderList();
 }
 $('fUnread').onclick = () => setMode('unread');
 $('fAll').onclick    = () => setMode('all');
 $('fArch').onclick   = () => setMode('archived');
-$('reload').onclick  = () => loadThreads();
+$('reload').onclick  = () => source === 'social' ? syncSocial() : loadThreads();
 
 if (!SUPABASE_KEY || !ADMIN_TOKEN) {
   showErr('키가 없습니다. /admin/inbox.html?sb=<anon>&at=<admin token> 으로 한 번 접속하세요.');
 } else {
   loadThreads();
+  loadSocial();   // 탭 배지(새 메시지 수)용
 }
 </script>
 </body>
