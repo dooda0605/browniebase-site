@@ -115,15 +115,20 @@
 
 <script>
 // ── 인증 (spot-map.html 과 동일 패턴·동일 localStorage 키) ────────────────────
+// 공백·줄바꿈 제거: 휴대폰 메신저로 긴 링크를 옮기면 중간에 끊기거나 줄바꿈이 끼어 키가 깨진 채
+// localStorage 에 박힌다(2026-09-25 폰 「불러오기 실패」). 키 문자열엔 공백이 없다.
 function _loadKey(name, label) {
-  const fromUrl = new URLSearchParams(window.location.search).get(name);
+  const clean = (s) => (s || '').replace(/\s+/g, '');
+  const fromUrl = clean(new URLSearchParams(window.location.search).get(name));
   if (fromUrl) { localStorage.setItem('admin_' + name, fromUrl); return fromUrl; }
   let v = localStorage.getItem('admin_' + name);
-  if (!v) { v = prompt(label + ' 입력:'); if (v) localStorage.setItem('admin_' + name, v); }
+  if (!v) { v = clean(prompt(label + ' 입력:')); if (v) localStorage.setItem('admin_' + name, v); }
   return v;
 }
 const SUPABASE_URL = 'https://gprgkcouugiwrfnbcsjz.supabase.co';
-const SUPABASE_KEY = _loadKey('sb', 'Supabase anon key (eyJ...)');
+// anon 키는 공개값(앱 바이너리에도 들어 있다) — 페이지에 박아 링크를 ?at= 하나로 줄인다. 권한은 전부 어드민 토큰+RLS.
+// 캐시된 admin_sb 는 무시한다 — 폰에 깨진 값이 이미 박혀 있어도 회복되게. ?sb= 는 받아도 쓰지 않는다.
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwcmdrY291dWdpd3JmbmJjc2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTUyMTksImV4cCI6MjA4OTkzMTIxOX0.E9EGnluU7JLqizT6X1CnjumoPzmsflSYnyqttklOgLg';
 const ADMIN_TOKEN  = _loadKey('at', 'Admin token (32+ char)');
 
 const H = {
