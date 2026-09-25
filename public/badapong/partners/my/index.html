@@ -1030,7 +1030,8 @@ function renderMembership() {
   } else if (m.active) {
     pill.textContent = '📅 멤버십 ~' + fmtDate(m.ends_at);
     $('mem-status').innerHTML = '<b style="color:var(--ok)">✓ 활성</b> · ' + fmtDate(m.starts_at) + ' ~ <b>' + fmtDate(m.ends_at) + '</b>' +
-      ' · 만료 후 다시 결제할 수 있습니다(만료 후 30일간 게시물 유지).';
+      (m.source === 'paid' ? ' · 만료 후 다시 결제할 수 있습니다(만료 후 30일간 게시물 유지).'
+        : ' · 결제하면 그날부터 12개월이 시작됩니다.');
   } else if (m.free_period) {
     // 옛 「전체 무료」 스위치(meetup_policy.free_period) — 2026-09-21 부터 꺼져 있다. 다시 켜는 경우만 대비.
     pill.textContent = '🟢 전체 무료';
@@ -1091,9 +1092,9 @@ async function initMembership() {
   }
 
   // [2026-09-25] 유료 멤버십 이용 중엔 결제 불가 — 토스 조건 「결제일부터 최대 12개월」.
-  //   서버(create_membership_order)도 active_membership 으로 거절한다. 체험 중엔 결제 가능.
+  //   서버(create_membership_order)도 active_membership 으로 거절한다(source='paid' 만). 체험·운영자 부여(grant) 중엔 결제 가능.
   const mem = me.membership || {};
-  if (mem.active && mem.source && mem.source !== 'trial') {
+  if (mem.active && mem.source === 'paid') {
     $('buy-tiers').innerHTML = '<div class="muted" style="width:100%">멤버십 이용 중입니다(~' + fmtDate(mem.ends_at) +
       '). 만료 후 다시 결제할 수 있고, 만료 후 30일 동안은 게시물이 그대로 보입니다.</div>';
   }
