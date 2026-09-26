@@ -140,6 +140,11 @@
   .stat-row { display:flex; justify-content:space-between; align-items:center; gap:10px;
     padding:10px 2px; border-bottom:1px solid var(--line2); font-size:.92rem; color:var(--strong); }
   .stat-row:last-child { border-bottom:0; }
+  /* [2026-09-26] 히어로 규모 지표 — 매일 갱신(landing_stats RPC) */
+  .kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:18px; }
+  .kpi { background:var(--card, rgba(255,255,255,.06)); border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:10px 12px; }
+  .kpi b { display:block; font-size:1.35rem; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .kpi > span { font-size:.78rem; color:var(--sub); }
   .stat-row b { font-variant-numeric:tabular-nums; color:var(--ink); }
 
   /* ── 근거 3개 ─────────────────────────────────────────────── */
@@ -228,6 +233,12 @@
           <a class="btn" href="/badapong/partners/my/">파트너 시작하기 →</a>
           <a class="btn ghost" href="#membership">멤버십 안내</a>
         </div>
+        <div class="kpis">
+          <div class="kpi"><b><span data-k="installs.total">3,599</span>명</b><span>누적 사용자</span></div>
+          <div class="kpi"><b><span data-k="installs.active_30d">3,252</span>명</b><span>최근 30일</span></div>
+          <div class="kpi"><b><span data-k="installs.active_7d">1,169</span>명</b><span>최근 7일</span></div>
+        </div>
+        <div class="muted" style="margin-top:6px">앱을 연 기기 기준 · <span data-k="installs.since">2026-08-10</span> 집계 시작 이후 · 운영자 제외 · 매일 갱신</div>
       </div>
 
       <!-- 말로 세 번 설명하는 대신 한 장을 보여준다. 검증 배지 · 좌석 미터가 앱 세션 카드와 같은 문법이다. -->
@@ -266,18 +277,18 @@
       <h2>셋 중 둘은 <span style="color:var(--teal)">스노클링</span>입니다</h2>
       <div class="sub">스쿠버 자격자는 이미 다니던 샵이 있습니다. <b>강습으로 이어질 사람은
         아직 자격증이 없는 쪽</b>이고, 그게 바다퐁 사용자의 대부분입니다.</div>
-      <div class="muted" style="margin-top:12px">최근 90일 1,670명, 각자 <b>가장 많이 본 활동</b> 기준.
-        활동을 직접 바꿔 본 사용자 510명만 따로 세어도 스노클링은 <b>57.5%</b>로 1위입니다 —
+      <div class="muted" style="margin-top:12px">최근 90일 <span data-k="activity90.devices">1,873</span>명, 각자 <b>가장 많이 본 활동</b> 기준.
+        활동을 직접 바꿔 본 사용자 <span data-k="activity90.strict_devices">627</span>명만 따로 세어도 스노클링은 <b><span data-k="activity90.strict_snorkel_pct" data-pct>57.6</span>%</b>로 1위입니다 —
         세는 방법을 바꿔도 결론이 같습니다.</div>
     </div>
     <div class="card">
-      <div class="stat-row"><span>🤿 <b>스노클링</b></span><span class="ok">63.2%</span></div>
-      <div class="stat-row"><span>🧜 <b>프리다이빙</b></span><span class="ok">19.1%</span></div>
-      <div class="stat-row"><span>🐠 스쿠버다이빙</span><span>5.9%</span></div>
-      <div class="stat-row"><span>🏖 해변 수영</span><span>4.6%</span></div>
-      <div class="stat-row"><span>🦪 갯벌</span><span>3.1%</span></div>
-      <div class="stat-row"><span>🎣 낚시 · 🏄 서핑</span><span>4.2%</span></div>
-      <div class="muted" style="margin-top:12px">스노클링과 프리다이빙이 <b>82%</b>입니다.
+      <div class="stat-row"><span>🤿 <b>스노클링</b></span><span class="ok"><span data-k="activity90.shares.snorkel" data-pct>64.0</span>%</span></div>
+      <div class="stat-row"><span>🧜 <b>프리다이빙</b></span><span class="ok"><span data-k="activity90.shares.freedive" data-pct>18.3</span>%</span></div>
+      <div class="stat-row"><span>🐠 스쿠버다이빙</span><span><span data-k="activity90.shares.scuba" data-pct>5.7</span>%</span></div>
+      <div class="stat-row"><span>🏖 해변 수영</span><span><span data-k="activity90.shares.beach_swim" data-pct>4.8</span>%</span></div>
+      <div class="stat-row"><span>🦪 갯벌</span><span><span data-k="activity90.shares.mudflat" data-pct>3.4</span>%</span></div>
+      <div class="stat-row"><span>🎣 낚시 · 🏄 서핑</span><span><span data-k="activity90.shares.fishing_surf" data-pct>4.0</span>%</span></div>
+      <div class="muted" style="margin-top:12px">스노클링과 프리다이빙이 <b><span id="sf-sum">82</span>%</b>입니다.
         체험다이빙·오픈워터·레벨1 같은 <b>입문 과정</b>을 여기에 올리면 가장 가까운 손님을 만납니다.</div>
     </div>
   </div>
@@ -299,17 +310,17 @@
   <div class="wrap two">
     <div>
       <div class="eyebrow">지난 7일 · 국내</div>
-      <h2>884명이 바다에 갈 날을 골랐습니다</h2>
+      <h2><span data-k="view7_kr.users">711</span>명이 바다에 갈 날을 골랐습니다</h2>
       <div class="sub">스팟 상세를 연 순 사용자 수입니다(운영자 제외). 배너를 스쳐 본 수가 아니라
         <b>날짜와 장소를 정하려고 들어온 사람</b>의 수입니다.</div>
     </div>
     <div class="card">
-      <div class="stat-row"><span><b>동해 남부</b> <span class="muted">포항·경주·울산</span></span><span class="ok">414명 · 2,409회</span></div>
-      <div class="stat-row"><span><b>동해 북부</b> <span class="muted">속초·양양·강릉</span></span><span class="ok">325명 · 1,760회</span></div>
-      <div class="stat-row"><span><b>제주도</b></span><span class="ok">226명 · 1,618회</span></div>
-      <div class="stat-row"><span><b>남해</b> <span class="muted">거제·통영·여수</span></span><span class="ok">179명 · 634회</span></div>
-      <div class="stat-row"><span><b>서해</b></span><span class="ok">72명 · 168회</span></div>
-      <div class="stat-row"><span><b>울릉도</b></span><span class="ok">62명 · 169회</span></div>
+      <div class="stat-row"><span><b>동해 남부</b> <span class="muted">포항·경주·울산</span></span><span class="ok" data-region="동해 남부">344명 · 2,206회</span></div>
+      <div class="stat-row"><span><b>동해 북부</b> <span class="muted">속초·양양·강릉</span></span><span class="ok" data-region="동해 북부">235명 · 1,711회</span></div>
+      <div class="stat-row"><span><b>제주도</b></span><span class="ok" data-region="제주도">166명 · 835회</span></div>
+      <div class="stat-row"><span><b>남해</b> <span class="muted">거제·통영·여수</span></span><span class="ok" data-region="남해">120명 · 321회</span></div>
+      <div class="stat-row"><span><b>서해</b></span><span class="ok" data-region="서해">44명 · 89회</span></div>
+      <div class="stat-row"><span><b>울릉도</b></span><span class="ok" data-region="울릉도">35명 · 114회</span></div>
       <div class="muted" style="margin-top:12px">내 샵 근처 스팟을 <b>몇 명이 언제 봤는지</b>는
         파트너 포털 「지역 인사이트」에서 요일·시간대까지 확인할 수 있습니다.</div>
     </div>
@@ -515,7 +526,7 @@
   </div>
   <div class="wrap">
     Browniebase · 바다퐁(Badapong) · 문의 support@browniebase.com<br/>
-    실적 수치는 앱 실사용 로그 기준이며 매일 갱신됩니다.
+    실적 수치는 앱 실사용 로그 기준이며 매일 새벽 자동 갱신됩니다(마지막 갱신 <span id="stats-at">2026-09-26</span>).
     파트너 멤버십은 사업자 인증 후 무료 체험(기능 제한 없음 · 2026년 10월 31일까지 인증 시 6개월, 이후 30일)이며, 이후 연간 멤버십 550,000원(부가세 포함, 한 달 약 4.6만원)을 파트너 포털에서 결제합니다(앱 인앱결제가 아닙니다) — 종료 7일 전·1일 전 앱 알림. 자동갱신 없음. 멤버십이 없으면 과정·세션·투어·소식이 앱에 노출되지 않으며, 만료 후 30일은 유예 기간으로 계속 노출됩니다.
   </div>
   <div class="wrap bizinfo">
@@ -532,6 +543,31 @@ const SB = 'https://gprgkcouugiwrfnbcsjz.supabase.co/rest/v1';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwcmdrY291dWdpd3JmbmJjc2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTUyMTksImV4cCI6MjA4OTkzMTIxOX0.E9EGnluU7JLqizT6X1CnjumoPzmsflSYnyqttklOgLg';
 const H = { apikey: KEY, Authorization: 'Bearer ' + KEY };
 const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// [2026-09-26] 실적 수치 매일 갱신 — landing_stats() 는 크론(04:44 KST)이 만든 **집계 한 행**만 돌려준다.
+//   HTML 안 숫자는 실패 시 대비 값(09-26). 푸터 「매일 갱신」이 사실이 되게 한 것.
+//   8/18 결정(원천 조회 데이터 비공개)은 유지 — 스팟별·시간별 원천은 여전히 내보내지 않는다.
+(async () => {
+  try {
+    const r = await fetch(SB + '/rpc/landing_stats', { method: 'POST', headers: { ...H, 'Content-Type': 'application/json' }, body: '{}' });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!d || !d.installs) return;
+    const get = p => p.split('.').reduce((o, k) => o == null ? o : o[k], d);
+    document.querySelectorAll('[data-k]').forEach(el => {
+      const v = get(el.dataset.k);
+      if (v == null) return;
+      el.textContent = typeof v === 'number' ? (el.hasAttribute('data-pct') ? v.toFixed(1) : v.toLocaleString('ko-KR')) : v;
+    });
+    (d.view7_kr.regions || []).forEach(g => {
+      const el = document.querySelector(`[data-region="${g.region}"]`);
+      if (el) el.textContent = `${g.users.toLocaleString('ko-KR')}명 · ${g.views.toLocaleString('ko-KR')}회`;
+    });
+    const sh = d.activity90.shares || {};
+    if (sh.snorkel != null && sh.freedive != null) document.getElementById('sf-sum').textContent = Math.round(sh.snorkel + sh.freedive);
+    if (d.computed_at) document.getElementById('stats-at').textContent = new Date(d.computed_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+  } catch (e) { /* 실패하면 HTML 대비 값 그대로 */ }
+})();
 
 // 앱 조회 데이터는 공개 페이지에서 다루지 않는다 (2026-08-18).
 // 지역별 조회수 로더(load/renderStats)를 제거했다 — 경쟁사가 통째로 받아가고,
