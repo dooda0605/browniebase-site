@@ -284,6 +284,7 @@
         <div class="muted" style="margin-top:4px" id="credit-note">펀다이빙 · 강습 · 체험 · 투어를 한곳에서 올립니다. 작성할 때 <b>날짜를 정해서 모집</b>할지, 오픈워터·Level 1처럼 <b>상시 접수</b>할지 고릅니다.</div>
         <div class="muted" id="free-note" style="margin-top:4px;color:#2bb5a0"></div>
         <div class="muted" style="margin-top:4px">발행한 글의 내용 수정은 <b>앱</b>에서 합니다 — 이 포털에는 수정 폼이 없습니다. 임시저장 글은 삭제하고 다시 작성해 주세요. 취소·환불 기준은 <b>바다퐁 표준</b>이 모든 일정·투어에 자동으로 붙습니다(아래 작성 폼 참고).</div>
+        <div class="muted" style="margin-top:4px">📞 <b>전화·카톡·현장으로 받은 예약</b>은 회차 옆 <b>「외부 예약 ＋」</b>를 눌러 주세요. 앱의 남은자리가 그만큼 줄어 초과 예약을 막습니다.</div>
         <div id="meetup-list" style="margin-top:10px"><span class="muted">불러오는 중…</span></div>
         <div id="course-list"></div>
       </div>
@@ -1515,7 +1516,7 @@ async function loadMeetups() {
 
   const ids = rows.map(r => r.id);
   const { data: slots } = await sb.from('meetup_slots_public')
-    .select('id,meetup_id,starts_at,capacity,seats_left').in('meetup_id', ids);
+    .select('id,meetup_id,starts_at,capacity,seats_left,external_seats').in('meetup_id', ids);
   const slotsBy = {};
   (slots || []).forEach(s => (slotsBy[s.meetup_id] = slotsBy[s.meetup_id] || []).push(s));
 
@@ -1543,7 +1544,13 @@ async function loadMeetups() {
         (r.state === 'published' && ['joined','accepted'].includes(m.state)
           ? ` <a href="#" onclick="releaseMember('${room.id}','${m.auth_user_id}');return false" title="연락이 안 되면 좌석을 비웁니다">좌석 해제</a>` : '') +
         `</span>`; }).join(' ');
-      return `${fmtDt(s.starts_at)}${r.meetup_type === 'tour' && r.ends_at ? ' ~ ' + fmtDate(r.ends_at) : ''} · 잔여 ${s.seats_left}/${s.capacity}` +
+      // [2026-09-26] 외부 예약 차감 — 전화·카톡·다른 플랫폼 예약을 여기서 빼야 앱 「남은자리」가 실제와 맞는다
+      const ext = r.state === 'published'
+        ? ` · <span title="전화·카톡·현장 등 앱 밖에서 받은 예약">외부 예약 ${s.external_seats || 0}석</span>
+           <a href="#" onclick="extSeat('${s.id}',-1);return false" title="외부 예약 1석 빼기">－</a>
+           <a href="#" onclick="extSeat('${s.id}',1);return false" title="외부 예약 1석 추가 — 앱 남은자리가 1 줄어요">＋</a>`
+        : (s.external_seats ? ` · 외부 예약 ${s.external_seats}석` : '');
+      return `${fmtDt(s.starts_at)}${r.meetup_type === 'tour' && r.ends_at ? ' ~ ' + fmtDate(r.ends_at) : ''} · 잔여 ${s.seats_left}/${s.capacity}${ext}` +
         (who ? '<div style="margin:3px 0 0 8px;display:flex;gap:4px;flex-wrap:wrap">' + who + '</div>' : '');
     }).join('<br/>');
     return `<div class="meetup-item">
@@ -1600,6 +1607,14 @@ window.releaseMember = async (room, user) => {
   if (!confirm('이 참가자의 좌석을 비울까요? 본인에게 알림이 가고, 다시 신청할 수 있습니다.')) return;
   const { data, error } = await sb.rpc('release_meetup_member', { p_room: room, p_user: user, p_next_state: 'left' });
   if (error || !data || !data.ok) { alert('해제 실패: ' + ((data && data.reason) || (error && error.message))); return; }
+  loadMeetups();
+};
+// 외부 예약 차감 — seats_taken 에 더해져 앱·검색·샵 페이지 남은자리가 같이 줄어든다(slot_external_seats)
+const EXT_REASON = { slot_full:'남은 자리가 없습니다.', nothing_to_release:'뺄 외부 예약이 없습니다.',
+  not_published:'모집 중인 일정만 바꿀 수 있습니다.', forbidden:'이 일정을 바꿀 권한이 없습니다.' };
+window.extSeat = async (slot, d) => {
+  const { data, error } = await sb.rpc('slot_external_seats', { p_slot: slot, p_delta: d });
+  if (error || !data || !data.ok) { alert(EXT_REASON[data && data.reason] || '변경 실패: ' + ((data && data.reason) || (error && error.message))); return; }
   loadMeetups();
 };
 window.closeNow = async id => {
