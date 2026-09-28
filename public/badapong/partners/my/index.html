@@ -155,6 +155,15 @@
   /* [2026-09-28] 안내 목록(해외 인증 안내 · 자료로 채우기 안내) */
   .af-ul { margin:8px 0 0 18px; font-size:.84rem; color:var(--body); }
   .af-ul li { margin:4px 0; }
+  /* [2026-09-28] 동의 체크 — .chips 알약 모양은 긴 문장에 안 맞는다 */
+  .consent label { display:flex; gap:8px; align-items:flex-start; font-weight:500; color:var(--body); margin:8px 0 0; font-size:.86rem; }
+  .consent input { width:auto; margin-top:4px; accent-color:var(--teal); flex:none; }
+  details p { margin-top:8px; }
+  .af-row { border-top:1px solid var(--line2); padding:10px 2px; display:grid; grid-template-columns:24px 1fr; gap:8px; }
+  .af-row input[type=checkbox] { width:auto; margin-top:3px; accent-color:var(--teal); }
+  .af-row .cmp { font-size:.85rem; color:var(--body); word-break:break-word; white-space:pre-wrap; }
+  .af-row .q { font-size:.78rem; color:var(--sub); margin-top:3px; word-break:break-word; }
+  .af-warn { color:var(--warn); font-size:.78rem; font-weight:700; }
 </style>
 </head>
 <body>
@@ -615,6 +624,81 @@
 
     <!-- ── 탭 3. 샵 정보 ─────────────────────────── -->
     <div id="tab-profile">
+      <!-- [2026-09-28] 자료로 채우기 — FEATURE_AUTOFILL 이 켜질 때만. 안내문 = underwater_visibility/docs/partner_autofill_guide.md 확정안.
+           서버: edge partner-autofill(초안만 돌려준다 — 프로필에 쓰지 않는다) · 20260928_partner_autofill.sql.
+           초안은 폼 칸에 채우기만 한다. 공개는 사장님이 아래 기존 [저장](과정은 「상품」 탭 [저장 · 게시])을 눌러야 된다. -->
+      <div class="card hidden" id="card-autofill">
+        <h2 style="margin-top:0">✋ 자료만 올려 주세요, 자동으로 채워 드려요</h2>
+        <div class="muted" style="font-size:.88rem">칸이 많아서 번거로우시죠?
+          <b>가격표·안내문 사진, 화면 캡처, 소개글</b>만 올려 주시면 샵 정보 칸이 <b>자동으로 채워져요.</b>
+          채워진 내용을 보시고 <b>[저장]을 누르셔야</b> 앱에 공개됩니다.<br/>
+          비용 <b>무료</b> · 올리면 보통 바로 채워져요. 늦어도 <b>3영업일 안에</b> 채워 드려요.</div>
+        <details>
+          <summary>⚠ 네이버·인스타그램은 주소만으로 가져올 수 없어요</summary>
+          <p class="muted">네이버와 인스타그램은 <b>자기 약관으로 자동 수집(크롤링)을 금지</b>하고 있어요. 그래서 바다퐁도 네이버 플레이스·블로그나 인스타그램 링크만 받아서 내용을 자동으로 가져올 수 <b>없어요.</b> 대신 아래처럼 <b>캡처하거나 글을 복사해서</b> 올려 주시면 똑같이 자동으로 채워져요.</p>
+          <ul class="af-ul">
+            <li><b>네이버 플레이스</b> — 「정보」 화면의 <b>소개글을 복사</b>해서 붙여넣기 · 가격(메뉴) 화면은 <b>캡처</b></li>
+            <li><b>인스타그램</b> — 프로필 소개를 <b>복사</b>해서 붙여넣기 · 하이라이트 가격표·교육 안내는 <b>캡처</b> · 샵 사진은 <b>휴대폰 앨범 원본</b></li>
+            <li><b>카카오톡 채널</b> — 채널 소개·공지 글을 <b>복사</b>해서 붙여넣기</li>
+            <li><b>내 홈페이지</b> — <b>주소</b>만 넣으면 첫 화면 글을 읽어 채워요(내 도메인 홈페이지만. 네이버 블로그·인스타 주소는 안 돼요)</li>
+            <li><b>브로슈어 PDF</b> — 쪽마다 <b>캡처</b>해서 올리기</li>
+          </ul>
+          <p class="muted">링크는 샵 페이지에 「네이버에서 보기」·「인스타그램」 버튼으로 걸어 드려요(링크 칸에 넣어 주세요).</p>
+        </details>
+        <details>
+          <summary>이런 자료가 가장 정확하게 채워져요</summary>
+          <ul class="af-ul">
+            <li><b>가격표·안내문 사진</b> ⭐ 가장 정확 — 정면에서 똑바로 · <b>한 장에 표 하나</b> · 빛 반사·그림자·흔들림 없이 · 긴 쪽 1600px 이상(휴대폰 기본 카메라면 충분) · 한 장 5MB 이하<br/>→ 과정(이름·가격·기간·포함 사항) · 대여 품목·가격 · 장비 · 예약 필요 여부 · 슈트 사이즈(적혀 있으면)</li>
+            <li><b>화면 캡처</b> (네이버·인스타·카카오 채널) — 글자가 잘리지 않게 · 한 화면에 한 가지 내용 · 여러 장이면 순서대로<br/>→ 샵 소개 · 과정 · 대여 · 시설·서비스</li>
+            <li><b>소개글 복사본</b> — 글을 그대로 복사해 붙여넣기(가공하지 않으셔도 돼요)<br/>→ 샵 소개 · 활동 종류 · 언어 · 시설 · 강사진</li>
+            <li><b>홈페이지 주소</b> — 교육·가격이 있는 메뉴 이름도 같이 적어 주시면 더 정확해요<br/>→ 홈페이지 링크 · 샵 소개 · 과정 · 강사진</li>
+            <li><b>샵 사진</b> — 가로 사진, 가로 1200px 이상 <b>원본</b>(캡처·워터마크 없이) · 최대 6장, 첫 장이 대표 · 샵 외관·교육 장면·장비·보트 · 얼굴이 보이는 사람은 <b>본인 동의한 사진만</b><br/>→ 홍보 사진</li>
+            <li><b>강사 자격증 사진</b> (선택) — 카드 앞면, 이름·단체·등급이 읽히게 · 강사 본인에게 먼저 알려 주세요<br/>→ 강사진 · 보유 자격증</li>
+          </ul>
+        </details>
+        <details>
+          <summary>글로 직접 적으신다면 이 모양이 가장 빨라요</summary>
+          <ul class="af-ul">
+            <li><b>과정</b> (한 줄에 하나): 과정 이름 · 가격(원) · 기간 · 교육 단체·레벨 · 포함 사항 · 최소 인원<br/>예) 오픈워터 · 550,000원 · 3일 · PADI · 교재·장비·보트 포함 · 2명부터</li>
+            <li><b>대여</b> (한 줄에 하나): 품목 · 가격(원) — 예) 풀세트 · 30,000원 / 슈트만 · 10,000원</li>
+            <li><b>슈트</b>: 두께(2·3·5·7mm) + 사이즈(XS~3XL) — 예) 3·5mm / S~2XL</li>
+            <li><b>예약</b>: 「예약 필수」 또는 「당일 현장 가능」</li>
+            <li><b>강사</b> (한 줄에 한 명): 이름 · 단체 · 레벨 · 경력(년) · 인스타 @아이디</li>
+            <li><b>언어 · 시설</b>(샤워·탈의실·주차) · <b>서비스·안전</b>(장비대여·픽업·보트·응급 산소·AED …)</li>
+          </ul>
+        </details>
+        <details>
+          <summary>자동으로 채울 수 없는 것 (직접 입력해 주세요)</summary>
+          <ul class="af-ul">
+            <li><b>사업자 인증</b>: 사업자등록번호 · 대표자명 · 개업일자 · 상호 → 「사업자 · 자격증 인증」 탭</li>
+            <li><b>입금 계좌</b> (숫자 하나만 틀려도 입금 사고가 나요)</li>
+            <li><b>전화번호</b>와 공개 여부</li>
+            <li>상품을 올릴 때 <b>레저사업 등록 확인 체크</b></li>
+            <li>휴무·시즌 오픈 같은 <b>날짜 공지</b></li>
+          </ul>
+        </details>
+
+        <label>소개글 · 안내문 붙여넣기</label>
+        <textarea id="af-text" maxlength="8000" rows="5" placeholder="네이버 플레이스 소개 · 인스타 프로필 · 카카오 채널 공지 글을 그대로 복사해 붙여 넣으세요"></textarea>
+        <label>가격표 · 안내문 사진 · 화면 캡처 <span class="muted" style="font-weight:400">— 최대 6장</span></label>
+        <div id="af-photos" class="photos"></div>
+        <input id="af-file" type="file" accept="image/*" multiple style="margin-top:8px" />
+        <div class="muted" id="af-photo-msg" style="margin-top:4px"></div>
+        <label>내 홈페이지 주소 <span class="muted" style="font-weight:400">— 내 도메인만 · 네이버 블로그 · 인스타 주소는 안 돼요</span></label>
+        <input id="af-url" maxlength="300" inputmode="url" placeholder="https://" />
+        <div class="consent hidden" id="af-own-box"><label><input type="checkbox" id="af-own" /> 우리 샵이 운영하는 홈페이지가 맞습니다</label></div>
+
+        <div style="margin-top:14px;font-weight:800;font-size:.9rem">동의 (올리기 전에 체크)</div>
+        <div class="consent">
+          <label><input type="checkbox" id="af-c1" /> <span>올린 자료는 <b>샵 페이지를 채우는 데만</b> 쓰고, 공개 전 사장님 확인을 받습니다.</span></label>
+          <label><input type="checkbox" id="af-c2" /> <span>자료를 자동으로 정리할 때 <b>AI 도구를 쓰며, 이때 자료가 해외(미국) 서버로 전송</b>됩니다.</span></label>
+        </div>
+        <div class="muted" style="margin-top:6px">사진 속 사람과 강사 정보는 본인이 동의한 것만 올려 주세요. 올린 자료를 지워 달라고 하시면 바로 지워 드려요 (support@browniebase.com). <a href="/privacy-badapong.html" target="_blank" rel="noopener">개인정보처리방침</a></div>
+        <div class="msg" id="af-msg"></div>
+        <button class="btn" id="btn-af" style="margin-top:12px">자동으로 채우기</button>
+        <div id="af-result"></div>
+      </div>
+
       <!-- 전화 공개 — 번호는 partner_contacts(비공개 테이블)에만 저장. 크롤한 원장 번호는 절대 안 쓴다.
            켜려면 사업자 인증 배지가 있어야 하고, 배지가 내려가면 서버가 자동으로 끈다. -->
       <div class="card" id="card-contact">
@@ -809,9 +893,13 @@ const msg = (id, text, ok) => { const el=$(id); el.textContent=text; el.classNam
 //   FEATURE_OPS_CHAT — 「운영자 문의」 탭. 20260928_shop_admin_phase1.sql(open_partner_thread) + 방침 「상담 대화 3년」 게시 뒤.
 //   FEATURE_OVERSEAS — STEP 1 「사업장 국가」·해외 서류 폼 + 샵 등록 주소 안내·「1인 강사 포함」.
 //                      20260928_partner_overseas_business.sql + 방침(해외 서류) · 약관 4-3(해외 파트너·1인 강사) 게시 뒤.
+//   FEATURE_AUTOFILL — 샵 정보 탭 「자료로 채우기」. 20260928_partner_autofill.sql + edge partner-autofill 배포
+//                      + 방침(AI 정리·미국 전송) 게시 뒤. 동의 문구를 바꾸면 AF_CONSENT_VERSION 과 edge 값을 같이 올린다.
 const FEATURE_OPS_CHAT = false;
 const FEATURE_OVERSEAS = false;
+const FEATURE_AUTOFILL = false;
 if (FEATURE_OPS_CHAT) $('tab-btn-opschat').classList.remove('hidden');
+if (FEATURE_AUTOFILL) $('card-autofill').classList.remove('hidden');
 if (FEATURE_OVERSEAS) {
   $('biz-country-box').classList.remove('hidden');
   $('rg-addr-hint').classList.remove('hidden');
@@ -2364,6 +2452,298 @@ $('btn-verify-ov').onclick = async () => {
   await loadOverseas();
   refreshAll();
 };
+
+// ══════════════════════════════════════════════════════════════════
+// [2026-09-28] 자료로 채우기 — FEATURE_AUTOFILL
+//   edge partner-autofill: POST {text, images, url, consent:{ai_transfer, own_site, version}}
+//     → 200 {ok, run_id, draft{…}, dropped, filled, usage, notice} | 4xx/5xx {ok:false, code, message, scope?}
+//   🔴 초안은 폼 칸에 **채우기만** 한다. 저장·공개는 사장님이 기존 [저장](과정은 상품 폼 [저장 · 게시])을 누를 때만.
+//   🔴 certs·instructors·courses 행을 상태에 넣을 때 quote·source·photo·check 키를 뺀다 — 안 빼면 [저장] 때
+//     partner_profiles 에 근거 인용문이 그대로 실려 공개 샵 페이지로 나간다.
+//   🔴 초안 값·인용문은 AI 가 만든 글이다 — textContent 로만 그린다(innerHTML 금지).
+//   기본 체크는 지금 비어 있는 칸만 — 사장님이 이미 적은 값을 덮어쓰지 않게.
+//   사진은 브라우저에서 긴 변 1600px JPEG(q0.85)로 줄여 partner-evidence/{uid}/material-… 에 올린다(서버 한도 5MB·JPG/PNG/WEBP).
+// ══════════════════════════════════════════════════════════════════
+const AF_CONSENT_VERSION = '2026-09-28';   // edge CONSENT_VERSION 과 같아야 한다(다르면 consent_required 로 거절)
+// 오류 문구 — supabase/functions/partner-autofill/index.ts 의 MSG 그대로(서버 문구와 한 벌로 유지).
+const AF_MSG = {
+  bad_request: '요청 형식이 올바르지 않아요.',
+  unauthorized: '로그인이 필요해요.',
+  no_account: '파트너 계정에서만 쓸 수 있어요.',
+  consent_required: '자료를 AI로 정리하려면 동의가 필요해요.',
+  empty_input: '글을 30자 이상 붙여 넣거나, 사진·홈페이지 주소를 넣어 주세요.',
+  text_too_long: '글은 8,000자까지 넣을 수 있어요. 나눠서 두 번 해 주세요.',
+  too_many_images: '사진은 한 번에 6장까지예요.',
+  bad_image_path: '사진을 다시 올려 주세요.',
+  image_not_found: '올린 사진을 찾지 못했어요. 다시 올려 주세요.',
+  image_too_large: '사진은 한 장 5MB 이하만 읽을 수 있어요.',
+  image_format: 'JPG·PNG·WEBP 사진만 읽을 수 있어요. 아이폰 HEIC 사진은 화면 캡처로 올려 주세요.',
+  url_invalid: '홈페이지 주소를 확인해 주세요(https://로 시작하는 내 사이트 주소).',
+  url_blocked: '네이버·인스타그램·링크트리·카카오·유튜브 주소는 자동으로 읽을 수 없어요. 글을 복사해 붙여 넣거나 화면을 캡처해 올려 주세요.',
+  url_private: '이 주소는 읽을 수 없어요. 글을 복사해 붙여 넣어 주세요.',
+  url_unsupported: '지금은 홈페이지를 읽을 수 없어요. 글을 복사해 붙여 넣어 주세요.',
+  url_dns_failed: '홈페이지 주소를 찾지 못했어요. 주소를 확인해 주세요.',
+  url_robots_disallow: '이 사이트는 자동 읽기를 막아 두었어요. 글을 복사해 붙여 넣어 주세요.',
+  url_robots_unreachable: '사이트 응답이 없어 읽지 못했어요. 글을 복사해 붙여 넣어 주세요.',
+  url_fetch_failed: '홈페이지를 열지 못했어요. 글을 복사해 붙여 넣어 주세요.',
+  url_not_html: '홈페이지 첫 화면이 아니에요. 글을 복사해 붙여 넣어 주세요.',
+  url_too_little_text: '홈페이지에서 글을 거의 못 읽었어요(그림·스크립트로 만든 사이트). 「교육 안내」 글을 복사해 붙여 넣어 주세요.',
+  rate_limited_day: '오늘은 5번까지 쓸 수 있어요. 내일 다시 해 주세요.',
+  rate_limited_month: '이번 달 30번을 다 쓰셨어요. support@browniebase.com 으로 자료를 보내 주시면 담당자가 채워 드려요.',
+  rate_limited_global: '지금 요청이 많아 잠시 쉬고 있어요. 내일 다시 해 주세요.',
+  busy: '앞 요청을 정리하는 중이에요. 1~2분 뒤 다시 해 주세요.',
+  not_shop_material: '샵 정보로 보이지 않아요. 가격표·교육 안내·샵 소개 자료를 올려 주세요.',
+  ai_failed: '자동 정리에 실패했어요. 올려 주신 자료로 3영업일 안에 담당자가 채워서 메일로 알려 드릴게요.',
+};
+// 서버에 닿지도 못한 경우(미배포·CORS·네트워크) — 행이 안 생겨 서버 쪽에선 아무도 모른다(마이그레이션 ④ 사각). 여기서 support 로 돌린다.
+const AF_NET_FAIL = '자동 정리 서버에 연결하지 못했어요. 잠시 뒤 다시 해 보시거나, 자료를 support@browniebase.com 으로 보내 주시면 담당자가 채워 드려요.';
+const AF_ROW_META = ['quote', 'source', 'photo', 'check'];
+const afStrip = r => Object.fromEntries(Object.entries(r || {})
+  .filter(([k, v]) => !AF_ROW_META.includes(k) && v !== null && v !== undefined && v !== '')
+  .map(([k, v]) => [k, String(v)]));   // 포털 행 편집기(renderRows)는 문자열만 다룬다
+const afNorm = v => String(v || '').replace(/\s+/g, '').toLowerCase();
+const afEmpty = v => v == null || v === '' || (Array.isArray(v) && !v.length) || (typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length);
+const afLab = (map, arr) => (arr || []).map(k => map[k] || k).join(', ');
+const afSetChecks = (id, vals) => document.querySelectorAll('#' + id + ' input[type=checkbox]')
+  .forEach(i => { if ((vals || []).includes(i.value)) i.checked = true; });   // 합치기만 — 이미 켠 것은 안 끈다
+const AF_RENTAL = { full: '풀세트', partial: '부분', none: '없음' };
+const AF_FAC = { shower: { cold: '냉수 샤워', hot: '온수 샤워' }, changing: { shared: '공용 탈의실', gendered: '남녀 분리 탈의실' },
+                 parking: { paid: '유료 주차', free: '무료 주차' } };
+const AF_FAC_ID = [['shower', 'p-shower'], ['changing', 'p-changing'], ['parking', 'p-parking']];
+const AF_SNS = { instagram: 'Instagram', youtube: 'YouTube', blog: '블로그', kakao: '카카오 채널', website: '홈페이지' };
+const AF_AMEN = Object.assign({}, AMEN_SERVICE, AMEN_SAFETY);
+// 초안 칸 → 포털 입력칸. key 는 edge DRAFT_SCHEMA 와 같다(sns.* 는 draft.sns 안).
+const AF_FIELDS = [
+  { key: 'intro', label: '📣 샵 안내', cur: () => $('p-intro').value.trim(), fmt: v => String(v),
+    apply: v => { $('p-intro').value = String(v).slice(0, 600); } },
+  { key: 'activities', label: '활동', cur: () => checked('p-acts'), fmt: v => afLab(ACTS, v), apply: v => afSetChecks('p-acts', v) },
+  { key: 'rental_scope', label: '대여 범위', cur: () => $('p-rental').value, fmt: v => AF_RENTAL[v] || v,
+    apply: v => { $('p-rental').value = v; } },
+  { key: 'reservation_required', label: '사전 예약', cur: () => $('p-resv').value,
+    fmt: v => (v === true || v === 'true') ? '예약 필요' : '당일 · 현장 예약 가능', apply: v => { $('p-resv').value = String(v); } },
+  { key: 'suit_sizes', label: '슈트 사이즈', cur: () => checked('p-sizes'), fmt: v => v.join(', '), apply: v => afSetChecks('p-sizes', v) },
+  { key: 'teach_levels', label: '강습 가능 범위', cur: () => teach.slice(), fmt: v => afLab(TEACH, v),
+    apply: v => { v.forEach(k => { if (!teach.includes(k)) teach.push(k); }); renderTeach(); } },
+  { key: 'facilities', label: '샤워 · 탈의실 · 주차',
+    cur: () => Object.fromEntries(AF_FAC_ID.filter(([, id]) => $(id).value).map(([k, id]) => [k, $(id).value])),
+    fmt: v => Object.entries(v).map(([k, x]) => (AF_FAC[k] || {})[x] || x).join(', '),
+    apply: v => { for (const [k, id] of AF_FAC_ID) if (v[k]) $(id).value = v[k]; } },
+  { key: 'languages', label: '사용 언어', cur: () => $('p-langs').value.trim(), fmt: v => Array.isArray(v) ? v.join(', ') : String(v),
+    apply: v => { const now = $('p-langs').value.split(',').map(s => s.trim()).filter(Boolean);
+                  v.forEach(x => { if (!now.includes(x)) now.push(x); }); $('p-langs').value = now.join(', '); } },
+  { key: 'equipment', label: '슈트 두께 · 장비 · 보드',
+    cur: () => Object.fromEntries([['suit_mm', 'p-mm'], ['scuba_gear', 'p-gear'], ['surf_boards', 'p-boards']]
+                 .map(([k, id]) => [k, checked(id)]).filter(([, a]) => a.length)),
+    fmt: v => [v.suit_mm && v.suit_mm.map(m => m + 'mm').join('·'), v.scuba_gear && afLab(GEAR, v.scuba_gear),
+               v.surf_boards && afLab(BOARDS, v.surf_boards)].filter(Boolean).join(' / '),
+    apply: v => { afSetChecks('p-mm', v.suit_mm); afSetChecks('p-gear', v.scuba_gear); afSetChecks('p-boards', v.surf_boards); } },
+  { key: 'price_note', label: '대여 가격 안내', cur: () => $('p-price-note').value.trim(), fmt: v => String(v),
+    apply: v => { $('p-price-note').value = v; } },
+  { key: 'amenities', label: '서비스 · 안전', cur: () => checked('p-amen-service').concat(checked('p-amen-safety')),
+    fmt: v => afLab(AF_AMEN, v), apply: v => { afSetChecks('p-amen-service', v); afSetChecks('p-amen-safety', v); } },
+  ...Object.keys(AF_SNS).map(k => ({ key: 'sns.' + k, label: 'SNS · ' + AF_SNS[k], cur: () => $('p-sns-' + k).value.trim(),
+    fmt: v => String(v), apply: v => { $('p-sns-' + k).value = v; } })),
+];
+const afGet = (d, key) => key.startsWith('sns.') ? (d.sns || {})[key.slice(4)] : d[key];
+const afSrc = f => f.source === 'image' ? '사진 ' + (f.photo || '') : f.source === 'website' ? '홈페이지' : '붙여넣은 글';
+
+let afPhotos = [];   // [{path, thumb}] — thumb 는 브라우저 안 objectURL(서버 URL 아님)
+let afItems = [];    // 비교 목록 [{cb, apply}]
+function renderAfPhotos() {
+  const box = $('af-photos'); box.textContent = '';
+  afPhotos.forEach((p, i) => {
+    const fig = document.createElement('figure');
+    const img = document.createElement('img'); img.src = p.thumb; img.alt = '';
+    const x = document.createElement('button'); x.type = 'button'; x.textContent = '×';
+    x.onclick = () => { URL.revokeObjectURL(p.thumb); afPhotos.splice(i, 1); renderAfPhotos(); };
+    fig.appendChild(img); fig.appendChild(x); box.appendChild(fig);
+  });
+}
+function afClearPhotos() { afPhotos.forEach(p => URL.revokeObjectURL(p.thumb)); afPhotos = []; renderAfPhotos(); }
+// 긴 변 1600px JPEG q0.85 — 가격표 글자를 읽을 만큼 크고, 서버 한도(5MB)·전송량 안에 들게. HEIC 는 대부분 브라우저가 못 연다(→ 캡처 안내).
+async function afToJpeg(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('decode')); i.src = url; });
+    const k = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * k)), h = Math.max(1, Math.round(img.naturalHeight * k));
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
+    const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.85));
+    if (!blob) throw new Error('encode');
+    return blob;
+  } finally { URL.revokeObjectURL(url); }
+}
+$('af-file').onchange = async e => {
+  const files = [...(e.target.files || [])];
+  e.target.value = '';
+  if (!files.length) return;
+  const room = 6 - afPhotos.length;
+  if (room <= 0) { $('af-photo-msg').textContent = AF_MSG.too_many_images; return; }
+  $('af-photo-msg').textContent = '올리는 중…';
+  let err = files.length > room ? AF_MSG.too_many_images : '';
+  for (const file of files.slice(0, room)) {
+    let blob;
+    try { blob = await afToJpeg(file); } catch (_) { err = AF_MSG.image_format; continue; }
+    // 경로 규칙: {auth.uid}/material-[A-Za-z0-9._-]{1,120} (edge validMaterialPath · partner_autofill_begin 이 둘 다 검사)
+    const path = `${uid}/material-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+    const up = await sb.storage.from('partner-evidence').upload(path, blob, { contentType: 'image/jpeg' });
+    if (up.error) { err = '업로드 실패: ' + up.error.message; continue; }
+    afPhotos.push({ path, thumb: URL.createObjectURL(blob) });
+  }
+  renderAfPhotos();
+  $('af-photo-msg').textContent = err;
+};
+$('af-url').oninput = () => $('af-own-box').classList.toggle('hidden', !$('af-url').value.trim());
+
+$('btn-af').onclick = async () => {
+  const text = $('af-text').value.trim(), url = $('af-url').value.trim();
+  if (!$('af-c1').checked || !$('af-c2').checked) { msg('af-msg', '올리기 전에 동의 두 가지에 체크해 주세요.', false); return; }
+  if (url && !$('af-own').checked) { msg('af-msg', '홈페이지 주소를 넣으셨다면 「우리 샵이 운영하는 홈페이지가 맞습니다」에 체크해 주세요.', false); return; }
+  if (text.length < 30 && !afPhotos.length && !url) { msg('af-msg', AF_MSG.empty_input, false); return; }
+  const btn = $('btn-af'); btn.disabled = true;
+  const t0 = Date.now();
+  const tick = () => msg('af-msg', '자료를 읽고 있어요… 보통 20~40초 걸려요 (' + Math.round((Date.now() - t0) / 1000) + '초). 이 화면을 닫지 마세요.', true);
+  tick();
+  const timer = setInterval(tick, 1000);
+  $('af-result').textContent = '';
+  let res = null;
+  try {
+    const body = { text, images: afPhotos.map(p => p.path), consent: { ai_transfer: true, version: AF_CONSENT_VERSION } };
+    if (url) { body.url = url; body.consent.own_site = true; }
+    const { data, error } = await sb.functions.invoke('partner-autofill', { body });
+    res = data;
+    // non-2xx 면 supabase-js 가 data 를 비운다 — 우리 코드(code·scope)는 응답 본문에 있다(toss-confirm 복귀와 같은 처리).
+    if (!res && error && error.context && typeof error.context.json === 'function') {
+      try { res = await error.context.json(); } catch (_) {}
+    }
+  } catch (_) { res = null; }
+  clearInterval(timer);
+  btn.disabled = false;
+  if (!res || !res.ok) {
+    const code = res && res.code;
+    // 서버가 AI 까지 돌린 경우(not_shop_material)엔 자료 사진을 지웠다 — 같은 경로를 다시 보내면 image_not_found.
+    if (code === 'not_shop_material') afClearPhotos();
+    msg('af-msg', !res ? AF_NET_FAIL
+      : code === 'rate_limited' ? (AF_MSG['rate_limited_' + res.scope] || AF_MSG.rate_limited_day)
+      : (AF_MSG[code] || AF_MSG.ai_failed), false);
+    return;
+  }
+  afClearPhotos();   // 초안을 만들면 서버가 이번 사진을 바로 지운다
+  $('af-msg').className = 'msg';
+  renderAfDraft(res);
+};
+
+function afEl(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function afAddRow(box, it) {
+  const row = afEl('div', 'af-row');
+  const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!it.def;
+  const body = afEl('div');
+  const head = afEl('div'); head.appendChild(afEl('b', '', it.label));
+  if (it.fld && it.fld.check) { head.appendChild(document.createTextNode(' ')); head.appendChild(afEl('span', 'af-warn', '⚠ 사진에서 읽은 값 — 꼭 확인')); }
+  body.appendChild(head);
+  if (it.now) body.appendChild(afEl('div', 'cmp', '지금: ' + it.now));
+  body.appendChild(afEl('div', 'cmp', (it.now ? '→ 초안: ' : '') + it.next));
+  if (it.fld && it.fld.quote) body.appendChild(afEl('div', 'q', '근거(' + afSrc(it.fld) + '): 「' + it.fld.quote + '」'));
+  row.appendChild(cb); row.appendChild(body); box.appendChild(row);
+  afItems.push({ cb, apply: it.apply });
+}
+function renderAfDraft(res) {
+  const d = res.draft || {}, box = $('af-result');
+  box.textContent = '';
+  afItems = [];
+  box.appendChild(afEl('div', 'note', res.notice || '아직 저장되지 않았어요 — 칸마다 확인하고 아래 [저장]을 눌러야 앱에 나갑니다.'));
+  const meta = [];
+  const u = res.usage;
+  if (u) meta.push('오늘 ' + u.used_day + '/' + u.limit_day + '회 · 이번 달 ' + u.used_month + '/' + u.limit_month + '회 사용');
+  if (Array.isArray(res.dropped) && res.dropped.length) meta.push('자료에서 근거를 찾지 못해 뺀 항목 ' + res.dropped.length + '개');
+  meta.push('체크한 칸만 폼에 들어갑니다 — 비어 있던 칸만 미리 체크했어요.');
+  box.appendChild(afEl('div', 'muted', meta.join(' · ')));
+  const list = afEl('div'); list.style.marginTop = '8px'; box.appendChild(list);
+
+  for (const f of AF_FIELDS) {
+    const fld = afGet(d, f.key);
+    if (!fld || afEmpty(fld.value)) continue;
+    const cur = f.cur(), empty = afEmpty(cur);
+    afAddRow(list, { label: f.label, now: empty ? '(비어 있음)' : f.fmt(cur), next: f.fmt(fld.value), fld, def: empty,
+                     apply: () => f.apply(fld.value) });
+  }
+  (d.certs || []).forEach(r => {
+    const c = afStrip(r);   // 🔴 quote·source·photo·check 제거
+    const dup = certs.some(x => afNorm(x.org) === afNorm(c.org) && afNorm(x.level) === afNorm(c.level));
+    afAddRow(list, { label: '보유 자격증 추가', now: dup ? '같은 자격증이 이미 있음' : '',
+                     next: [c.org, c.level, c.no].filter(Boolean).join(' · '), fld: r, def: !dup,
+                     apply: () => { certs.push(Object.assign({}, c)); renderCerts(); } });
+  });
+  (d.instructors || []).forEach(r => {
+    const c = afStrip(r);   // 🔴 quote·source·photo·check 제거
+    const dup = instructors.some(x => afNorm(x.name) === afNorm(c.name));
+    afAddRow(list, { label: '강사진 추가', now: dup ? '같은 이름의 강사가 이미 있음' : '',
+                     next: [c.name, c.agency, c.level, c.years ? c.years + '년' : '', c.instagram, c.bio].filter(Boolean).join(' · '),
+                     fld: r, def: !dup, apply: () => { instructors.push(Object.assign({}, c)); renderInstructors(); } });
+  });
+
+  if (afItems.length) {
+    const b = afEl('button', 'btn sec', '체크한 칸을 폼에 채우기'); b.type = 'button'; b.style.marginTop = '10px';
+    b.onclick = () => {
+      const on = afItems.filter(it => it.cb.checked && !it.cb.disabled);
+      if (!on.length) { msg('af-msg', '채울 칸을 체크해 주세요.', false); return; }
+      on.forEach(it => { it.apply(); it.cb.checked = false; it.cb.disabled = true; });   // 같은 행을 두 번 넣지 않게
+      msg('af-msg', on.length + '개 칸을 폼에 채웠어요 — 아래 내용을 확인하고 맨 아래 [저장]을 눌러야 앱에 나갑니다.', true);
+      msg('p-msg', '자료로 채운 내용이 있습니다 — 확인하고 [저장]을 눌러 주세요(저장 전에는 앱에 나가지 않습니다).', true);
+    };
+    box.appendChild(b);
+  }
+
+  const courses = d.courses || [];
+  if (courses.length) {
+    box.appendChild(afEl('div', 'muted', '🎓 과정 초안 ' + courses.length + '개 — 과정은 「상품」 탭 작성 폼에 하나씩 넣어 확인한 뒤 [저장 · 게시]로 올립니다.'));
+    courses.forEach(r => {
+      const c = afStrip(r);   // 🔴 quote·source·photo·check 제거 — 상품 폼에는 값만 넣는다
+      const row = afEl('div', 'af-row'); row.style.gridTemplateColumns = '1fr';
+      const body = afEl('div');
+      const head = afEl('div'); head.appendChild(afEl('b', '', c.name || '(이름 없음)'));
+      if (r.check) { head.appendChild(document.createTextNode(' ')); head.appendChild(afEl('span', 'af-warn', '⚠ 사진에서 읽은 값 — 꼭 확인')); }
+      body.appendChild(head);
+      body.appendChild(afEl('div', 'cmp', [ACT_KO[c.activity] || '', c.agency, c.days ? c.days + '일' : '', c.hours ? c.hours + '시간' : '',
+        c.price ? Number(c.price).toLocaleString() + '원' : '', c.price_note, c.includes].filter(Boolean).join(' · ')));
+      if (r.quote) body.appendChild(afEl('div', 'q', '근거(' + afSrc(r) + '): 「' + r.quote + '」'));
+      const go = afEl('button', 'btn sec sm', '상품 폼에 넣기'); go.type = 'button'; go.style.marginTop = '6px';
+      go.onclick = () => afCourseToComposer(c);
+      body.appendChild(go);
+      row.appendChild(body); box.appendChild(row);
+    });
+  }
+  if (!afItems.length && !courses.length) {
+    box.appendChild(afEl('div', 'muted', '채울 수 있는 칸을 찾지 못했어요. 가격표 사진이나 소개글을 더 올려 주세요.'));
+  }
+}
+// 과정 초안 → 「상품」 탭 작성 폼(상시 접수). 저장은 사장님이 [저장 · 게시] — saveAlwaysCourse 그대로.
+function afCourseToComposer(c) {
+  if (!$('composer').classList.contains('hidden') && $('m-title').value.trim()
+      && !confirm('작성 중인 상품 폼을 비우고 이 과정 초안을 넣을까요?')) return;
+  document.querySelector('.tab[data-tab=meetups]').click();
+  $('btn-cancel-compose').click();   // 폼 비우기 — 다른 작성 내용이 섞이지 않게
+  editingCourse = null;
+  openComposer('always');
+  if (c.activity && [...$('m-activity').options].some(o => o.value === c.activity)) $('m-activity').value = c.activity;
+  labelTouched = false; syncLabel();
+  $('m-title').value = (c.name || '').slice(0, 40);
+  $('m-agency').value = (c.agency || '').slice(0, 30);
+  $('m-days').value = (c.days || '').slice(0, 10);
+  $('m-hours').value = (c.hours || '').slice(0, 10);
+  $('m-level').value = ['beginner', 'intermediate', 'advanced'].includes(c.level) ? c.level : 'any';
+  legacyLevel = null;
+  $('m-includes').value = (c.includes || '').slice(0, 120);
+  $('m-price').value = String(c.price || '').replace(/[^0-9]/g, '');
+  $('m-price-note').value = (c.price_note || '').slice(0, 60);
+  msg('m-msg', '자료로 채운 과정 초안입니다 — 내용을 확인하고 [저장 · 게시]를 눌러야 앱에 나갑니다.', true);
+}
 </script>
 
 <!-- 전자결제(PG) 심사 필수: 결제가 일어나는 페이지 하단에 상호·사업자등록번호·대표자명·주소·유선번호.
