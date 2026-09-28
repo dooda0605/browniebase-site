@@ -91,6 +91,29 @@
   a{color:var(--accent)}
   .empty{padding:28px 14px; color:var(--dim); text-align:center}
   .err{background:#5a1d1d; color:#ffd7d7; padding:8px 12px; font-size:12.5px}
+
+  /* 샵 관리(shop-admin.js, 2026-09-28) — 폰(360px)에서도 쓰므로 줄바꿈 우선 */
+  .sa-nav{position:sticky; top:0; z-index:2; background:var(--bg); display:flex; gap:6px; flex-wrap:wrap;
+          padding:8px 10px; border-bottom:1px solid var(--line)}
+  .sa-bar{display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:8px 10px; border-bottom:1px solid var(--line)}
+  .sa-bar input{flex:1 1 120px; min-width:0}
+  .sa-tabs{display:flex; gap:5px; flex-wrap:wrap; margin-top:8px}
+  .sa-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0}
+  #saList .badge{white-space:nowrap; flex:none}
+  .sa-item{border-top:1px solid var(--line); padding:8px 0}
+  .sa-item:first-of-type{border-top:0}
+  .sa-kv{width:100%; border-collapse:collapse; margin:6px 0; font-size:13px; table-layout:fixed}
+  .sa-kv th{width:34%; text-align:left; color:var(--dim); font-weight:600; padding:3px 6px 3px 0; vertical-align:top}
+  .sa-kv td{padding:3px 0; word-break:break-word; white-space:pre-wrap}
+  .sa-ev .sa-img{display:block; max-width:100%; max-height:70vh; margin-top:6px; border-radius:6px; border:1px solid var(--line)}
+  .sa-ok{background:#123d2a; color:#bff5d6; padding:8px 11px; border-radius:8px; margin-bottom:10px; font-size:13px}
+  .sa-chk{display:flex; gap:6px; align-items:center; font-size:12.5px; color:var(--dim); margin-top:6px}
+  .card textarea{width:100%; flex:none}
+  input:not([type=checkbox]),select{background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:8px;
+    padding:7px 9px; font:inherit; max-width:100%}
+  .resbtns button.danger{border-color:#a33; color:#ffb3b3}
+  .resbtns button.ok{border-color:var(--ok); color:var(--ok)}
+  .resbtns button:disabled{opacity:.45}
 </style>
 </head>
 <body>
@@ -99,10 +122,12 @@
   <h1>🐚 문의함</h1>
   <button class="chip on" id="srcApp">앱</button>
   <button class="chip" id="srcSocial">인스타·스레드 <span id="cSocial">·</span></button>
-  <span style="width:6px"></span>
-  <button class="chip on" id="fUnread">미답변 <span id="cUnread">·</span></button>
-  <button class="chip" id="fAll">전체</button>
-  <button class="chip" id="fArch">숨김 <span id="cArch">·</span></button>
+  <!-- [2026-09-28] 샵 관리(파트너 목록·인증 대기열·샵 채팅·신청) — admin/shop-admin.js. 필터 칩(.appf)은 샵 모드에서 숨긴다 -->
+  <button class="chip" id="srcShops">샵 <span id="cShops">·</span></button>
+  <span class="appf" style="width:6px"></span>
+  <button class="chip on appf" id="fUnread">미답변 <span id="cUnread">·</span></button>
+  <button class="chip appf" id="fAll">전체</button>
+  <button class="chip appf" id="fArch">숨김 <span id="cArch">·</span></button>
   <span class="spacer"></span>
   <button class="chip" id="reload">↻</button>
 </header>
@@ -194,6 +219,7 @@ async function loadThreads() {
     threads = await api('message_threads?select=id,kind,request_id,created_at,last_msg_at,user_unread,operator_unread,archived_at'
                         + '&order=last_msg_at.desc&limit=300');
     if (threads.length) sawAnyRow = true;
+    threads = threads.filter(t => t.kind !== 'partner');   // 샵 채팅(kind='partner')은 「샵」 칩에서 — shop-admin.js
 
     // 스팟 요청 원장 — 스레드에 붙은 것만
     const ids = threads.map(t => t.request_id).filter(Boolean);
@@ -230,7 +256,7 @@ function visible() {
 }
 
 function renderList() {
-  if (source === 'social') return;   // 앱 문의 재로드가 소셜 목록을 덮어쓰지 않게
+  if (source !== 'app') return;   // 앱 문의 재로드가 소셜·샵 목록을 덮어쓰지 않게
   const unread = threads.filter(t => !t.archived_at && (t.operator_unread || 0) > 0).length;
   $('cUnread').textContent = unread;
   $('cArch').textContent = threads.filter(t => t.archived_at).length;
@@ -509,23 +535,30 @@ function setSource(s) {
   document.body.classList.remove('detail-open');
   $('srcApp').classList.toggle('on', s === 'app');
   $('srcSocial').classList.toggle('on', s === 'social');
+  $('srcShops').classList.toggle('on', s === 'shops');
+  document.querySelectorAll('.appf').forEach(el => el.style.display = s === 'shops' ? 'none' : '');
   $('detail').innerHTML = '<div class="empty">왼쪽에서 대화를 선택하세요</div>';
-  s === 'social' ? loadSocial() : renderList();
+  if (s !== 'shops' && window.ShopAdmin) ShopAdmin.leave();
+  if (s === 'shops') {
+    if (window.ShopAdmin) ShopAdmin.enter();
+    else $('list').innerHTML = '<div class="err">shop-admin.js 를 불러오지 못했습니다</div>';
+  } else s === 'social' ? loadSocial() : renderList();
 }
 $('srcApp').onclick    = () => setSource('app');
 $('srcSocial').onclick = () => setSource('social');
+$('srcShops').onclick  = () => setSource('shops');
 
 // ── 필터·초기화 ─────────────────────────────────────────────────────────────
 function setMode(m) {
   mode = m;
   [['unread','fUnread'],['all','fAll'],['archived','fArch']].forEach(([k, id]) =>
     $(id).classList.toggle('on', k === m));
-  source === 'social' ? renderSocialList() : renderList();
+  source === 'social' ? renderSocialList() : source === 'app' ? renderList() : null;
 }
 $('fUnread').onclick = () => setMode('unread');
 $('fAll').onclick    = () => setMode('all');
 $('fArch').onclick   = () => setMode('archived');
-$('reload').onclick  = () => source === 'social' ? syncSocial() : loadThreads();
+$('reload').onclick  = () => source === 'social' ? syncSocial() : source === 'shops' ? ShopAdmin.reload() : loadThreads();
 
 if (!SUPABASE_KEY || !ADMIN_TOKEN) {
   showErr('키가 없습니다. /admin/inbox.html?sb=<anon>&at=<admin token> 으로 한 번 접속하세요.');
@@ -534,5 +567,7 @@ if (!SUPABASE_KEY || !ADMIN_TOKEN) {
   loadSocial();   // 탭 배지(새 메시지 수)용
 }
 </script>
+<!-- 샵 관리 — 위 스크립트의 전역(H·api·esc·setSource …)을 쓰므로 반드시 그 뒤에. 딥링크 ?tab=shops 도 여기서 처리 -->
+<script src="shop-admin.js?v=20260928"></script>
 </body>
 </html>
