@@ -144,6 +144,14 @@
                    cursor:pointer; padding:0; }
   .note { margin-top:16px; padding:12px 14px; border-radius:12px; background:rgba(20,184,166,.10);
           border:1px solid rgba(20,184,166,.35); color:var(--strong); font-size:.85rem; line-height:1.55; }
+  /* [2026-09-28] 운영자 문의(샵 채팅) 말풍선 — .msg 는 상태 문구에 이미 쓰여서 .cm */
+  .chat-box { max-height:55vh; overflow-y:auto; margin-top:12px; padding:4px 2px; }
+  .cm { margin:9px 0; display:flex; }
+  .cm .b { max-width:82%; padding:8px 12px; border-radius:12px; white-space:pre-wrap; word-break:break-word; font-size:.9rem; }
+  .cm.op .b { background:rgba(255,255,255,.06); border:1px solid var(--line); border-bottom-left-radius:3px; }
+  .cm.me { justify-content:flex-end; }
+  .cm.me .b { background:rgba(26,115,232,.30); border-bottom-right-radius:3px; }
+  .cm .t { font-size:.72rem; color:var(--sub); margin:2px 4px 0; }
 </style>
 </head>
 <body>
@@ -272,6 +280,8 @@
            샵 사장이 아는 말(사업자·자격증)로 쓴다. 보험도 이 탭에 있지만 탭 이름은 짧게. -->
       <button class="tab tab-acct" data-tab="verify">사업자 · 자격증 인증</button>
       <button class="tab" data-tab="membership">멤버십</button>
+      <!-- [2026-09-28] 운영자 문의(샵 채팅) — FEATURE_OPS_CHAT 이 켜질 때만 보인다 -->
+      <button class="tab hidden" data-tab="opschat" id="tab-btn-opschat">운영자 문의 <span id="ops-badge" class="state-chip" style="display:none"></span></button>
     </div>
 
     <!-- ── 탭 1. 상품 (펀다이빙 · 강습 · 체험 · 투어) ─────────────────────────── -->
@@ -698,6 +708,22 @@
       </div>
     </div>
 
+    <!-- ── 운영자 문의(샵 채팅, 2026-09-28) ─────────────────
+         message_threads(kind='partner') 재사용 — 서버 20260928_shop_admin_phase1.sql open_partner_thread.
+         운영자 답장은 이 화면과 같은 계정의 앱 문의함에도 온다(푸시). 인증 승인·반려·정지 통지도 여기로 온다. -->
+    <div id="tab-opschat" class="hidden">
+      <div class="card">
+        <h2 style="margin-top:0">💬 운영자 문의</h2>
+        <div class="muted">인증 · 결제 · 노출 등 궁금한 점을 바다퐁 운영자에게 물어보세요. 답장은 보통 <b>1영업일</b> 안에 이 화면(같은 계정 앱 문의함)으로 옵니다.
+          인증 승인 · 반려 결과도 여기로 알려 드립니다.</div>
+        <div id="ops-list" class="chat-box"></div>
+        <textarea id="ops-body" maxlength="2000" rows="3" placeholder="문의 내용을 적어 주세요" style="margin-top:10px"></textarea>
+        <div class="msg" id="ops-msg"></div>
+        <button class="btn" id="btn-ops-send" style="margin-top:10px">보내기</button>
+        <div class="muted" style="margin-top:10px">하루 20건까지 보낼 수 있습니다. 이 화면이 안 되거나 급한 일은 <a href="mailto:support@browniebase.com">support@browniebase.com</a> 으로 보내 주세요.</div>
+      </div>
+    </div>
+
     <p style="margin-top:26px"><a class="muted" href="#" id="btn-logout">로그아웃</a></p>
   </div>
 
@@ -718,6 +744,13 @@ const show = id => {
     $(v).classList.toggle('hidden', v !== id);
 };
 const msg = (id, text, ok) => { const el=$(id); el.textContent=text; el.className='msg '+(ok?'ok':'err'); };
+
+// ── 기능 스위치 (2026-09-28) ─────────────────────────
+// 서버가 아직 **적용 전**이고(마이그레이션·edge), 개인정보처리방침 개정안도 게시 전이다.
+// 실수로 push 돼도 화면에 안 보이게 false 로 둔다. 켜는 순서: 서버 적용·검증 → 방침(·약관) 게시 → 여기 true → push(사장님 Go).
+//   FEATURE_OPS_CHAT — 「운영자 문의」 탭. 20260928_shop_admin_phase1.sql(open_partner_thread) + 방침 「상담 대화 3년」 게시 뒤.
+const FEATURE_OPS_CHAT = false;
+if (FEATURE_OPS_CHAT) $('tab-btn-opschat').classList.remove('hidden');
 // 초대 링크 소진 실패 사유 → 한국어. 예전엔 console.warn 뿐이라
 // 어떤 실패든 "연결된 샵이 없습니다" 한 화면으로만 보였다(2026-09-03 감사).
 const INVITE_REASON = {
@@ -941,6 +974,7 @@ async function init() {
   loadMeetups();
   loadPosts();
   initMembership();
+  if (FEATURE_OPS_CHAT) opsBadge();
 }
 
 
@@ -1506,8 +1540,10 @@ $('p-photo-file').onchange = async e => {
 // 탭 전환
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
-  for (const k of ['meetups','posts','verify','profile','membership','inquiries'])
+  for (const k of ['meetups','posts','verify','profile','membership','inquiries','opschat'])
     $('tab-'+k).classList.toggle('hidden', t.dataset.tab !== k);
+  // [2026-09-28] 운영자 문의 — 탭을 열 때 스레드를 열고 30초 폴링, 떠나면 멈춘다
+  if (t.dataset.tab === 'opschat') openOpsChat(); else stopOpsPoll();
 });
 
 // ── 모집글 목록 ──────────────────────────────────────
@@ -2042,6 +2078,90 @@ $('btn-save-profile').onclick = async () => {
   const { error } = await sb.from('partner_profiles').upsert(patch);
   msg('p-msg', error ? '저장 실패: '+error.message : '저장 완료 — 앱에 바로 반영됩니다.', !error);
   if (!error) refreshAll();
+};
+
+// ══════════════════════════════════════════════════════════════════
+// [2026-09-28] 운영자 문의(샵 채팅) — FEATURE_OPS_CHAT
+//   서버(20260928_shop_admin_phase1.sql): open_partner_thread() → {ok, thread_id, user_unread}.
+//   목록·보내기는 기존 RLS(본인 스레드 · messages_insert_own), 읽음은 mark_thread_read(앱 message_service.dart 와 같다).
+//   🔴 보내기는 insert 뒤 .select() 로 행을 돌려받는다(Prefer: return=representation). 하루 20건 한도(trg_msg_rate_limit)는
+//     에러 없이 **조용히 드롭**한다 → 0행이면 한도 안내를 띄우고 쓴 글을 지우지 않는다. 안 그러면 「보냈는데 운영자는 못 받은」
+//     상태가 아무 흔적 없이 생긴다.
+// ══════════════════════════════════════════════════════════════════
+let opsThread = null, opsTimer = null, opsN = -1;
+const OPS_FAIL = '운영자 문의를 열지 못했습니다 — 잠시 뒤 다시 시도하시거나 support@browniebase.com 으로 보내 주세요.';
+// 배지만 본다 — 스레드를 만들지 않는다(open_partner_thread 는 탭을 열 때만. 안 열어 본 샵까지 빈 스레드가 생기지 않게).
+async function opsBadge() {
+  try {
+    const { data } = await sb.from('message_threads').select('id,user_unread').eq('kind', 'partner').limit(1);
+    const n = (data && data[0] && data[0].user_unread) || 0;
+    const b = $('ops-badge'); b.textContent = n; b.style.display = n ? '' : 'none';
+  } catch (_) { /* 배지는 없어도 된다 */ }
+}
+async function openOpsChat() {
+  if (!opsThread) {
+    $('ops-list').innerHTML = '<span class="muted">불러오는 중…</span>';
+    const { data, error } = await sb.rpc('open_partner_thread');
+    if (error || !data || !data.ok) {
+      const r = data && data.reason;
+      $('ops-list').innerHTML = '';
+      msg('ops-msg', r === 'no_account' ? '샵 등록을 먼저 마쳐 주세요.'
+        : r === 'not_signed_in' ? '로그인이 풀렸습니다 — 새로고침 후 다시 로그인해 주세요.' : OPS_FAIL, false);
+      return;
+    }
+    opsThread = data.thread_id;
+  }
+  await loadOpsMessages();
+  stopOpsPoll();
+  // 탭이 열려 있는 동안만 30초마다(운영자 답장 확인). 탭을 떠나면 멈춘다.
+  opsTimer = setInterval(() => { if (!document.hidden) loadOpsMessages(); }, 30000);
+}
+function stopOpsPoll() { if (opsTimer) { clearInterval(opsTimer); opsTimer = null; } }
+async function loadOpsMessages() {
+  if (!opsThread) return;
+  const { data, error } = await sb.from('user_messages').select('id,sender,body,created_at')
+    .eq('thread_id', opsThread).order('created_at', { ascending: true }).limit(300);
+  if (error) { msg('ops-msg', OPS_FAIL, false); return; }
+  const rows = data || [];
+  if (rows.length === opsN) return;
+  opsN = rows.length;
+  const box = $('ops-list');
+  box.textContent = '';
+  if (!rows.length) {
+    const e = document.createElement('div');
+    e.className = 'muted'; e.textContent = '아직 대화가 없습니다. 아래에 첫 문의를 남겨 주세요.';
+    box.appendChild(e);
+  }
+  for (const m of rows) {
+    const op = m.sender === 'operator';
+    const wrap = document.createElement('div'); wrap.className = 'cm ' + (op ? 'op' : 'me');
+    const inner = document.createElement('div');
+    const b = document.createElement('div'); b.className = 'b'; b.textContent = m.body;
+    const t = document.createElement('div'); t.className = 't'; t.style.textAlign = op ? 'left' : 'right';
+    t.textContent = (op ? '바다퐁 운영자 · ' : '') + fmtDt(m.created_at);
+    inner.appendChild(b); inner.appendChild(t); wrap.appendChild(inner); box.appendChild(wrap);
+  }
+  box.scrollTop = box.scrollHeight;
+  // 새 메시지를 그렸을 때만 읽음(30초마다 쓰기가 나가지 않게). 실패해도 대화는 보인다.
+  try { await sb.rpc('mark_thread_read', { p_thread: opsThread }); } catch (_) {}
+  $('ops-badge').style.display = 'none';
+}
+$('btn-ops-send').onclick = async () => {
+  const body = $('ops-body').value.trim();
+  if (!body) return;
+  if (!opsThread) { await openOpsChat(); if (!opsThread) return; }
+  $('btn-ops-send').disabled = true;
+  const { data, error } = await sb.from('user_messages')
+    .insert({ thread_id: opsThread, sender: 'user', body }).select('id');
+  $('btn-ops-send').disabled = false;
+  if (error) { msg('ops-msg', '보내지 못했습니다 (' + error.message + ') — support@browniebase.com 으로 보내 주세요.', false); return; }
+  if (!data || !data.length) {
+    msg('ops-msg', '오늘 보낼 수 있는 문의(하루 20건)를 다 쓰셨습니다 — 방금 글은 전달되지 않았습니다. 내일 다시 보내 주시거나 support@browniebase.com 으로 보내 주세요.', false);
+    return;
+  }
+  $('ops-body').value = '';
+  $('ops-msg').className = 'msg';
+  await loadOpsMessages();
 };
 </script>
 
