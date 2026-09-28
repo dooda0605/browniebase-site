@@ -1216,8 +1216,9 @@ $('btn-register').onclick = async () => {
   let lat = rgPick ? rgPick.lat : null, lon = rgPick ? rgPick.lon : null;
   if (lat == null && addr) {
     // 새 샵 좌표 — 지역 목록·지도 노출에 쓴다. 실패해도 등록은 진행(운영자가 보정).
+    // countrycodes=kr: 2026-09-24 주소 「245」가 나라 제한 없이 아이슬란드(64.0,-22.7)로 찍혔다. 틀린 좌표보다 null(needs_geocode)이 낫다.
     try {
-      const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(addr), { headers: { 'Accept-Language': 'ko' } }).then(r => r.json());
+      const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=kr&q=' + encodeURIComponent(addr), { headers: { 'Accept-Language': 'ko' } }).then(r => r.json());
       if (r && r[0]) { lat = +r[0].lat; lon = +r[0].lon; }
     } catch (e) {}
   }
