@@ -152,6 +152,9 @@
   .cm.me { justify-content:flex-end; }
   .cm.me .b { background:rgba(26,115,232,.30); border-bottom-right-radius:3px; }
   .cm .t { font-size:.72rem; color:var(--sub); margin:2px 4px 0; }
+  /* [2026-09-28] 안내 목록(해외 인증 안내 · 자료로 채우기 안내) */
+  .af-ul { margin:8px 0 0 18px; font-size:.84rem; color:var(--body); }
+  .af-ul li { margin:4px 0; }
 </style>
 </head>
 <body>
@@ -234,6 +237,8 @@
         <div><label>종류 *</label><select id="rg-kind"><option value="dive">다이브샵 (스쿠버·프리다이빙)</option><option value="surf">서핑샵</option></select></div>
         <div><label>주소 *</label><input id="rg-addr" maxlength="160" placeholder="도로명 주소" /></div>
       </div>
+      <!-- [2026-09-28] 1인 강사·해외 샵 안내 — FEATURE_OVERSEAS 가 켜질 때만(약관 4-3 개정 게시 뒤) -->
+      <div class="muted hidden" id="rg-addr-hint" style="margin-top:6px">📍 주소 = <b>손님과 만나는 곳</b>(매장 없는 1인 강사는 활동 지역) — 앱에 그대로 보입니다. <b>집 주소는 적지 마세요.</b></div>
       <div class="msg" id="rg-msg"></div>
       <button class="btn" id="btn-register" style="margin-top:12px;width:100%">이 샵으로 시작하기</button>
       <p class="muted" style="margin-top:12px;font-size:.82rem">이미 다른 계정이 잡은 샵이면
@@ -490,6 +495,58 @@
 
       <div class="card hidden" id="card-biz">
         <h2 style="margin-top:0">STEP 1 — 사업자 인증 <span id="v-biz-badge"></span></h2>
+        <!-- [2026-09-28] 해외 사업자 인증 — FEATURE_OVERSEAS 가 켜질 때만. 기본 대한민국 = 아래 국세청 폼 그대로,
+             그 외 나라 = 현지 사업자 등록 서류 폼(submit_overseas_business). 서버: 20260928_partner_overseas_business.sql -->
+        <div id="biz-country-box" class="hidden" style="margin-bottom:10px">
+          <label style="margin-top:4px">사업장 국가 *</label>
+          <select id="v-country">
+            <option value="KR">대한민국</option>
+            <option value="JP">일본</option><option value="PH">필리핀</option><option value="ID">인도네시아</option>
+            <option value="TH">태국</option><option value="VN">베트남</option><option value="MY">말레이시아</option>
+            <option value="TW">대만</option><option value="GU">괌</option><option value="MP">사이판 · 북마리아나</option>
+            <option value="PW">팔라우</option><option value="MV">몰디브</option><option value="EG">이집트</option>
+            <option value="AU">호주</option><option value="US">미국</option><option value="MX">멕시코</option>
+            <option value="OTHER">기타 (나라 코드 직접 입력)</option>
+          </select>
+          <input id="v-country-other" class="hidden" maxlength="2" placeholder="나라 코드 영문 2자리 (예: FJ)" style="margin-top:6px;text-transform:uppercase" />
+        </div>
+        <div id="biz-ov" class="hidden">
+          <div id="ov-status" style="margin-bottom:10px"></div>
+          <div class="note" style="margin-top:0">
+            <b>🌏 해외 샵 사업자 인증</b><br/>
+            한국 밖에서 영업하는 샵은 <b>영업지 나라의 사업자 등록 서류</b>로 인증합니다. 운영자가 서류를 직접 대조하며 보통 <b>1~2일(영업일)</b> 걸립니다.
+            <ul class="af-ul">
+              <li>받는 서류: 사업자 등록증 · 영업 허가증 · 개인사업자 등록증 등 <b>현지 사업자 등록 서류</b>(사진 또는 PDF, 1~3개). 신분증 사본은 받지 않습니다.</li>
+              <li>사업자 등록된 <b>1인 강사</b>도 인증할 수 있습니다. 사업자 등록이 없는 개인 강사는 파트너가 될 수 없습니다.</li>
+              <li>상호 · 등록번호 · 대표자 · 주소는 <b>서류에 적힌 그대로</b> 입력해 주세요. 현지어 서류는 영문이 함께 적힌 서류나 번역본을 같이 올려 주세요.</li>
+              <li>등록 주소는 검수에만 쓰고 <b>앱에 공개하지 않습니다.</b></li>
+              <li>인증은 <b>승인일부터 1년</b>(서류 유효기간이 더 짧으면 그 날까지) 유효합니다. 만료되면 새 서류로 다시 인증할 때까지 앱 · 웹 샵 페이지에 보이지 않습니다.</li>
+              <li>영업지 나라의 사업 등록 · 인허가 · 안전 · 소비자 보호 법규를 지킬 책임은 파트너에게 있습니다. 바다퐁은 사업자 등록 외의 현지 인허가를 확인하지 않습니다.</li>
+            </ul>
+          </div>
+          <div id="ov-form">
+            <div class="row2">
+              <div><label>구분 *</label><select id="ov-entity"><option value="">선택</option>
+                <option value="sole_proprietor">개인사업자 (1인 강사 포함)</option><option value="company">법인</option></select></div>
+              <div><label>등록번호 *</label><input id="ov-regno" maxlength="40" placeholder="서류에 적힌 번호 그대로" /></div>
+            </div>
+            <div class="row2">
+              <div><label>현지 상호 *</label><input id="ov-name" maxlength="120" placeholder="서류에 적힌 상호 그대로" /></div>
+              <div><label>대표자 *</label><input id="ov-ceo" maxlength="60" placeholder="서류에 적힌 이름 그대로" /></div>
+            </div>
+            <label>등록 주소 * <span class="muted" style="font-weight:400">— 서류의 주소 · 비공개(검수용)</span></label>
+            <input id="ov-addr" maxlength="300" />
+            <div class="row2">
+              <div><label>서류 유효기간 <span class="muted" style="font-weight:400">(있으면)</span></label><input id="ov-docexp" type="date" /></div>
+              <div></div>
+            </div>
+            <label>사업자 등록 서류 * <span class="muted" style="font-weight:400">— 사진 또는 PDF 1~3개</span></label>
+            <input id="ov-files" type="file" accept="image/*,.pdf" multiple />
+            <div class="msg" id="ov-msg"></div>
+            <button class="btn" id="btn-verify-ov" style="margin-top:12px">검수 요청</button>
+          </div>
+        </div>
+        <div id="biz-kr">
         <div class="muted" style="margin-bottom:8px">⏱ 자동 확인이 안 되면 수동 검수로 넘어가며, 보통 <b>1~2일(영업일)</b> 걸립니다.</div>
         <div class="muted">국세청 조회로 즉시 확인됩니다. 통과하면 앱의 내 샵 이름 옆에 <b>✓ 사업자</b> 인증 표시가 붙습니다.
           <b>사업자등록번호 하나에 계정 하나</b>입니다 — 이미 인증된 번호는 다른 계정에서 다시 인증할 수 없습니다.</div>
@@ -503,6 +560,7 @@
         </div>
         <div class="msg" id="v-biz-msg"></div>
         <button class="btn" id="btn-verify-biz" style="margin-top:12px">인증하기</button>
+        </div><!-- /biz-kr -->
       </div>
 
       <div class="card">
@@ -749,8 +807,18 @@ const msg = (id, text, ok) => { const el=$(id); el.textContent=text; el.classNam
 // 서버가 아직 **적용 전**이고(마이그레이션·edge), 개인정보처리방침 개정안도 게시 전이다.
 // 실수로 push 돼도 화면에 안 보이게 false 로 둔다. 켜는 순서: 서버 적용·검증 → 방침(·약관) 게시 → 여기 true → push(사장님 Go).
 //   FEATURE_OPS_CHAT — 「운영자 문의」 탭. 20260928_shop_admin_phase1.sql(open_partner_thread) + 방침 「상담 대화 3년」 게시 뒤.
+//   FEATURE_OVERSEAS — STEP 1 「사업장 국가」·해외 서류 폼 + 샵 등록 주소 안내·「1인 강사 포함」.
+//                      20260928_partner_overseas_business.sql + 방침(해외 서류) · 약관 4-3(해외 파트너·1인 강사) 게시 뒤.
 const FEATURE_OPS_CHAT = false;
+const FEATURE_OVERSEAS = false;
 if (FEATURE_OPS_CHAT) $('tab-btn-opschat').classList.remove('hidden');
+if (FEATURE_OVERSEAS) {
+  $('biz-country-box').classList.remove('hidden');
+  $('rg-addr-hint').classList.remove('hidden');
+  $('rg-addr').placeholder = '손님과 만나는 곳 (1인 강사는 활동 지역)';
+  $('rg-kind').options[0].text = '다이브샵 (스쿠버·프리다이빙 · 1인 강사 포함)';
+  $('rg-kind').options[1].text = '서핑샵 (1인 강사 포함)';
+}
 // 초대 링크 소진 실패 사유 → 한국어. 예전엔 console.warn 뿐이라
 // 어떤 실패든 "연결된 샵이 없습니다" 한 화면으로만 보였다(2026-09-03 감사).
 const INVITE_REASON = {
@@ -975,6 +1043,7 @@ async function init() {
   loadPosts();
   initMembership();
   if (FEATURE_OPS_CHAT) opsBadge();
+  if (FEATURE_OVERSEAS && me.role === 'owner') loadOverseas();
 }
 
 
@@ -1991,8 +2060,12 @@ $('btn-verify-biz').onclick = async () => {
 
 // ── STEP 2 자격 · 보험 ───────────────────────────────
 async function uploadEvidence(kind, file) {
-  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-  const path = `${uid}/${kind}-${Date.now()}.${ext}`;
+  // [2026-09-28] 확장자에서 영숫자 밖 글자를 뺀다 — 점 없는 한글 파일명이면 이름 전체가 「확장자」가 되어
+  //   서버 경로 검사(submit_overseas_business: bizdoc-[A-Za-z0-9._-]{1,80})에 걸린다.
+  //   해외 서류는 한 번에 1~3개를 올린다 — upsert:true 라 같은 밀리초·같은 확장자면 앞 파일을 덮는다 → 짧은 난수를 붙인다
+  //   (서버 경로 규칙 <kind>-[A-Za-z0-9._-] 안이다: submit_overseas_business · admin-evidence PATH_RE).
+  const ext = ((file.name.includes('.') ? file.name.split('.').pop() : '') || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'jpg';
+  const path = `${uid}/${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
   const { error } = await sb.storage.from('partner-evidence').upload(path, file, { upsert: true });
   if (error) throw error;
   return path;
@@ -2162,6 +2235,134 @@ $('btn-ops-send').onclick = async () => {
   $('ops-body').value = '';
   $('ops-msg').className = 'msg';
   await loadOpsMessages();
+};
+
+// ══════════════════════════════════════════════════════════════════
+// [2026-09-28] 해외 사업자 인증 — FEATURE_OVERSEAS
+//   서버(20260928_partner_overseas_business.sql): submit_overseas_business(p_country, p_name, p_reg_no, p_ceo, p_address,
+//     p_doc_paths text[], p_entity, p_doc_expires) · my_overseas_business(). 대표 계정만(카드 자체가 대표에게만 보인다).
+//   서류는 uploadEvidence('bizdoc', file) → partner-evidence/{uid}/bizdoc-<ts>.<ext> (서버가 이 경로·실제 파일 존재를 검사한다).
+//   승인은 운영자 검수 → 국내와 같은 배지 → 공개 → 체험. 만료 = min(서류 유효기간, 승인+1년).
+// ══════════════════════════════════════════════════════════════════
+const OV_REASON = {
+  not_signed_in: '로그인이 풀렸습니다 — 새로고침 후 다시 로그인해 주세요.',
+  signup_required: '소셜 로그인 계정으로 다시 들어와 주세요.',
+  no_account: '샵 등록을 먼저 마쳐 주세요.',
+  owner_only: '사업자 인증은 샵 대표 계정에서만 할 수 있습니다.',
+  kr_use_nts: '대한민국 사업자는 「사업장 국가」에서 대한민국을 골라 국세청 확인으로 인증해 주세요.',
+  bad_country: '사업장 국가를 다시 골라 주세요(기타는 영문 2자리 나라 코드).',
+  name_required: '현지 상호를 적어 주세요.',
+  reg_no_required: '등록번호를 적어 주세요.',
+  bad_reg_no: '등록번호를 확인해 주세요(영문·숫자 4자 이상).',
+  ceo_required: '대표자 이름을 적어 주세요.',
+  address_required: '등록 주소를 적어 주세요.',
+  too_long: '입력이 너무 깁니다(상호 120자 · 등록번호 40자 · 대표자 60자 · 주소 300자까지).',
+  bad_entity: '구분(개인사업자·법인)을 다시 골라 주세요.',
+  doc_expired: '서류 유효기간이 이미 지났습니다 — 유효한 서류로 제출해 주세요.',
+  doc_required: '사업자 등록 서류를 1개 이상 올려 주세요.',
+  too_many_docs: '서류는 3개까지 올릴 수 있습니다.',
+  bad_doc_path: '서류 업로드가 확인되지 않았습니다 — 파일을 다시 골라 올려 주세요.',
+  doc_not_found: '서류 업로드가 확인되지 않았습니다 — 파일을 다시 골라 올려 주세요.',
+  domestic_shop: '국내에 등재된 샵은 해외 인증을 쓸 수 없습니다 — 대한민국을 골라 국세청 확인으로 인증해 주세요. 해외 샵이 맞다면 support@browniebase.com 으로 알려 주세요.',
+  domestic_location: '샵 위치가 한국으로 확인됩니다 — 대한민국을 골라 주세요. 해외 샵이 맞다면(예: 대마도) support@browniebase.com 으로 알려 주세요.',
+  already_approved: '이미 인증이 끝났습니다.',
+  too_many: '방금 제출하셨습니다 — 1분 뒤 다시 시도해 주세요.',
+  reg_no_taken: '이 나라 · 등록번호로 이미 인증된 다른 계정이 있습니다. 본인 샵이면 support@browniebase.com 으로 알려 주세요.',
+};
+let ovState = null;
+function syncBizRoute() {
+  const v = $('v-country').value;
+  $('v-country-other').classList.toggle('hidden', v !== 'OTHER');
+  const kr = v === 'KR';
+  $('biz-kr').classList.toggle('hidden', !kr);
+  $('biz-ov').classList.toggle('hidden', kr);
+}
+$('v-country').onchange = syncBizRoute;
+async function loadOverseas() {
+  let data = null;
+  try { const r = await sb.rpc('my_overseas_business'); data = r.data; } catch (_) {}
+  // 서버 미적용·오류면 국내 폼 그대로(나라 선택만 보인다)
+  ovState = data && data.ok ? data : null;
+  const o = ovState && ovState.route === 'overseas' ? ovState.overseas : null;
+  if (o) {
+    const has = [...$('v-country').options].some(x => x.value === o.country);
+    $('v-country').value = has ? o.country : 'OTHER';
+    if (!has) $('v-country-other').value = o.country || '';
+    // 반려·만료면 지난 값을 채워 두고 고쳐 내게 한다(서류 파일은 다시 올린다)
+    $('ov-entity').value = o.entity || ''; $('ov-regno').value = o.reg_no || ''; $('ov-name').value = o.name || '';
+    $('ov-ceo').value = o.ceo || ''; $('ov-addr').value = o.address || ''; $('ov-docexp').value = o.doc_expires || '';
+  }
+  syncBizRoute();
+  renderOvStatus();
+}
+function renderOvStatus() {
+  const box = $('ov-status'); box.textContent = '';
+  const d = ovState;
+  let showForm = true, cls = '', text = '';
+  if (d && d.route === 'overseas') {
+    const now = Date.now(), exp = d.expires_at ? new Date(d.expires_at).getTime() : null;
+    if (d.state === 'pending') {
+      cls = 'pend';
+      text = '🕐 검수 중 — ' + fmtDate(d.overseas && d.overseas.submitted_at) + ' 제출 · 보통 1~2일(영업일). 고칠 것이 있으면 아래에서 다시 제출해 주세요.';
+    } else if (d.state === 'rejected') {
+      cls = 'rej';
+      text = '반려 — ' + (d.reject_reason || '사유 없음') + '\n아래 내용을 고쳐 서류와 함께 다시 제출해 주세요.';
+    } else if (d.state === 'approved' && exp && exp <= now) {
+      cls = 'rej';
+      text = '인증 만료(' + fmtDate(d.expires_at) + ') — 앱 · 웹에 보이지 않습니다. 새 서류로 다시 제출해 주세요.';
+    } else if (d.state === 'approved') {
+      // 승인·미만료는 서버가 재제출을 막는다(already_approved) — 폼을 감추고 만료 30일 전부터 경고만.
+      showForm = false;
+      const days = exp ? Math.ceil((exp - now) / 86400000) : null;
+      cls = days !== null && days <= 30 ? 'pend' : 'on';
+      text = '✓ 승인' + (exp ? ' — ' + fmtDate(d.expires_at) + '까지 유효' : '')
+        + (days !== null && days <= 30 ? '\n⚠ 만료 ' + days + '일 전 — 만료일이 지나면 이 화면에서 새 서류로 다시 인증해 주세요(만료되면 앱 · 웹에 보이지 않습니다).' : '');
+    }
+  }
+  if (text) {
+    const el = document.createElement('div');
+    el.className = 'badge ' + cls;
+    el.style.cssText = 'display:block;white-space:pre-wrap;border-radius:10px;padding:9px 13px;font-weight:600';
+    el.textContent = text;
+    box.appendChild(el);
+  }
+  $('ov-form').classList.toggle('hidden', !showForm);
+}
+$('btn-verify-ov').onclick = async () => {
+  let cc = $('v-country').value;
+  if (cc === 'OTHER') cc = $('v-country-other').value.trim().toUpperCase();
+  const entity = $('ov-entity').value, reg = $('ov-regno').value.trim(), name = $('ov-name').value.trim();
+  const ceo = $('ov-ceo').value.trim(), addr = $('ov-addr').value.trim(), docExp = $('ov-docexp').value || null;
+  const files = [...($('ov-files').files || [])];
+  if (!/^[A-Z]{2}$/.test(cc) || cc === 'KR') { msg('ov-msg', OV_REASON.bad_country, false); return; }
+  if (!entity) { msg('ov-msg', OV_REASON.bad_entity, false); return; }
+  if (!name || !reg || !ceo || !addr) { msg('ov-msg', '현지 상호 · 등록번호 · 대표자 · 등록 주소를 모두 적어 주세요.', false); return; }
+  if (!files.length) { msg('ov-msg', OV_REASON.doc_required, false); return; }
+  if (files.length > 3) { msg('ov-msg', OV_REASON.too_many_docs, false); return; }
+  if (files.some(f => f.size > 10 * 1024 * 1024)) { msg('ov-msg', '서류는 한 개 10MB 이하로 올려 주세요.', false); return; }
+  $('btn-verify-ov').disabled = true;
+  msg('ov-msg', '서류를 올리는 중…', true);
+  const paths = [];
+  try {
+    for (const f of files) paths.push(await uploadEvidence('bizdoc', f));   // 순서대로 — 파일명 시각이 겹치지 않게
+  } catch (e) {
+    $('btn-verify-ov').disabled = false;
+    msg('ov-msg', '서류 업로드 실패: ' + e.message, false);
+    return;
+  }
+  const { data, error } = await sb.rpc('submit_overseas_business', {
+    p_country: cc, p_name: name, p_reg_no: reg, p_ceo: ceo, p_address: addr,
+    p_doc_paths: paths, p_entity: entity, p_doc_expires: docExp });
+  $('btn-verify-ov').disabled = false;
+  if (error || !data || !data.ok) {
+    const r = data && data.reason;
+    msg('ov-msg', OV_REASON[r] || ('접수하지 못했습니다 (' + (r || (error && error.message) || '알 수 없음') + ') — support@browniebase.com 으로 알려 주세요.'), false);
+    return;
+  }
+  msg('ov-msg', '접수 완료 — 운영자가 서류를 대조해 보통 1~2일(영업일) 안에 결과를 알려 드립니다. 결과는 이 화면에서 확인할 수 있습니다.', true);
+  $('ov-files').value = '';
+  await loadOverseas();
+  refreshAll();
 };
 </script>
 
