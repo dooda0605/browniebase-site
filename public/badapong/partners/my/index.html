@@ -719,7 +719,7 @@
         <h2 style="margin-top:0">샵 정보</h2>
         <!-- [2026-09-21 사용자] 앱 샵 상세 「소개」·웹 샵 페이지와 같은 순서(①~⑦).
              「기본 정보」 3칸 요약·자유 소개는 뺐다 — 앱에서도 뺐다. -->
-        <div class="muted">아래 ①~⑦ 순서 그대로 <b>앱 샵 소개</b>와 <b>웹 샵 페이지</b>에 보입니다. 필수(*) 3개만 채워도 됩니다.<br/>
+        <div class="muted">아래 ①~⑦ 순서 그대로 <b>앱 샵 소개</b>와 <b>웹 샵 페이지</b>에 보입니다. 필수(*) 2개만 채워도 됩니다.<br/>
           🎓 과정 · 프로그램은 <b>「상품」 탭</b>에서 올립니다.</div>
 
         <div style="margin:24px 0 2px;padding-top:14px;border-top:1px solid var(--line);font-weight:800;font-size:.98rem">① 사진 · 설명</div>
@@ -746,8 +746,6 @@
         <label>대여 범위 *</label>
         <select id="p-rental"><option value="">선택</option><option value="full">풀세트</option>
           <option value="partial">부분</option><option value="none">없음</option></select>
-        <label>슈트 사이즈 *</label>
-        <div class="chips" id="p-sizes"></div>
         <label>사전 예약 필요 *</label>
         <select id="p-resv"><option value="">선택</option><option value="true">예약 필요</option>
           <option value="false">당일 · 현장 예약 가능</option></select>
@@ -765,7 +763,9 @@
         <!-- [2026-09-28 사용자] 장비 같은 세부 항목은 접어 둔다 — 샵 자료에 거의 없고 필수도 아니다.
              값이 하나라도 있으면(저장된 값·자료로 채우기) 펼친다(openDetailIfFilled). -->
         <details id="p-detail-box" style="margin-top:18px">
-          <summary style="cursor:pointer;font-weight:700">세부 항목 (선택) — 시설 · 장비 · 보유 자격증 · 서비스</summary>
+          <summary style="cursor:pointer;font-weight:700">세부 항목 (선택) — 슈트 사이즈 · 시설 · 장비 · 보유 자격증 · 서비스</summary>
+        <label>슈트 사이즈</label>
+        <div class="chips" id="p-sizes"></div>
         <div class="row2">
           <div><label>샤워</label><select id="p-shower"><option value="">없음</option>
             <option value="cold">냉수</option><option value="hot">온수</option></select></div>
