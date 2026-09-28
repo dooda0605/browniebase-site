@@ -651,7 +651,7 @@
             <li><b>가격표·안내문 사진</b> ⭐ 가장 정확 — 정면에서 똑바로 · <b>한 장에 표 하나</b> · 빛 반사·그림자·흔들림 없이 · 긴 쪽 1600px 이상(휴대폰 기본 카메라면 충분) · 한 장 5MB 이하<br/>→ 과정(이름·가격·기간·포함 사항) · 대여 품목·가격 · 장비 · 예약 필요 여부 · 슈트 사이즈(적혀 있으면)</li>
             <li><b>화면 캡처</b> (네이버·인스타·카카오 채널) — 글자가 잘리지 않게 · 한 화면에 한 가지 내용 · 여러 장이면 순서대로<br/>→ 샵 소개 · 과정 · 대여 · 시설·서비스</li>
             <li><b>소개글 복사본</b> — 글을 그대로 복사해 붙여넣기(가공하지 않으셔도 돼요)<br/>→ 샵 소개 · 활동 종류 · 언어 · 시설 · 강사진</li>
-            <li><b>홈페이지 주소</b> — 교육·가격이 있는 메뉴 이름도 같이 적어 주시면 더 정확해요<br/>→ 홈페이지 링크 · 샵 소개 · 과정 · 강사진</li>
+            <li><b>홈페이지 주소</b> — <b>한 페이지만</b> 읽어요. 첫 화면보다 <b>가격표·교육 안내 페이지 주소</b>를 넣거나, 여러 페이지 글을 복사해 붙여 넣으세요<br/>→ 홈페이지 링크 · 샵 소개 · 과정 · 강사진</li>
             <li><b>강사 자격증 사진</b> (선택) — 카드 앞면, 이름·단체·등급이 읽히게 · 강사 본인에게 먼저 알려 주세요<br/>→ 강사진 · 보유 자격증</li>
           </ul>
         </details>
@@ -1603,7 +1603,7 @@ $('m-photo-file').onchange = async e => {
   }
   renderMeetupPhotos();
   e.target.value = '';
-  $('m-photo-msg').textContent = err || (dup ? DUP_PHOTO_MSG : '');
+  $('m-photo-msg').textContent = err || [dup && DUP_PHOTO_MSG, files.length > room && '사진은 최대 6장이라 나머지는 올리지 않았어요.'].filter(Boolean).join(' ');
 };
 
 // 소개 본문 속 사진 — URL 한 줄을 커서 자리에 끼워 넣는다.
@@ -1616,11 +1616,12 @@ $('m-body-photo').onchange = async e => {
   const note = $('m-body-photo-msg');
   note.textContent = '업로드 중…';
   const urls = [];
+  let bodyDup = false;
   for (const file of files.slice(0, 6)) {
     if (file.size > 5 * 1024 * 1024) { note.textContent = '5MB 이하 파일만 넣을 수 있습니다.'; continue; }
     const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
     const h = await photoHash(file);
-    if (ta.value.includes(h) || urls.some(u => u.includes(h))) { note.textContent = DUP_PHOTO_MSG; continue; }
+    if (ta.value.includes(h) || urls.some(u => u.includes(h))) { bodyDup = true; continue; }
     // 경로 첫 칸이 uid 여야 스토리지 정책(meetup_images_own_write)을 통과한다.
     const path = `${uid}/meetup/body/${h}.${ext}`;
     const up = await sb.storage.from('meetup-images').upload(path, file, { contentType: file.type || 'image/jpeg' });
@@ -1628,7 +1629,7 @@ $('m-body-photo').onchange = async e => {
     urls.push(sb.storage.from('meetup-images').getPublicUrl(path).data.publicUrl);
   }
   e.target.value = '';
-  if (!urls.length) return;
+  if (!urls.length) { if (bodyDup) note.textContent = DUP_PHOTO_MSG; return; }
   const ins = '\n' + urls.join('\n') + '\n';
   const at = ta.selectionStart ?? ta.value.length;
   // 1,000자 상한을 넘기면 textarea 가 조용히 잘라낸다 — 미리 막고 알려준다.
@@ -1639,7 +1640,7 @@ $('m-body-photo').onchange = async e => {
   ta.value = ta.value.slice(0, at) + ins + ta.value.slice(at);
   ta.selectionStart = ta.selectionEnd = at + ins.length;
   ta.focus();
-  note.textContent = `사진 ${urls.length}장을 본문에 넣었습니다 — 그 줄 자리에 사진이 보입니다.`;
+  note.textContent = `사진 ${urls.length}장을 본문에 넣었습니다 — 그 줄 자리에 사진이 보입니다.` + (bodyDup ? ' ' + DUP_PHOTO_MSG : '');
 };
 
 // ── 소식 (shop_posts) ─────────────────────────────────
@@ -1721,7 +1722,7 @@ $('p-photo-file').onchange = async e => {
   }
   renderPhotos();
   e.target.value = '';
-  $('p-photo-msg').textContent = err || ((dup ? DUP_PHOTO_MSG + ' ' : '') + '아래 저장을 눌러야 반영됩니다.');
+  $('p-photo-msg').textContent = err || [dup && DUP_PHOTO_MSG, files.length > room && '사진은 최대 6장이라 나머지는 올리지 않았어요.', '아래 저장을 눌러야 반영됩니다.'].filter(Boolean).join(' ');
 };
 
 // 탭 전환
@@ -2604,6 +2605,14 @@ async function afToJpeg(file) {
     return blob;
   } finally { URL.revokeObjectURL(url); }
 }
+// [2026-09-28] 업로드 중 같은 칸을 다시 고르면 room·지문 검사가 await 사이에서 겹쳐 6장 초과·중복이 들어간다(목업 재현).
+//   처리하는 동안 선택칸을 잠근다 — 핸들러 네 개를 한 곳에서 감싼다(af-file 은 아래 정의 뒤에 감싼다).
+function lockWhileUploading(id) {
+  const el = $(id), h = el.onchange;
+  el.onchange = async e => { el.disabled = true; try { await h(e); } finally { el.disabled = false; } };
+}
+['m-photo-file', 'm-body-photo', 'p-photo-file'].forEach(lockWhileUploading);
+
 $('af-file').onchange = async e => {
   const files = [...(e.target.files || [])];
   e.target.value = '';
@@ -2627,6 +2636,7 @@ $('af-file').onchange = async e => {
   renderAfPhotos();
   $('af-photo-msg').textContent = err || (dup ? DUP_PHOTO_MSG : '');
 };
+lockWhileUploading('af-file');
 $('af-url').oninput = () => $('af-own-box').classList.toggle('hidden', !$('af-url').value.trim());
 
 $('btn-af').onclick = async () => {
