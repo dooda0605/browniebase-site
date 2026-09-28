@@ -759,6 +759,13 @@
           <input id="p-teach-new" placeholder="직접 추가 (예: 테크니컬)" style="max-width:260px" />
           <button type="button" class="btn sec sm" id="btn-add-teach">추가</button>
         </div>
+        <label>대여 가격 안내 <span class="muted" style="font-weight:400">— 샵 카드 맨 아래에 보입니다</span></label>
+        <input id="p-price-note" placeholder="예: 풀세트 3만원, 슈트만 1만원" />
+
+        <!-- [2026-09-28 사용자] 장비 같은 세부 항목은 접어 둔다 — 샵 자료에 거의 없고 필수도 아니다.
+             값이 하나라도 있으면(저장된 값·자료로 채우기) 펼친다(openDetailIfFilled). -->
+        <details id="p-detail-box" style="margin-top:18px">
+          <summary style="cursor:pointer;font-weight:700">세부 항목 (선택) — 시설 · 장비 · 보유 자격증 · 서비스</summary>
         <div class="row2">
           <div><label>샤워</label><select id="p-shower"><option value="">없음</option>
             <option value="cold">냉수</option><option value="hot">온수</option></select></div>
@@ -783,12 +790,11 @@
         <div id="p-certs" class="rows"></div>
         <button type="button" class="btn sec sm" id="btn-add-cert" style="margin-top:6px">+ 자격증 추가</button>
 
-        <label>대여 가격 안내 <span class="muted" style="font-weight:400">— 샵 카드 맨 아래에 보입니다</span></label>
-        <input id="p-price-note" placeholder="예: 풀세트 3만원, 슈트만 1만원" />
         <label>서비스 <span class="muted" style="font-weight:400">— 앱 소개 탭 배지</span></label>
         <div class="chips" id="p-amen-service"></div>
         <label>안전 · 편의시설</label>
         <div class="chips" id="p-amen-safety"></div>
+        </details>
 
         <div style="margin:24px 0 2px;padding-top:14px;border-top:1px solid var(--line);font-weight:800;font-size:.98rem">⑤ 후기</div>
         <div class="muted" style="margin-bottom:4px">손님이 앱에서 남깁니다 — 입력할 칸이 없습니다.</div>
@@ -1516,6 +1522,13 @@ function renderDash() {
   const amen = Array.isArray(p.amenities) ? p.amenities : [];
   $('p-amen-service').innerHTML = chipsHtml('p-amen-service', AMEN_SERVICE, amen);
   $('p-amen-safety').innerHTML  = chipsHtml('p-amen-safety',  AMEN_SAFETY,  amen);
+  openDetailIfFilled();
+}
+function openDetailIfFilled() {
+  const box = $('p-detail-box');
+  const filled = ['p-shower', 'p-changing', 'p-parking', 'p-langs'].some(id => $(id).value)
+    || box.querySelector('input[type=checkbox]:checked') || certs.length;
+  if (filled) box.open = true;
 }
 // 앱 l10n 의 amenity_* 키와 같아야 한다 (shop_detail_screen.dart).
 const AMEN_SERVICE = { card_pay:'카드결제', rental:'장비대여', parking:'주차', shower:'샤워', hot_water:'온수', locker:'보관함',
@@ -2714,6 +2727,7 @@ function renderAfDraft(res) {
       const on = afItems.filter(it => it.cb.checked && !it.cb.disabled);
       if (!on.length) { msg('af-msg', '채울 칸을 체크해 주세요.', false); return; }
       on.forEach(it => { it.apply(); it.cb.checked = false; it.cb.disabled = true; });   // 같은 행을 두 번 넣지 않게
+      openDetailIfFilled();   // 접힌 세부 항목에 채운 값이 숨지 않게
       msg('af-msg', on.length + '개 칸을 폼에 채웠어요 — 아래 내용을 확인하고 맨 아래 [저장]을 눌러야 앱에 나갑니다.', true);
       msg('p-msg', '자료로 채운 내용이 있습니다 — 확인하고 [저장]을 눌러 주세요(저장 전에는 앱에 나가지 않습니다).', true);
     };
