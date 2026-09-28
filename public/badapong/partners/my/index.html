@@ -638,7 +638,7 @@
           <p class="muted">네이버와 인스타그램은 <b>자기 약관으로 자동 수집(크롤링)을 금지</b>하고 있어요. 그래서 바다퐁도 네이버 플레이스·블로그나 인스타그램 링크만 받아서 내용을 자동으로 가져올 수 <b>없어요.</b> 대신 아래처럼 <b>캡처하거나 글을 복사해서</b> 올려 주시면 똑같이 자동으로 채워져요.</p>
           <ul class="af-ul">
             <li><b>네이버 플레이스</b> — 「정보」 화면의 <b>소개글을 복사</b>해서 붙여넣기 · 가격(메뉴) 화면은 <b>캡처</b></li>
-            <li><b>인스타그램</b> — 프로필 소개를 <b>복사</b>해서 붙여넣기 · 하이라이트 가격표·교육 안내는 <b>캡처</b> · 샵 사진은 <b>휴대폰 앨범 원본</b></li>
+            <li><b>인스타그램</b> — 프로필 소개를 <b>복사</b>해서 붙여넣기 · 하이라이트 가격표·교육 안내는 <b>캡처</b></li>
             <li><b>카카오톡 채널</b> — 채널 소개·공지 글을 <b>복사</b>해서 붙여넣기</li>
             <li><b>내 홈페이지</b> — <b>주소</b>만 넣으면 첫 화면 글을 읽어 채워요(내 도메인 홈페이지만. 네이버 블로그·인스타 주소는 안 돼요)</li>
             <li><b>브로슈어 PDF</b> — 쪽마다 <b>캡처</b>해서 올리기</li>
@@ -652,7 +652,6 @@
             <li><b>화면 캡처</b> (네이버·인스타·카카오 채널) — 글자가 잘리지 않게 · 한 화면에 한 가지 내용 · 여러 장이면 순서대로<br/>→ 샵 소개 · 과정 · 대여 · 시설·서비스</li>
             <li><b>소개글 복사본</b> — 글을 그대로 복사해 붙여넣기(가공하지 않으셔도 돼요)<br/>→ 샵 소개 · 활동 종류 · 언어 · 시설 · 강사진</li>
             <li><b>홈페이지 주소</b> — 교육·가격이 있는 메뉴 이름도 같이 적어 주시면 더 정확해요<br/>→ 홈페이지 링크 · 샵 소개 · 과정 · 강사진</li>
-            <li><b>샵 사진</b> — 가로 사진, 가로 1200px 이상 <b>원본</b>(캡처·워터마크 없이) · 최대 6장, 첫 장이 대표 · 샵 외관·교육 장면·장비·보트 · 얼굴이 보이는 사람은 <b>본인 동의한 사진만</b><br/>→ 홍보 사진</li>
             <li><b>강사 자격증 사진</b> (선택) — 카드 앞면, 이름·단체·등급이 읽히게 · 강사 본인에게 먼저 알려 주세요<br/>→ 강사진 · 보유 자격증</li>
           </ul>
         </details>
@@ -1551,6 +1550,17 @@ $('btn-save-contact').onclick = async () => {
   refreshAll();
 };
 
+// [2026-09-28 사용자] 같은 사진 두 번 막기 — 파일 내용 SHA-256 앞 16자리를 지문으로 쓴다.
+//   상품·홍보 사진은 지문을 파일 이름에 넣어, 나중에 다시 올려도 목록 URL 에서 잡힌다(이전에 올린 사진은 이름이 달라 비교 밖).
+//   같은 지문 파일이 이미 버킷에 있으면(다른 상품에 쓴 사진) 업로드는 「exists」로 실패하지만 같은 파일이라 그 URL 을 그대로 쓴다.
+//   meetup-images 는 파일을 지우는 경로가 없어 두 상품이 한 파일을 같이 써도 안전하다.
+async function photoHash(file) {
+  const d = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+  return [...new Uint8Array(d)].slice(0, 8).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+const DUP_PHOTO_MSG = '이미 올린 사진은 건너뛰었어요.';
+const uploadExists = err => err && /exist|duplicate/i.test(err.message || '');
+
 // ── 상품 사진 ───────────────────────────────────────
 // [2026-09-21 사용자] 대표 사진 1장이었던 걸 6장으로. meetups.images 는 원래 배열이고
 //   앱 상세도 가로 스크롤로 다 보여준다. 첫 장이 목록 카드 썸네일(images[1]).
@@ -1566,19 +1576,21 @@ $('m-photo-file').onchange = async e => {
   const room = 6 - meetupPhotos.length;
   if (room <= 0) { $('m-photo-msg').textContent = '사진은 최대 6장입니다.'; e.target.value = ''; return; }
   $('m-photo-msg').textContent = '업로드 중…';
-  let err = '';
+  let err = '', dup = false;
   for (const file of files.slice(0, room)) {
     if (file.size > 5 * 1024 * 1024) { err = '5MB 이하 파일만 올릴 수 있습니다.'; continue; }
     const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const h = await photoHash(file);
+    if (meetupPhotos.some(u => u.includes(h))) { dup = true; continue; }
     // 경로 첫 칸이 uid 여야 스토리지 정책(meetup_images_own_write)을 통과한다.
-    const path = `${uid}/meetup/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+    const path = `${uid}/meetup/${h}.${ext}`;
     const up = await sb.storage.from('meetup-images').upload(path, file, { contentType: file.type || 'image/jpeg' });
-    if (up.error) { err = '업로드 실패: ' + up.error.message; continue; }
+    if (up.error && !uploadExists(up.error)) { err = '업로드 실패: ' + up.error.message; continue; }
     meetupPhotos.push(sb.storage.from('meetup-images').getPublicUrl(path).data.publicUrl);
   }
   renderMeetupPhotos();
   e.target.value = '';
-  $('m-photo-msg').textContent = err;
+  $('m-photo-msg').textContent = err || (dup ? DUP_PHOTO_MSG : '');
 };
 
 // 소개 본문 속 사진 — URL 한 줄을 커서 자리에 끼워 넣는다.
@@ -1594,10 +1606,12 @@ $('m-body-photo').onchange = async e => {
   for (const file of files.slice(0, 6)) {
     if (file.size > 5 * 1024 * 1024) { note.textContent = '5MB 이하 파일만 넣을 수 있습니다.'; continue; }
     const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const h = await photoHash(file);
+    if (ta.value.includes(h) || urls.some(u => u.includes(h))) { note.textContent = DUP_PHOTO_MSG; continue; }
     // 경로 첫 칸이 uid 여야 스토리지 정책(meetup_images_own_write)을 통과한다.
-    const path = `${uid}/meetup/body/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+    const path = `${uid}/meetup/body/${h}.${ext}`;
     const up = await sb.storage.from('meetup-images').upload(path, file, { contentType: file.type || 'image/jpeg' });
-    if (up.error) { note.textContent = '업로드 실패: ' + up.error.message; continue; }
+    if (up.error && !uploadExists(up.error)) { note.textContent = '업로드 실패: ' + up.error.message; continue; }
     urls.push(sb.storage.from('meetup-images').getPublicUrl(path).data.publicUrl);
   }
   e.target.value = '';
@@ -1680,18 +1694,21 @@ $('p-photo-file').onchange = async e => {
   const room = 6 - photos.length;
   if (room <= 0) { $('p-photo-msg').textContent = '사진은 최대 6장입니다.'; e.target.value = ''; return; }
   $('p-photo-msg').textContent = '업로드 중…';
+  let err = '', dup = false;
   for (const file of files.slice(0, room)) {
-    if (file.size > 5 * 1024 * 1024) { $('p-photo-msg').textContent = '5MB 이하 파일만 올릴 수 있습니다.'; continue; }
+    if (file.size > 5 * 1024 * 1024) { err = '5MB 이하 파일만 올릴 수 있습니다.'; continue; }
     const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-    const path = `${uid}/shop/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+    const h = await photoHash(file);
+    if (photos.some(u => u.includes(h))) { dup = true; continue; }
+    const path = `${uid}/shop/${h}.${ext}`;
     const up = await sb.storage.from('meetup-images')
       .upload(path, file, { contentType: file.type || 'image/jpeg' });
-    if (up.error) { $('p-photo-msg').textContent = '업로드 실패: ' + up.error.message; continue; }
+    if (up.error && !uploadExists(up.error)) { err = '업로드 실패: ' + up.error.message; continue; }
     photos.push(sb.storage.from('meetup-images').getPublicUrl(path).data.publicUrl);
   }
   renderPhotos();
   e.target.value = '';
-  $('p-photo-msg').textContent = '아래 저장을 눌러야 반영됩니다.';
+  $('p-photo-msg').textContent = err || ((dup ? DUP_PHOTO_MSG + ' ' : '') + '아래 저장을 눌러야 반영됩니다.');
 };
 
 // 탭 전환
@@ -2547,7 +2564,7 @@ const AF_FIELDS = [
 const afGet = (d, key) => key.startsWith('sns.') ? (d.sns || {})[key.slice(4)] : d[key];
 const afSrc = f => f.source === 'image' ? '사진 ' + (f.photo || '') : f.source === 'website' ? '홈페이지' : '붙여넣은 글';
 
-let afPhotos = [];   // [{path, thumb}] — thumb 는 브라우저 안 objectURL(서버 URL 아님)
+let afPhotos = [];   // [{path, hash, thumb}] — thumb 는 브라우저 안 objectURL(서버 URL 아님)
 let afItems = [];    // 비교 목록 [{cb, apply}]
 function renderAfPhotos() {
   const box = $('af-photos'); box.textContent = '';
@@ -2582,17 +2599,20 @@ $('af-file').onchange = async e => {
   if (room <= 0) { $('af-photo-msg').textContent = AF_MSG.too_many_images; return; }
   $('af-photo-msg').textContent = '올리는 중…';
   let err = files.length > room ? AF_MSG.too_many_images : '';
+  let dup = false;
   for (const file of files.slice(0, room)) {
+    const h = await photoHash(file);
+    if (afPhotos.some(x => x.hash === h)) { dup = true; continue; }
     let blob;
     try { blob = await afToJpeg(file); } catch (_) { err = AF_MSG.image_format; continue; }
     // 경로 규칙: {auth.uid}/material-[A-Za-z0-9._-]{1,120} (edge validMaterialPath · partner_autofill_begin 이 둘 다 검사)
     const path = `${uid}/material-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
     const up = await sb.storage.from('partner-evidence').upload(path, blob, { contentType: 'image/jpeg' });
     if (up.error) { err = '업로드 실패: ' + up.error.message; continue; }
-    afPhotos.push({ path, thumb: URL.createObjectURL(blob) });
+    afPhotos.push({ path, hash: h, thumb: URL.createObjectURL(blob) });
   }
   renderAfPhotos();
-  $('af-photo-msg').textContent = err;
+  $('af-photo-msg').textContent = err || (dup ? DUP_PHOTO_MSG : '');
 };
 $('af-url').oninput = () => $('af-own-box').classList.toggle('hidden', !$('af-url').value.trim());
 
