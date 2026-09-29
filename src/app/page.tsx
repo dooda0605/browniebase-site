@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import BizInfo from '@/components/BizInfo'
 
 type Lang = 'ko' | 'en'
 
@@ -221,6 +222,10 @@ export default function BrowniebasePage() {
             <a href="/terms-badapong.html" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '이용약관' : 'Terms'}</a>
           </div>
           <p className="text-gray-500 text-xs">{c.footer.copy}</p>
+        </div>
+        {/* 사이버몰 운영자 표시(전자상거래법 제10조) — 값·근거는 BizInfo.tsx */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 border-t border-gray-800 mt-6 pt-6">
+          <BizInfo lang={lang} className="text-gray-500" />
         </div>
       </footer>
     </main>

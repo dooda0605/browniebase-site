@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import BizInfo from '@/components/BizInfo'
 import { storeUrl, useDeviceOS, useSource } from './store'
 import { REGION_MAP } from './regionMap'
 
@@ -471,6 +472,13 @@ export default function BadapongPage() {
               </div>
             ))}
           </div>
+
+          {/* 등급은 모델 추정 — 공식 특보·안전요원 지시를 대체한다고 읽히지 않게 (2026-09-29 법적 표시 점검) */}
+          <p className="mt-6 text-[#6B8AA8] text-xs leading-relaxed">
+            {lang === 'ko'
+              ? '바다 등급은 참고용 추정이며 공식 기상특보·현장 안전요원 지시를 대체하지 않습니다.'
+              : 'Sea grades are estimates for reference only and do not replace official weather warnings or instructions from on-site lifeguards.'}
+          </p>
         </div>
       </section>
 
@@ -638,6 +646,8 @@ export default function BadapongPage() {
             <p className="text-[#6B8AA8] text-sm">© 2026 Browniebase. All rights reserved.</p>
             <p className="text-[#A9BCD0] text-xs">support@browniebase.com</p>
           </div>
+          {/* 사이버몰 운영자 표시(전자상거래법 제10조) — 값·근거는 BizInfo.tsx */}
+          <BizInfo lang={lang} className="mt-6 text-[#6B8AA8]" />
         </div>
       </footer>
     </main>

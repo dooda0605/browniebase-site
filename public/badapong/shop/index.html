@@ -37,6 +37,9 @@
   .badge { border-radius:99px; padding:2px 10px; font-size:.75rem; font-weight:700; background:rgba(52,211,153,.14); color:var(--ok); }
   .chip { border-radius:99px; padding:2px 10px; font-size:.75rem; background:rgba(255,255,255,.06); color:var(--body); }
   .muted { color:var(--sub); font-size:.84rem; }
+  /* 통신판매중개자 고지(전자상거래법 제20조①) — 판매자(샵) 상호 표기(사업자 정보 .row .9rem·보통 굵기) 이상으로.
+     muted(.84rem·흐린 색)로 두면 「고지했다」고 보기 어렵다 (2026-09-29 법적 표시 점검). */
+  .broker { margin-top:10px; font-size:.9rem; font-weight:700; color:var(--ink); }
   .notice { margin-top:12px; padding:10px 14px; border-radius:12px; background:rgba(245,183,92,.12); border:1px solid rgba(245,183,92,.35);
     color:var(--strong); font-size:.9rem; }
   .tabs { position:sticky; top:0; z-index:5; background:var(--bg); display:flex; gap:6px; padding:12px 0 8px; margin-top:16px;
@@ -124,7 +127,7 @@
       <div id="products"></div>
       <h2>취소 · 환불 기준 (바다퐁 표준)</h2>
       <pre class="policy" id="policy"></pre>
-      <div class="muted" style="margin-top:8px">서비스 제공 주체는 이 샵이며, 바다퐁은 모집 정보를 게시하는 플랫폼입니다. 참가비는 샵에 직접 결제합니다.</div>
+      <div class="broker">바다퐁은 통신판매중개자로서 통신판매의 당사자가 아닙니다. 예약·결제·환불 등 거래 책임은 샵에 있습니다. 참가비는 샵에 직접 결제합니다.</div>
     </section>
 
     <section id="sec-posts" class="hidden">
@@ -287,7 +290,7 @@ function render(d) {
   const bizRows = [['상호', s.name], ['대표자', p.representative], ['연락처', phone], ['주소', s.address], ['입금 계좌', p.bank_account]]
     .filter(([, v]) => v);
   $('biz').innerHTML = bizRows.map(([k, v]) => `<div class="row"><span class="muted">${k}</span><span>${esc(v)}</span></div>`).join('') +
-    '<div class="muted" style="margin-top:8px;font-size:.8rem">서비스 제공 주체는 이 샵이며, 바다퐁은 모집 정보를 게시하는 플랫폼입니다. 참가비는 샵에 직접 결제합니다.</div>';
+    '<div class="broker">바다퐁은 통신판매중개자로서 통신판매의 당사자가 아닙니다. 예약·결제·환불 등 거래 책임은 샵에 있습니다. 참가비는 샵에 직접 결제합니다.</div>';
 
   $('cta').style.display = '';
   $('page').classList.remove('hidden');
