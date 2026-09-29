@@ -467,8 +467,8 @@
       <div class="card">
         <h2 style="margin-top:0">소식 올리기</h2>
         <div class="muted">오늘 바다 컨디션·수료 인증·공지. 앱 샵 상세와 「샵」 탭 전체 소식에 보입니다.
-          <b>내 샵 단골</b>에게 알림이 가고, 아래에서 <b>스팟을 고르면</b> 그 스팟을 찜해 둔 사람에게도 함께 갑니다.
-          글은 하루 3건까지 올릴 수 있고, <b>알림은 하루 한 번</b>만 나갑니다(여러 건을 올려도 첫 건 기준).</div>
+          <b>내 샵 단골</b>에게 알림이 갑니다(「(광고)」 표시). 글은 하루 3건까지 올릴 수 있고,
+          <b>알림은 하루 한 번</b>만 나갑니다(여러 건을 올려도 첫 건 기준). <b>밤 9시~아침 8시</b>에 올린 글은 알림 없이 게시만 됩니다.</div>
         <!-- [2026-09-21 사용자] 순서 = 앱 소식 글 화면과 같게: 종류·제목 → 사진 → 내용. 종류는 선택. -->
         <div class="row2">
           <div><label>종류 <span class="muted" style="font-weight:400">(선택)</span></label>
@@ -1675,7 +1675,10 @@ $('btn-post').onclick = async () => {
     p_kind: $('sp-kind').value || null, p_title: title, p_body: $('sp-body').value.trim() || null, p_images: postPhotos });
   $('btn-post').disabled = false;
   if (error || !data || !data.ok) { msg('sp-msg', POST_REASON[data && data.reason] || '게시 실패: ' + ((data && data.reason) || (error && error.message)), false); return; }
-  msg('sp-msg', '게시했습니다 — 단골에게 알림이 갑니다.', true);
+  // 2026-09-30 서버가 push 로 알림 결과를 돌려준다 — 야간(21~08 KST)은 night_skipped, 오늘 이미 보냈으면 0
+  msg('sp-msg', data.push === 'night_skipped' ? '게시했습니다 — 밤 9시~아침 8시라 알림은 보내지 않았습니다.'
+    : data.push === 0 ? '게시했습니다 — 오늘 알림은 이미 한 번 나가서 이번 글은 알림 없이 게시됐습니다.'
+    : '게시했습니다 — 단골에게 알림이 갑니다.', true);
   $('sp-title').value = ''; $('sp-body').value = ''; postPhotos = []; renderPostPhotos();
   loadPosts();
 };
