@@ -930,6 +930,18 @@ const FEATURE_SIGNUP_SRC = false;
     localStorage.setItem('bp_signup_src_at', new Date().toISOString());
   } catch (e) { /* 사생활 모드·저장소 차단 — 측정만 빠지고 포털은 그대로 */ }
 })();
+// [2026-09-30] 파트너 페이지 방문 수 — 랜딩(partners/index.html logPageView)과 같은 규칙, page='portal'.
+//   탭 세션당 한 번, captureSignupSrc 뒤, 로그인과 무관(방문을 센다). 결과·오류 무시. 서버 적용 전엔 false.
+const FEATURE_PAGE_VIEWS = false;
+(function logPageView() {
+  if (!FEATURE_PAGE_VIEWS) return;
+  try {
+    if (sessionStorage.getItem('bp_pv_portal')) return;
+    sessionStorage.setItem('bp_pv_portal', '1');
+    let src = null; try { src = localStorage.getItem('bp_signup_src'); } catch (e) {}
+    sb.rpc('log_partner_page_view', { p_page: 'portal', p_src: src }).then(() => {}, () => {});
+  } catch (e) {}
+})();
 // 로그인·계정 확인 뒤 한 번 서버로 보낸다(init 에서 호출). 새 계정(register_partner_shop·초대 소진)도
 //   location.reload() 로 init 을 다시 타므로 같은 경로로 들어온다.
 // 서버 함수가 아직 없거나(적용 전) 일시 오류면 조용히 넘기고 다음 방문 때 다시 보낸다 —

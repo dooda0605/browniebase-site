@@ -578,6 +578,22 @@ const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&
   } catch (e) {}
 })();
 
+// [2026-09-30] 파트너 페이지 방문 수(익명 일별 카운터 — 20260930_partner_page_views.sql). 데일리 다이제스트 「파트너 페이지 방문」.
+//   탭 세션당 한 번만, captureSignupSrc **뒤에** 부른다(앞에서 부르면 광고로 처음 온 바로 그 방문이 direct 로 찍힌다).
+//   IP·계정 등 식별 정보는 보내지 않는다 — page 와 first-touch 출처 문자열뿐. 결과·오류는 무시(화면과 무관).
+//   서버 적용 전엔 false — 켜기 순서: 서버 적용·실측 → true → push.
+const FEATURE_PAGE_VIEWS = false;
+(function logPageView() {
+  if (!FEATURE_PAGE_VIEWS) return;
+  try {
+    if (sessionStorage.getItem('bp_pv_landing')) return;
+    sessionStorage.setItem('bp_pv_landing', '1');
+    let src = null; try { src = localStorage.getItem('bp_signup_src'); } catch (e) {}
+    fetch(SB + '/rpc/log_partner_page_view', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H),
+      body: JSON.stringify({ p_page: 'landing', p_src: src }) }).catch(() => {});
+  } catch (e) {}
+})();
+
 // [2026-09-26] 실적 수치 매일 갱신 — landing_stats() 는 크론(04:44 KST)이 만든 **집계 한 행**만 돌려준다.
 //   HTML 안 숫자는 실패 시 대비 값(09-26). 푸터 「매일 갱신」이 사실이 되게 한 것.
 //   8/18 결정(원천 조회 데이터 비공개)은 유지 — 스팟별·시간별 원천은 여전히 내보내지 않는다.
