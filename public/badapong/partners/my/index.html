@@ -902,7 +902,7 @@ const msg = (id, text, ok) => { const el=$(id); el.textContent=text; el.classNam
 //                      + 방침(AI 정리·미국 전송) 게시 뒤. 동의 문구를 바꾸면 AF_CONSENT_VERSION 과 edge 값을 같이 올린다.
 const FEATURE_OPS_CHAT = false;
 const FEATURE_OVERSEAS = false;
-const FEATURE_AUTOFILL = false;
+const FEATURE_AUTOFILL = true;    // 2026-09-29 공개 — 서버 적용(13:05)·실측·방침 게시(09-28) 확인 후 사장님 Go
 if (FEATURE_OPS_CHAT) $('tab-btn-opschat').classList.remove('hidden');
 if (FEATURE_AUTOFILL) $('card-autofill').classList.remove('hidden');
 if (FEATURE_OVERSEAS) {
