@@ -936,14 +936,17 @@ const FEATURE_SIGNUP_SRC = false;
 //   측정 실패를 샵 사장님께 보일 이유가 없다. ok(기록) 또는 kept(이미 기록돼 있음)면 다시 보내지 않는다.
 async function sendSignupSrc() {
   if (!FEATURE_SIGNUP_SRC) return;
-  let v;
+  let v, seenAt;
   try {
     if (localStorage.getItem('bp_signup_src_sent')) return;
     v = localStorage.getItem('bp_signup_src');
+    seenAt = localStorage.getItem('bp_signup_src_at');
   } catch (e) { return; }
   if (!v) return;
   try {
-    const { data, error } = await sb.rpc('set_partner_signup_src', { p_src: v });
+    // p_seen_at: 서버는 계정 생성이 이 시각 뒤일 때만 기록한다 — 기존 파트너가 광고 링크로 다시 들어와도
+    //   「광고로 가입」으로 세지 않게(09-29 부풀림 검토). skipped 도 ok:true 라 다시 보내지 않는다.
+    const { data, error } = await sb.rpc('set_partner_signup_src', { p_src: v, p_seen_at: seenAt || null });
     if (!error && data && (data.ok || data.kept)) {
       try { localStorage.setItem('bp_signup_src_sent', '1'); } catch (e) {}
     }
