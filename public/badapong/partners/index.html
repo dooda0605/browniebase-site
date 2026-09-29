@@ -547,6 +547,37 @@ const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZi
 const H = { apikey: KEY, Authorization: 'Bearer ' + KEY };
 const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+// [2026-09-29] 유입 경로 저장 — 메타 광고 효과 측정(사장님 Go). 포털(my/index.html)에 같은 코드가 있다 — 바꾸면 둘 다.
+// ?src=meta&utm_campaign=reel17 → 'meta|reel17' (campaign 없으면 'meta'). utm_source 도 src 로 받는다.
+// 최초 유입만 남긴다(이미 있으면 덮지 않음, first-touch) — 광고로 처음 온 뒤 다른 길로 다시 와 가입해도 공은 첫 광고에.
+// 형식은 서버 set_partner_signup_src 정규식 ^[A-Za-z0-9._|-]{1,80}$ 과 맞춘다(허용 밖 문자 제거·80자 자름).
+//   '|' 는 구분자로만 쓰려고 각 값에서는 뺀다. 서버 전송은 포털이 로그인·계정 확인 뒤에 한다(여기선 저장만).
+// 값은 광고 캠페인 문자열뿐이다 — 개인 식별 정보가 아니다.
+(function captureSignupSrc() {
+  try {
+    const q = new URLSearchParams(location.search);
+    const clean = s => String(s || '').replace(/[^A-Za-z0-9._-]/g, '');
+    const src = clean(q.get('src') || q.get('utm_source'));
+    if (!src) return;
+    const camp = clean(q.get('utm_campaign'));
+    const v = (camp ? src + '|' + camp : src).slice(0, 80).replace(/\|$/, '');   // 자른 끝에 구분자만 남지 않게
+    if (!localStorage.getItem('bp_signup_src')) {
+      localStorage.setItem('bp_signup_src', v);
+      localStorage.setItem('bp_signup_src_at', new Date().toISOString());
+    }
+  } catch (e) { /* 사생활 모드·저장소 차단 — 측정만 빠진다 */ }
+  // 포털로 가는 버튼에도 출처 쿼리를 이어 붙인다 — 같은 브라우저면 localStorage 로 충분하지만,
+  //   인앱 브라우저(인스타·페북)에서 포털로 넘어간 뒤 「외부 브라우저로 열기」나 주소 복사로 PC 에서 가입하면
+  //   저장소가 다른 브라우저로 바뀐다. 포털 주소에 출처가 남아 있으면 포털이 그 브라우저에서 다시 저장한다.
+  //   초대 토큰(?t=) 같은 다른 파라미터는 넘기지 않는다 — 출처 세 개만.
+  try {
+    const q = new URLSearchParams(location.search), keep = new URLSearchParams();
+    for (const k of ['src', 'utm_source', 'utm_campaign']) if (q.get(k)) keep.set(k, q.get(k));
+    const qs = keep.toString();
+    if (qs) document.querySelectorAll('a[href="/badapong/partners/my/"]').forEach(a => a.href = '/badapong/partners/my/?' + qs);
+  } catch (e) {}
+})();
+
 // [2026-09-26] 실적 수치 매일 갱신 — landing_stats() 는 크론(04:44 KST)이 만든 **집계 한 행**만 돌려준다.
 //   HTML 안 숫자는 실패 시 대비 값(09-26). 푸터 「매일 갱신」이 사실이 되게 한 것.
 //   8/18 결정(원천 조회 데이터 비공개)은 유지 — 스팟별·시간별 원천은 여전히 내보내지 않는다.
