@@ -907,7 +907,7 @@ const FEATURE_AUTOFILL = true;    // 2026-09-29 공개 — 서버 적용(13:05)�
 //                      적용·anon/authenticated 실측 뒤 true. ⚠ 이 스위치는 **서버 호출만** 막는다 —
 //                      localStorage 저장(captureSignupSrc)은 항상 돈다. 광고가 서버 적용보다 먼저 시작돼도
 //                      그 사이 들어온 유입을 잃지 않고, 스위치를 켠 뒤 첫 방문 때 보내기 위해서다.
-const FEATURE_SIGNUP_SRC = false;
+const FEATURE_SIGNUP_SRC = true;
 
 // ── 유입 경로 저장 (2026-09-29) ─────────────────────────
 // ?src=meta&utm_campaign=reel17 → 'meta|reel17' (campaign 없으면 'meta'). utm_source 도 src 로 받는다.
@@ -932,7 +932,7 @@ const FEATURE_SIGNUP_SRC = false;
 })();
 // [2026-09-30] 파트너 페이지 방문 수 — 랜딩(partners/index.html logPageView)과 같은 규칙, page='portal'.
 //   탭 세션당 한 번, captureSignupSrc 뒤, 로그인과 무관(방문을 센다). 결과·오류 무시. 서버 적용 전엔 false.
-const FEATURE_PAGE_VIEWS = false;
+const FEATURE_PAGE_VIEWS = true;
 (function logPageView() {
   if (!FEATURE_PAGE_VIEWS) return;
   try {

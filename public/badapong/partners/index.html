@@ -582,7 +582,7 @@ const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&
 //   탭 세션당 한 번만, captureSignupSrc **뒤에** 부른다(앞에서 부르면 광고로 처음 온 바로 그 방문이 direct 로 찍힌다).
 //   IP·계정 등 식별 정보는 보내지 않는다 — page 와 first-touch 출처 문자열뿐. 결과·오류는 무시(화면과 무관).
 //   서버 적용 전엔 false — 켜기 순서: 서버 적용·실측 → true → push.
-const FEATURE_PAGE_VIEWS = false;
+const FEATURE_PAGE_VIEWS = true;
 (function logPageView() {
   if (!FEATURE_PAGE_VIEWS) return;
   try {
