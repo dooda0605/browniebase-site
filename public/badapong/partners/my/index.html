@@ -2739,7 +2739,7 @@ $('btn-af').onclick = async () => {
     return;
   }
   afClearPhotos();   // 초안을 만들면 서버가 이번 사진을 바로 지운다
-  $('af-msg').className = 'msg';
+  $('af-msg').className = 'msg'; $('af-msg').textContent = '';   // [2026-10-01] 숨기기만 하면 「읽고 있어요… (n초)」가 남아 다음 표시·스냅숏에 섞인다
   renderAfDraft(res);
 };
 
