@@ -307,7 +307,7 @@
         </div>
         <div class="muted" style="margin-top:4px" id="credit-note">펀다이빙 · 강습 · 체험 · 투어를 한곳에서 올립니다. 작성할 때 <b>날짜를 정해서 모집</b>할지, 오픈워터·Level 1처럼 <b>상시 접수</b>할지 고릅니다.</div>
         <div class="muted" id="free-note" style="margin-top:4px;color:#2bb5a0"></div>
-        <div class="muted" style="margin-top:4px">발행한 글의 내용 수정은 <b>앱</b>에서 합니다 — 이 포털에는 수정 폼이 없습니다. 임시저장 글은 삭제하고 다시 작성해 주세요. 취소·환불 기준은 <b>바다퐁 표준</b>이 모든 일정·투어에 자동으로 붙습니다(아래 작성 폼 참고).</div>
+        <div class="muted" style="margin-top:4px">발행한 글의 내용 수정은 <b>앱</b>에서 합니다 — 이 포털에는 수정 폼이 없습니다. 임시저장 글은 삭제하고 다시 작성해 주세요. 취소·환불 규정은 상품마다 <b>샵이 직접 정해 입력</b>합니다(필수) — 손님은 신청 전에 이 규정을 그대로 봅니다.</div>
         <div class="muted" style="margin-top:4px">📞 <b>전화·카톡·현장으로 받은 예약</b>은 회차 옆 <b>「외부 예약 ＋」</b>를 눌러 주세요. 앱의 남은자리가 그만큼 줄어 초과 예약을 막습니다.</div>
         <div id="meetup-list" style="margin-top:10px"><span class="muted">불러오는 중…</span></div>
         <div id="course-list"></div>
@@ -442,8 +442,13 @@
         <input id="m-price-note" maxlength="60" placeholder="예: 장비 지참 시 1만원 할인 · 점심 별도" />
         <label id="m-meet-label">집결지</label>
         <input id="m-meet" maxlength="60" placeholder="예: 샵 앞 주차장 05:40" />
-        <label>취소 · 환불 기준 <span class="muted" style="font-weight:400">— 바다퐁 표준(모든 샵 동일). 발행 시 자동으로 붙고 카드 하단에 항상 노출됩니다</span></label>
-        <pre id="m-cancel-std" class="muted" style="white-space:pre-wrap;font:inherit;font-size:.84rem;border:1px dashed var(--line);border-radius:10px;padding:10px 12px">불러오는 중…</pre>
+        <!-- [2026-10-02 사장님 Go] 「바다퐁 표준」 폐지 — 샵이 규정을 직접 쓴다(research/20 §5·20a).
+             중개자가 기준을 정하면 표시 주체가 되어 표시광고법 제10조 무과실 배상을 지고, 비워 두면 전자상거래법
+             제20조의3 에 따라 바다퐁이 청약철회 정보를 대신 제공해야 한다 → 필수 입력, 서버도 20자 미만이면 발행 거절.
+             🔴 placeholder 에 숫자 예시를 넣지 않는다 — 넣으면 다시 「바다퐁 기준」으로 읽힌다(09-02 앱 힌트와 같은 원칙). -->
+        <label>취소 · 환불 규정 (필수) <span class="muted" style="font-weight:400">— 샵이 정한 규정이 손님 신청 화면에 그대로 보입니다. 바다퐁은 기준을 정하지 않습니다</span></label>
+        <textarea id="m-cancel" rows="5" maxlength="1500" placeholder="예: 시점별 환불 기준 · 샵 사정이나 기상 악화로 취소할 때(환불·일정 변경) · 취소 요청 방법 · 환불 시기"></textarea>
+        <div class="muted" style="margin-top:4px">규정은 전자상거래법(7일 청약철회 등)에 맞게 정해 주세요. 참고: 공정위 「소비자분쟁해결기준」. 20자 이상 입력해야 게시됩니다.</div>
         <label id="m-leisure-box" style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-weight:400;font-size:.86rem;line-height:1.5">
           <input type="checkbox" id="m-leisure" style="width:auto;margin-top:3px" />
           <span>우리 샵은 수중레저·수상레저 등 <b>관련 법령상 사업 등록·신고</b>를 갖추고 상품을 올립니다.
@@ -990,6 +995,7 @@ const GEAR = {bcd:'BCD',regulator:'호흡기',computer:'다이브 컴퓨터',tan
 const BOARDS = {soft:'소프트보드',long:'롱보드',fun:'펀보드',short:'숏보드',bodyboard:'바디보드',sup:'SUP'};
 let photos = [];   // partner_profiles.photos (공개 URL 배열)
 let certs = [], courses = [], instructors = [];   // 앱 ProfileScreen 과 같은 키
+let lastCancelPolicy = '';   // 마지막으로 통과한 취소·환불 규정 — 다음 상품 폼에 미리 채운다(readCancelPolicy)
 const CERT_F   = [['org','발급 단체'],['level','등급'],['no','자격번호'],['url','인증 조회 URL']];
 // [2026-09-19] 강사진 — partner_profiles.instructors jsonb [{name, agency, level, years}]
 // [2026-09-21] bio·instagram 추가. DB(jsonb)엔 원래 있던 자리인데 입력 폼이 안 받아
@@ -1022,6 +1028,7 @@ function renderTeach() {
 //   name · activity · body · images · photo(=images[0], 카드 썸네일) · agency · level · place ·
 //   instructor(강사진 이름과 같으면 프로필이 붙는다) · days · hours · price · price_note ·
 //   includes(글자 한 줄 — c->>'includes') · next_start(비우면 「상시 접수」). 전부 jsonb 안이라 스키마 변경 0.
+//   [2026-10-02] + cancel_policy(취소·환불 규정, 필수 20자 이상 — readCancelPolicy). 옛 과정엔 없다.
 function renderRows(id, list, fields, cls) {
   const el = $(id);
   // [2026-09-21] 입력칸을 .f 하위 그리드로 감싼다. 과정 10칸·강사 6칸으로 늘면서
@@ -1100,6 +1107,7 @@ window.editCourse = i => {
   $('m-price').value = String(c.price || '').replace(/[^0-9]/g, '');
   $('m-price-note').value = c.price_note || '';
   $('m-meet').value = c.place || '';
+  $('m-cancel').value = c.cancel_policy || lastCancelPolicy || '';   // 옛 과정은 비어 있다 — 저장하려면 채워야 한다
   meetupPhotos = Array.isArray(c.images) && c.images.length ? c.images.slice() : (c.photo ? [c.photo] : []);
   renderMeetupPhotos();
   $('composer-title').textContent = '상시 과정 수정';
@@ -1170,12 +1178,11 @@ async function init() {
   }
 
   // [2026-09-03] 무료 기간 스위치 — 앱과 같은 행(meetup_policy)을 읽는다.
-  // [2026-09-19] 표준 취소 규정도 같은 행에서 — 발행 시 서버가 샵 모집글에 자동으로 붙인다.
+  // [2026-10-02] standard_cancel_policy(옛 「바다퐁 표준」)는 더 이상 읽지 않는다 — 샵이 상품마다 직접 입력(m-cancel).
   try {
     const { data: pol } = await sb.from('meetup_policy')
-      .select('free_period,free_max_days,free_max_posts,paid_from,standard_cancel_policy').limit(1).maybeSingle();
+      .select('free_period,free_max_days,free_max_posts,paid_from').limit(1).maybeSingle();
     if (pol) {
-      $('m-cancel-std').textContent = pol.standard_cancel_policy || '(표준 규정 미설정)';
       // [2026-09-21] 전체 무료(파일럿)는 끝났다 — 샵별 무료 체험은 renderMembership 이 안내한다.
       //   (옛 스위치가 다시 켜지는 경우만 대비해 남겨 둔다)
       if (pol.free_period) {
@@ -1877,7 +1884,10 @@ const PUB_REASON = {
   slot_time_locked:'발행 후에는 회차 시각을 바꿀 수 없습니다. 취소 후 다시 올려주세요.',
   slot_has_participants:'이미 신청자가 있어 회차 시각을 바꿀 수 없습니다.',
   meetup_has_participants:'이미 신청자가 있어 회차 시각을 바꿀 수 없습니다.',
-  past_slot:'지난 시각의 회차가 있습니다.', cancel_policy_required:'취소 규정은 필수입니다.',
+  past_slot:'지난 시각의 회차가 있습니다.',
+  // [2026-10-02] 서버가 샵 모집글의 취소·환불 규정이 비었거나 20자 미만이면 발행을 거절한다.
+  //   포털에는 수정 폼이 없어 옛 임시저장 글(규정 null)은 삭제 후 다시 작성해야 한다.
+  cancel_policy_required:'취소·환불 규정을 20자 이상 입력해야 게시됩니다. 임시저장 글이면 삭제하고 규정을 넣어 다시 작성해 주세요.',
   duplicate_slot:'같은 스팟·활동·시각에 이미 발행한 모집글이 있습니다.',
   // [2026-09-20] 샵 상품에서는 둘 다 더 이상 안 뜬다(publish_meetup 이 host_kind='shop' 을 면제).
   // 개인 버디 모집에는 그대로 적용돼 문구는 남긴다.
@@ -1886,10 +1896,16 @@ const PUB_REASON = {
   activity_shop_kind_mismatch:'서핑샵은 스쿠버 모집을 올릴 수 없습니다.',
   partner_suspended:'계정 상태를 확인해 주세요.', not_draft:'이미 발행된 글입니다.',
   not_published:'모집 중인 글만 마감할 수 있습니다.', forbidden:'이 글을 처리할 권한이 없습니다.' };
+// 발행 실패 사유 키 — 서버는 {ok:false, reason} 로도, raise exception '<키>' 로도 거절한다
+//   (2026-10-02 cancel_policy_required 계약은 raise). 둘 다 같은 안내로 보이게 키를 뽑는다.
+const pubReason = (data, error) => (data && data.reason) ||
+  (error && Object.keys(PUB_REASON).find(k => (error.message || '').includes(k))) || null;
+const pubFailMsg = (data, error) => PUB_REASON[pubReason(data, error)] ||
+  '발행 실패: ' + ((data && data.reason) || (error && error.message) || '알 수 없는 오류');
 
 window.publishNow = async id => {
   const { data, error } = await sb.rpc('publish_meetup', { p_meetup: id });
-  if (error || !data.ok) { alert(PUB_REASON[data && data.reason] || '발행 실패: ' + ((data&&data.reason)||error.message)); return; }
+  if (error || !data.ok) { alert(pubFailMsg(data, error)); return; }
   // 등급은 말하지 않는다 — 모집·진행 판단은 샵 몫(2026-09-19 원칙).
   let m = '발행 완료!';
   if (data.interested > 0) m += `\n이 날짜에 관심을 눌러둔 사용자 ${data.interested}명에게 노출됩니다.`;
@@ -2029,11 +2045,14 @@ const openComposer = mode => {
   $('composer-title').textContent = '상품 작성';
   labelTouched = false;
   setMode(mode);
+  // [2026-10-02] 취소·환불 규정은 샵마다 대개 하나 — 이번 세션에 쓴 것, 없으면 기존 과정에 적힌 것을 미리 채운다(샵이 확인·수정).
+  if (!$('m-cancel').value.trim())
+    $('m-cancel').value = lastCancelPolicy || ((courses.slice().reverse().find(c => (c.cancel_policy || '').trim()) || {}).cancel_policy || '');
   window.scrollTo({ top: $('composer').offsetTop - 20, behavior: 'smooth' });
 };
 $('btn-new').onclick = () => { editingCourse = null; openComposer('dated'); addSlotRow(); };
 $('btn-cancel-compose').onclick = () => { $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; meetupPhotos = []; renderMeetupPhotos(); $('m-photo-msg').textContent=''; $('m-instructor').value=''; editingCourse = null; legacyLevel = null; labelTouched = false;
-  for (const k of ['m-title','m-body','m-agency','m-next','m-days','m-hours','m-includes','m-price','m-price-note','m-meet']) $(k).value = '';
+  for (const k of ['m-title','m-body','m-agency','m-next','m-days','m-hours','m-includes','m-price','m-price-note','m-meet','m-cancel']) $(k).value = '';
   $('m-level').value = 'any'; };
 $('btn-add-slot').onclick = addSlotRow;
 // 투어는 회차 1개(출발일·정원) + 종료일. 유형을 바꾸면 안내만 바뀐다.
@@ -2097,6 +2116,22 @@ window.pickSpot = (id, name) => {
   $('m-spot-id').value = id; $('m-spot-q').value = name; $('m-spot-result').innerHTML = '';
 };
 
+// [2026-10-02] 취소·환불 규정 필수 — 비었거나 20자 미만이면 저장을 막는다(서버 publish_meetup 도 같은 기준으로 거절).
+//   상시 과정(partner_profiles.courses jsonb)은 서버 발행 게이트를 안 거치므로 이 검사가 유일한 관문이다.
+//   통과하면 다음 상품 폼에 미리 채워 두려고 lastCancelPolicy 에 기억한다(샵마다 규정은 대개 하나).
+const CANCEL_POLICY_MIN = 20;
+function readCancelPolicy(id, out) {
+  const v = ($(id).value || '').trim();
+  if ([...v].length < CANCEL_POLICY_MIN) {
+    msg(out, v ? `취소·환불 규정을 ${CANCEL_POLICY_MIN}자 이상 적어 주세요(지금 ${[...v].length}자).`
+               : '취소·환불 규정은 필수입니다 — 손님이 신청 전에 이 규정을 봅니다.', false);
+    $(id).focus();
+    return null;
+  }
+  lastCancelPolicy = v;
+  return v;
+}
+
 // [2026-09-24] 레저사업 등록 자기확인 — 샵당 한 번, 서버에 첫 확인 시각이 남는다.
 //   플랫폼의 인허가 확인 의무는 없고 등록 책임은 샵에 있다(약관). 이 기록이 그 고지의 근거다.
 //   [2026-09-30] 과정 초안 일괄 저장(af-bulk-leisure · af-bulk-msg)도 같은 확인을 거친다 — 체크박스·메시지 칸만 인자로.
@@ -2118,6 +2153,8 @@ async function saveDraft() {
   const spot = $('m-spot-id').value;
   if (!spot) { msg('m-msg','스팟을 선택해 주세요.',false); return null; }
   if (!$('m-title').value.trim()) { msg('m-msg','제목을 입력해 주세요.',false); return null; }
+  const cancelPolicy = readCancelPolicy('m-cancel', 'm-msg');
+  if (!cancelPolicy) return null;
   const slots = [...document.querySelectorAll('.slot-row')].filter(r => r.querySelector('.s-date').value && r.querySelector('.s-time').value).map(r => ({
     starts_at: r.querySelector('.s-date').value + 'T' + r.querySelector('.s-time').value, capacity: +r.querySelector('.s-cap').value || 0 }))
     .filter(s => s.starts_at && s.capacity > 0);
@@ -2146,8 +2183,8 @@ async function saveDraft() {
     includes: $('m-includes').value.split(',').map(s => s.trim()).filter(Boolean),
     meetup_type: $('m-type').value,
     meet_point: $('m-meet').value.trim() || null,
-    // 취소 규정은 발행 시 서버가 표준으로 덮어쓴다(publish_meetup). 여기선 비워 둔다.
-    cancel_policy: null,
+    // [2026-10-02] 샵이 쓴 원문 그대로. 옛 「발행 시 서버가 표준으로 덮어쓰기」는 폐지(research/20a).
+    cancel_policy: cancelPolicy,
     ends_at: isTour ? new Date($('m-ends').value + 'T23:59:00').toISOString() : null,
     deposit_note: isTour ? ($('m-deposit').value.trim() || null) : null,
     images,
@@ -2168,6 +2205,8 @@ async function saveAlwaysCourse() {
   if (!(await ensureLeisureAttest())) return false;
   const title = $('m-title').value.trim();
   if (!title) { msg('m-msg', '제목(과정명)을 입력해 주세요.', false); return false; }
+  const cancelPolicy = readCancelPolicy('m-cancel', 'm-msg');
+  if (!cancelPolicy) return false;
   const row = {
     name: title,
     activity: $('m-activity').value,
@@ -2186,6 +2225,7 @@ async function saveAlwaysCourse() {
     images: meetupPhotos.length ? meetupPhotos.slice() : undefined,
     photo: meetupPhotos[0] || undefined,          // 추천 강습 카드 썸네일(list_courses 의 photo)
     label_word: curLabel(),
+    cancel_policy: cancelPolicy,                   // [2026-10-02] 상시 과정도 필수 — shop_page 는 crs 를 통째로 내준다
   };
   Object.keys(row).forEach(k => row[k] === undefined && delete row[k]);
   const backup = courses.slice();
@@ -2206,8 +2246,8 @@ $('btn-publish').onclick = async () => {
   const id = await saveDraft();
   if (!id) return;
   const { data, error } = await sb.rpc('publish_meetup', { p_meetup: id });
-  if (error || !data.ok) { msg('m-msg', PUB_REASON[data && data.reason] || '발행 실패: '+((data&&data.reason)||error.message), false); return; }
-  let m = '발행 완료! 표준 취소 규정이 자동으로 붙었습니다.';
+  if (error || !data.ok) { msg('m-msg', pubFailMsg(data, error), false); return; }
+  let m = '발행 완료! 입력하신 취소·환불 규정이 신청 화면에 함께 보입니다.';
   if (data.interested > 0) m += ` · 관심 사용자 ${data.interested}명에게 알림 대상`;
   msg('m-msg', m, true);
   $('composer').classList.add('hidden'); $('slot-box').innerHTML=''; meetupPhotos = []; renderMeetupPhotos(); $('m-photo-msg').textContent='';
@@ -2844,6 +2884,12 @@ function renderAfDraft(res) {
       lb.appendChild(lc); lb.appendChild(afEl('span', '', '우리 샵은 수중레저·수상레저 등 관련 법령상 사업 등록·신고를 갖추고 상품을 올립니다. (등록·신고와 그 유지는 샵의 책임입니다 — 약관)'));
       box.appendChild(lb);
     }
+    // [2026-10-02] 상시 과정도 취소·환불 규정 필수 — 일괄 저장은 체크한 과정 모두에 같은 규정을 붙인다.
+    box.appendChild(afEl('label', '', '취소 · 환불 규정 (필수) — 체크한 과정에 똑같이 붙습니다'));
+    const bc = document.createElement('textarea'); bc.id = 'af-bulk-cancel'; bc.rows = 4; bc.maxLength = 1500;
+    bc.placeholder = '예: 시점별 환불 기준 · 샵 사정이나 기상 악화로 취소할 때(환불·일정 변경) · 취소 요청 방법 · 환불 시기';
+    bc.value = lastCancelPolicy || ((courses.slice().reverse().find(c => (c.cancel_policy || '').trim()) || {}).cancel_policy || '');
+    box.appendChild(bc);
     const sb2 = afEl('button', 'btn', '체크한 과정 한 번에 저장'); sb2.type = 'button'; sb2.style.marginTop = '10px';
     sb2.onclick = () => afSaveCourses(bulk, sb2);
     box.appendChild(sb2);
@@ -2857,6 +2903,8 @@ function renderAfDraft(res) {
 async function afSaveCourses(bulk, btn) {
   const on = bulk.filter(b => b.cb.checked && !b.cb.disabled);
   if (!on.length) { msg('af-bulk-msg', '저장할 과정을 체크해 주세요.', false); return; }
+  const cancelPolicy = readCancelPolicy('af-bulk-cancel', 'af-bulk-msg');
+  if (!cancelPolicy) return;
   if (!(await ensureLeisureAttest('af-bulk-leisure', 'af-bulk-msg'))) return;
   if (!confirm('과정 ' + on.length + '개를 저장하면 앱 「예약·강습」 탭에 바로 공개됩니다.\n사진에서 읽은 값(⚠ 표시)은 가격·기간이 맞는지 확인하셨나요?\n저장 뒤에도 「상품」 탭 목록에서 [수정]·[삭제]할 수 있어요.')) return;
   const rows = on.map(({ c }) => {
@@ -2872,6 +2920,7 @@ async function afSaveCourses(bulk, btn) {
       price: String(c.price || '').replace(/[^0-9]/g, '') || undefined,
       price_note: (c.price_note || '').trim().slice(0, 60) || undefined,
       label_word: defaultLabel(act),
+      cancel_policy: cancelPolicy,
     };
     Object.keys(row).forEach(k => row[k] === undefined && delete row[k]);
     return row;

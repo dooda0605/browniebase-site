@@ -72,6 +72,7 @@
     background:var(--sea); color:#fff; }
   .btn.sec { background:transparent; color:var(--strong); border:1px solid var(--line); }
   .btn.hidden { display:none; }
+  details.pol { margin-top:8px; } details.pol summary { cursor:pointer; font-size:.86rem; color:var(--ink); }
   pre.policy { white-space:pre-wrap; font:inherit; font-size:.84rem; color:var(--body); background:rgba(255,255,255,.03);
     border:1px dashed var(--line); border-radius:12px; padding:12px 14px; }
   .center { text-align:center; padding:60px 0; color:var(--sub); }
@@ -125,8 +126,10 @@
          카드마다 종류 칩(펀다이빙·강습·체험·투어·과정)으로 구분한다. -->
     <section id="sec-products" class="hidden">
       <div id="products"></div>
-      <h2>취소 · 환불 기준 (바다퐁 표준)</h2>
-      <pre class="policy" id="policy"></pre>
+      <!-- [2026-10-02 사장님 Go] 「바다퐁 표준」 폐지 — 규정은 상품 카드마다 샵이 쓴 원문(cancel_policy)을 보인다.
+           바다퐁이 정한 기준처럼 보이는 문구를 두지 않는다(표시광고법 제10조 · research/20 §5 A·C). -->
+      <h2>취소 · 환불</h2>
+      <div class="muted">취소·환불은 각 샵이 정한 규정을 따릅니다. 신청 전에 샵 규정을 꼭 확인하세요.</div>
       <div class="broker">바다퐁은 통신판매중개자로서 통신판매의 당사자가 아닙니다. 예약·결제·환불 등 거래 책임은 샵에 있습니다. 참가비는 샵에 직접 결제합니다.</div>
     </section>
 
@@ -246,23 +249,32 @@ function render(d) {
     return u ? `<img class="cover" src="${esc(u)}" alt="" loading="lazy" />` : ''; };
   const head = (kind, title, price) => `<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
       <span><span class="kind">${esc(kind)}</span><b>${esc(title)}</b></span><span class="price">${price}</span></div>`;
+  // [2026-10-02] 상품별 취소·환불 규정 — 샵이 쓴 원문 그대로 + 「샵 작성」 표기(research/20 §5 C).
+  //   일정·투어는 키가 없으면(RPC 가 아직 안 내려줌) 아무것도 안 그린다. 키는 있는데 비었으면 앱과 같은 「아직 입력 안 함」 안내.
+  //   과정(courses)은 jsonb 를 통째로 받으므로 키가 없으면 = 샵이 안 적은 것 → always=true 로 안내를 띄운다.
+  const pol = (x, always) => (!always && !('cancel_policy' in x)) ? '' : ((x.cancel_policy || '').trim()
+    ? `<details class="pol"><summary>취소·환불 규정 (${esc(s.name || '샵')} 작성)</summary><pre class="policy">${esc(x.cancel_policy)}</pre>
+        <div class="muted">이 규정은 샵이 정한 것으로, 바다퐁이 정하거나 보증하지 않습니다.</div></details>`
+    : `<div class="muted">이 ${always ? '과정' : '일정'}은 샵이 취소·환불 규정을 아직 입력하지 않았어요. 신청 전에 샵에 확인해 주세요.</div>`);
   const ses = (d.sessions || []).map(m => `<div class="card">${cover(m)}${head(typeOf(m), m.title, m.price ? won(m.price) : '')}
       <div class="muted">${esc([ACT[m.activity], m.meet_point ? '집결 ' + m.meet_point : ''].filter(Boolean).join(' · '))}</div>
       ${(m.slots || []).map(sl => `<div class="slot"><span>${fmt(sl.starts_at)}${sl.duration_min ? ' · ' + sl.duration_min + '분' : ''}</span>
         <span class="seats">남은자리 <b>${sl.remaining}</b>/${sl.capacity}</span></div>`).join('')}
+      ${pol(m)}
     </div>`);
   const tours = (d.tours || []).map(m => `<div class="card">${cover(m)}${head('투어', m.title, m.price ? won(m.price) : '')}
       <div class="muted">${fmtD(m.starts_at)} ~ ${m.ends_at ? fmtD(m.ends_at) : ''} · ${ACT[m.activity] || ''}${m.deposit_note ? ' · ' + esc(m.deposit_note) : ''}</div>
       <div class="slot"><span>출발 ${fmt(m.starts_at)}</span><span class="seats">남은자리 <b>${m.remaining}</b>/${m.capacity}</span></div>
+      ${pol(m)}
     </div>`);
   const courses = (Array.isArray(d.courses) ? d.courses.filter(c => c.name) : []).map(c => `<div class="card">${cover(c)}${head(learnOf(c), c.name, won(c.price))}
       <div class="muted">${esc([c.agency, c.days ? c.days + '일' : '', c.hours ? c.hours + '시간' : '', c.next_start ? '다음 개강 ' + c.next_start : '상시 접수'].filter(Boolean).join(' · '))}</div>
       ${c.place ? `<div class="muted">장소: ${esc(c.place)}</div>` : ''}
       ${c.includes ? `<div class="muted">포함: ${esc(c.includes)}</div>` : ''}
+      ${pol(c, true)}
     </div>`);
   const all = ses.concat(tours, courses);
   $('products').innerHTML = all.length ? all.join('') : '<div class="empty">등록된 상품이 없습니다.</div>';
-  $('policy').textContent = d.cancel_policy || '';
 
   // 소식
   const posts = d.posts || [];
