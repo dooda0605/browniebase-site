@@ -244,8 +244,11 @@
       <div id="rg-hits" style="margin-top:6px"></div>
       <div class="row2" style="margin-top:8px">
         <div><label>종류 *</label><select id="rg-kind"><option value="dive">다이브샵 (스쿠버·프리다이빙)</option><option value="surf">서핑샵</option></select></div>
-        <div><label>주소 *</label><input id="rg-addr" maxlength="160" placeholder="도로명 주소" /></div>
+        <div><label>주소 *</label><input id="rg-addr" maxlength="160" placeholder="도로명 주소 (예: 부산 해운대구 ○○로 12)" /></div>
       </div>
+      <!-- [2026-10-03] 첫 실가입 샵이 주소 칸에 건물 이름만 적어 좌표가 0,0(위치 미상)으로 들어갔다 — 지도 검색이 건물명을 못 찾는다.
+           아래 rg-addr-hint 는 FEATURE_OVERSEAS(약관 4-3) 뒤라 안 보이므로 이 줄은 게이트 없이 둔다. -->
+      <div class="muted" style="margin-top:6px;font-size:.84rem">시·군·구 + 도로명 + 번호까지 적어 주세요. 건물 이름만 적으면 지도에 위치가 잡히지 않습니다.</div>
       <!-- [2026-09-28] 1인 강사·해외 샵 안내 — FEATURE_OVERSEAS 가 켜질 때만(약관 4-3 개정 게시 뒤) -->
       <div class="muted hidden" id="rg-addr-hint" style="margin-top:6px">📍 주소 = <b>손님과 만나는 곳</b>(매장 없는 1인 강사는 활동 지역) — 앱에 그대로 보입니다. <b>집 주소는 적지 마세요.</b></div>
       <div class="msg" id="rg-msg"></div>
@@ -267,6 +270,8 @@
       </div>
       <!-- [2026-09-20] 가입 → 인증 → 샵 안내·사진 → 과정·일정 → 멤버십. 끝난 건 ✓, 남은 건 탭으로 바로 이동. -->
       <div id="todo-box" class="muted" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px"></div>
+      <!-- [2026-10-03] 첫 실가입 샵이 등록 직후 아무것도 저장하지 않고 멈췄다 — 어디서부터 하는지 한 줄로. -->
+      <div class="muted" style="margin-top:6px;font-size:.84rem;flex-basis:100%">처음이면 「다음 할 일」을 왼쪽부터 하나씩 — 사업자등록증(번호·대표자명·개업일자)을 옆에 두고 시작하세요. 각 탭은 <b>[저장]</b>을 눌러야 반영됩니다. <a href="/badapong/partners/#apply" target="_blank" rel="noopener">입력 순서 안내 ↗</a></div>
       <!-- [2026-09-21] display:none 안에 묻혀 있던 것을 되살렸다 — 09-20 헤더 개편 때
            인사이트와 「내 샵 페이지」가 통째로 가려져 포털에서 갈 길이 없어졌다(사용자 제보).
            두 버튼 다 핸들러는 멀쩡히 살아 있었고, 감춰진 것만 문제였다. -->
