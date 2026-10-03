@@ -244,11 +244,19 @@
       <div id="rg-hits" style="margin-top:6px"></div>
       <div class="row2" style="margin-top:8px">
         <div><label>종류 *</label><select id="rg-kind"><option value="dive">다이브샵 (스쿠버·프리다이빙)</option><option value="surf">서핑샵</option></select></div>
-        <div><label>주소 *</label><input id="rg-addr" maxlength="160" placeholder="도로명 주소 (예: 부산 해운대구 ○○로 12)" /></div>
       </div>
-      <!-- [2026-10-03] 첫 실가입 샵이 주소 칸에 건물 이름만 적어 좌표가 0,0(위치 미상)으로 들어갔다 — 지도 검색이 건물명을 못 찾는다.
-           아래 rg-addr-hint 는 FEATURE_OVERSEAS(약관 4-3) 뒤라 안 보이므로 이 줄은 게이트 없이 둔다. -->
-      <div class="muted" style="margin-top:6px;font-size:.84rem">시·군·구 + 도로명 + 번호까지 적어 주세요. 건물 이름만 적으면 지도에 위치가 잡히지 않습니다.</div>
+      <!-- [2026-10-03] 샵 위치 = 손님과 만나는 곳. 사업자등록증 주소(비거주 오피스 등)와 따로 받는다(사장님 10-03).
+           첫 실가입 샵이 주소 칸에 건물 이름만 적어 좌표가 0,0 으로 들어갔다 → 검색은 후보만, 좌표는 지도 핀 확인으로 정한다(아래 LocPicker).
+           아래 rg-addr-hint 는 FEATURE_OVERSEAS(약관 4-3) 뒤라 안 보이므로 이 안내는 게이트 없이 둔다. -->
+      <label style="margin-top:8px">샵 위치 * <span class="muted" style="font-weight:400">— 손님과 만나는 곳 · 앱 지도와 샵 페이지에 보입니다</span></label>
+      <div style="display:flex;gap:6px"><input id="rg-addr" maxlength="160" placeholder="도로명 주소 (예: 부산 해운대구 ○○로 12)" style="flex:1" />
+        <button type="button" class="btn ghost" id="rg-find" style="white-space:nowrap">위치 찾기</button></div>
+      <div class="muted" style="margin-top:6px;font-size:.84rem">사업자등록증 주소(비거주 오피스 등)와 달라도 됩니다 — 사업자 정보는 다음 단계에서 따로 받습니다.
+        매장이 없으면 손님과 주로 만나는 곳(다이빙 풀·항구 등)을 적어 주세요. 집 주소는 적지 마세요.</div>
+      <div id="rg-geo-hits" style="margin-top:6px"></div>
+      <div id="rg-map" class="hidden" style="height:240px;border-radius:12px;margin-top:8px;border:1px solid var(--line)"></div>
+      <label id="rg-pin-ok-box" class="hidden" style="margin-top:8px;font-weight:400;display:flex;gap:6px;align-items:flex-start">
+        <input type="checkbox" id="rg-pin-ok" style="width:auto;margin-top:3px" /> <span>지도의 핀이 손님과 만나는 곳이 맞습니다 <span class="muted">(틀리면 핀을 끌거나 지도를 눌러 옮기세요)</span></span></label>
       <!-- [2026-09-28] 1인 강사·해외 샵 안내 — FEATURE_OVERSEAS 가 켜질 때만(약관 4-3 개정 게시 뒤) -->
       <div class="muted hidden" id="rg-addr-hint" style="margin-top:6px">📍 주소 = <b>손님과 만나는 곳</b>(매장 없는 1인 강사는 활동 지역) — 앱에 그대로 보입니다. <b>집 주소는 적지 마세요.</b></div>
       <div class="msg" id="rg-msg"></div>
@@ -1484,21 +1492,84 @@ $('rg-name').addEventListener('input', e => {
     });
   }, 250);
 });
+// ── 위치 고르기 = 검색은 후보만, 좌표는 지도 핀 확인 (2026-10-03) ──
+// 검색 1등을 그대로 저장하던 방식이 두 번 조용히 틀렸다:
+//   09-24 주소 「245」 → 아이슬란드(64.0,-22.7) · 10-02 첫 실가입 샵이 건물 이름만 적어 못 찾음 → 0,0(needs_geocode).
+//   10-03 실측: Nominatim 은 「서울 중랑구 망우로 353」을 인천 청라 아파트로 잡는다 — 결과가 「있어도」 틀릴 수 있다.
+// 그래서 Nominatim 결과는 지도를 옮기는 출발점일 뿐이고, 샵이 핀을 보고(필요하면 끌어 옮기고) 확인해야 좌표가 정해진다.
+// 나라 순서: 한국 먼저, 없으면 서비스 지역 나라(일본·인니·태국·필리핀·괌·사이판) — 해외 샵도 등록되게(09-28 사용자).
+// Nominatim 사용 규칙(초당 1회·자동완성 금지) 때문에 입력마다가 아니라 [위치 찾기] 버튼으로만 부른다.
+// 지도는 Leaflet + OSM 타일을 필요할 때만 불러온다(Mapbox 는 비용 — CLAUDE.md #8).
+// ponytail: 한국 건물명·지번 검색은 Nominatim 이 약하다. 카카오 지도 JavaScript 키(도메인 제한)를 받으면 검색만 그쪽으로 바꾸면 된다.
+let leafletReady = null;
+const loadLeaflet = () => leafletReady || (leafletReady = new Promise((ok, bad) => {
+  const css = document.createElement('link'); css.rel = 'stylesheet';
+  css.href = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'; document.head.appendChild(css);
+  const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+  s.onload = ok; s.onerror = () => { leafletReady = null; bad(new Error('map_load_failed')); }; document.head.appendChild(s);
+}));
+function makeLocPicker(p) {   // p = id 접두어: `${p}-addr`·`${p}-find`·`${p}-geo-hits`·`${p}-map`·`${p}-pin-ok`·`${p}-pin-ok-box`
+  let map = null, marker = null;
+  const st = { lat: null, lon: null };
+  const unconfirm = () => { $(p + '-pin-ok').checked = false; };
+  const place = (lat, lon, zoom) => {
+    st.lat = +(+lat).toFixed(6); st.lon = +(+lon).toFixed(6);
+    if (!marker) {
+      marker = L.marker([st.lat, st.lon], { draggable: true }).addTo(map);
+      marker.on('dragend', () => { const g = marker.getLatLng(); st.lat = +g.lat.toFixed(6); st.lon = +g.lng.toFixed(6); unconfirm(); });
+    } else marker.setLatLng([st.lat, st.lon]);
+    map.setView([st.lat, st.lon], zoom || Math.max(map.getZoom(), 16));
+    $(p + '-pin-ok-box').classList.remove('hidden'); unconfirm();
+  };
+  const showMap = async () => {
+    await loadLeaflet();
+    $(p + '-map').classList.remove('hidden');
+    if (!map) {
+      map = L.map(p + '-map').setView([36.3, 127.8], 7);   // 첫 화면 = 한반도
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+      map.on('click', e => place(e.latlng.lat, e.latlng.lng, map.getZoom()));
+    }
+    map.invalidateSize();
+  };
+  $(p + '-find').onclick = async () => {
+    const q = $(p + '-addr').value.trim();
+    if (!q) { $(p + '-geo-hits').innerHTML = '<div class="muted">주소를 먼저 적어 주세요.</div>'; return; }
+    $(p + '-geo-hits').innerHTML = '<div class="muted">찾는 중…</div>';
+    let hits = [];
+    try {
+      const geo = cc => fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=' + cc + '&q=' + encodeURIComponent(q), { headers: { 'Accept-Language': 'ko' } }).then(r => r.json());
+      hits = await geo('kr');
+      if (!(hits && hits.length)) hits = await geo('jp,id,th,ph,gu,mp');
+    } catch (e) { hits = []; }
+    try { await showMap(); } catch (e) {
+      $(p + '-geo-hits').innerHTML = '<div class="msg err">지도를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.</div>'; return;
+    }
+    if (!(hits && hits.length)) {
+      $(p + '-geo-hits').innerHTML = '<div class="muted">검색 결과가 없습니다 — 지도를 움직여 <b>손님과 만나는 곳을 직접 눌러</b> 주세요.</div>';
+      return;
+    }
+    $(p + '-geo-hits').innerHTML = '<div class="muted" style="margin-bottom:4px">후보를 누르면 지도에 핀이 찍힙니다. <b>핀 위치를 꼭 확인하세요</b> — 검색이 엉뚱한 곳을 잡기도 합니다.</div>'
+      + hits.map((h, i) => `<div class="stat-row" style="cursor:pointer;padding:6px 4px;border-bottom:1px solid var(--line)" data-i="${i}"><span class="muted">${esc(h.display_name)}</span><span class="muted">선택</span></div>`).join('');
+    [...$(p + '-geo-hits').querySelectorAll('[data-i]')].forEach(el => el.onclick = () => { const h = hits[+el.dataset.i]; place(h.lat, h.lon, 17); });
+    place(hits[0].lat, hits[0].lon, 17);
+  };
+  $(p + '-addr').addEventListener('input', () => { if (marker) unconfirm(); });
+  return {
+    // 확인된 좌표만 돌려준다 — 핀을 안 찍었거나 체크를 안 했으면 null.
+    confirmed: () => (st.lat != null && $(p + '-pin-ok').checked) ? { lat: st.lat, lon: st.lon } : null,
+  };
+}
+const rgLoc = makeLocPicker('rg');
 $('btn-register').onclick = async () => {
   const name = $('rg-name').value.trim(), addr = $('rg-addr').value.trim(), kind = $('rg-kind').value;
   if (!name) { msg('rg-msg', '상호를 적어 주세요.', false); return; }
-  if (!rgPick && !addr) { msg('rg-msg', '새 샵은 주소가 필요합니다.', false); return; }
+  if (!rgPick && !addr) { msg('rg-msg', '새 샵은 샵 위치(주소)가 필요합니다.', false); return; }
+  // 등재 샵을 고른 경우는 수집 좌표를 쓴다. 새 샵은 지도 핀 확인이 필수 — 0,0(needs_geocode)으로 들어가는 길을 막는다.
   let lat = rgPick ? rgPick.lat : null, lon = rgPick ? rgPick.lon : null;
-  if (lat == null && addr) {
-    // 새 샵 좌표 — 지역 목록·지도 노출에 쓴다. 실패해도 등록은 진행(운영자가 보정).
-    // 나라 제한: 2026-09-24 주소 「245」가 제한 없이 아이슬란드(64.0,-22.7)로 찍혔다. 틀린 좌표보다 null(needs_geocode)이 낫다.
-    // 한국 먼저, 없으면 서비스 지역 나라(일본·인니·태국·필리핀·괌·사이판) — 해외 샵도 등록되게(09-28 사용자).
-    try {
-      const geo = cc => fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=' + cc + '&q=' + encodeURIComponent(addr), { headers: { 'Accept-Language': 'ko' } }).then(r => r.json());
-      let r = await geo('kr');
-      if (!(r && r[0])) r = await geo('jp,id,th,ph,gu,mp');
-      if (r && r[0]) { lat = +r[0].lat; lon = +r[0].lon; }
-    } catch (e) {}
+  if (!rgPick) {
+    const c = rgLoc.confirmed();
+    if (!c) { msg('rg-msg', '[위치 찾기]로 지도에 핀을 찍고, 핀 위치가 맞다고 체크해 주세요.', false); return; }
+    lat = c.lat; lon = c.lon;
   }
   $('btn-register').disabled = true;
   const { data, error } = await sb.rpc('register_partner_shop', { p_name: name, p_address: addr || null, p_kind: kind, p_lat: lat, p_lon: lon });
