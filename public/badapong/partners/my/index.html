@@ -250,7 +250,10 @@
            아래 rg-addr-hint 는 FEATURE_OVERSEAS(약관 4-3) 뒤라 안 보이므로 이 안내는 게이트 없이 둔다. -->
       <label style="margin-top:8px">샵 위치 * <span class="muted" style="font-weight:400">— 손님과 만나는 곳 · 앱 지도와 샵 페이지에 보입니다</span></label>
       <div style="display:flex;gap:6px"><input id="rg-addr" maxlength="160" placeholder="도로명 주소 (예: 부산 해운대구 ○○로 12)" style="flex:1" />
+        <button type="button" class="btn" id="rg-post" style="white-space:nowrap">주소 찾기</button>
         <button type="button" class="btn ghost" id="rg-find" style="white-space:nowrap">위치 찾기</button></div>
+      <div id="rg-post-box" class="hidden" style="height:420px;margin-top:6px;border:1px solid var(--line);border-radius:12px;overflow:hidden"></div>
+      <div class="muted" style="margin-top:4px;font-size:.8rem">국내: [주소 찾기]로 도로명 주소를 고르면 지도에 바로 찍힙니다 · 해외: 주소를 적고 [위치 찾기]</div>
       <div class="muted" style="margin-top:6px;font-size:.84rem">사업자등록증 주소(비거주 오피스 등)와 달라도 됩니다 — 사업자 정보는 다음 단계에서 따로 받습니다.
         매장이 없으면 손님과 주로 만나는 곳(다이빙 풀·항구 등)을 적어 주세요. 집 주소는 적지 마세요.</div>
       <div id="rg-geo-hits" style="margin-top:6px"></div>
@@ -1531,15 +1534,16 @@ function makeLocPicker(p) {   // p = id 접두어: `${p}-addr`·`${p}-find`·`${
     }
     map.invalidateSize();
   };
-  $(p + '-find').onclick = async () => {
-    const q = $(p + '-addr').value.trim();
-    if (!q) { $(p + '-geo-hits').innerHTML = '<div class="muted">주소를 먼저 적어 주세요.</div>'; return; }
+  // tries = Nominatim 검색 인자 묶음 목록 — 결과가 나오는 첫 묶음을 쓴다.
+  const search = async tries => {
     $(p + '-geo-hits').innerHTML = '<div class="muted">찾는 중…</div>';
     let hits = [];
     try {
-      const geo = cc => fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=' + cc + '&q=' + encodeURIComponent(q), { headers: { 'Accept-Language': 'ko' } }).then(r => r.json());
-      hits = await geo('kr');
-      if (!(hits && hits.length)) hits = await geo('jp,id,th,ph,gu,mp');
+      for (const t of tries) {
+        hits = await fetch('https://nominatim.openstreetmap.org/search?' + new URLSearchParams({ format: 'json', limit: 5, ...t }),
+                           { headers: { 'Accept-Language': 'ko' } }).then(r => r.json());
+        if (hits && hits.length) break;
+      }
     } catch (e) { hits = []; }
     try { await showMap(); } catch (e) {
       $(p + '-geo-hits').innerHTML = '<div class="msg err">지도를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.</div>'; return;
@@ -1552,6 +1556,39 @@ function makeLocPicker(p) {   // p = id 접두어: `${p}-addr`·`${p}-find`·`${
       + hits.map((h, i) => `<div class="stat-row" style="cursor:pointer;padding:6px 4px;border-bottom:1px solid var(--line)" data-i="${i}"><span class="muted">${esc(h.display_name)}</span><span class="muted">선택</span></div>`).join('');
     [...$(p + '-geo-hits').querySelectorAll('[data-i]')].forEach(el => el.onclick = () => { const h = hits[+el.dataset.i]; place(h.lat, h.lon, 17); });
     place(hits[0].lat, hits[0].lon, 17);
+  };
+  $(p + '-find').onclick = () => {
+    const q = $(p + '-addr').value.trim();
+    if (!q) { $(p + '-geo-hits').innerHTML = '<div class="muted">주소를 먼저 적어 주세요.</div>'; return; }
+    search([{ countrycodes: 'kr', q }, { countrycodes: 'jp,id,th,ph,gu,mp', q }]);
+  };
+  // 국내 = 우편번호 서비스(카카오, 키 없음)로 표준 도로명 주소를 고른다 — 오타·건물명만 쓰기(10-02)를 원천에서 막는다.
+  // 좌표는 주지 않으므로 고른 주소로 Nominatim 을 부른다. 10-03 실측: 「서울 중랑구 망우로 353」 자유 문장은 인천 청라로 틀렸지만
+  // 구조화 검색(street='353 망우로', city='중랑구', state='서울')은 상봉동 그 건물을 정확히 잡았다 → 구조화 → 「도로명 번호, 시도」 → 지번 → 동 순서.
+  // 그래도 결과는 출발점일 뿐, 핀 확인 체크는 그대로 필수.
+  const postBtn = $(p + '-post');
+  if (postBtn) postBtn.onclick = () => {
+    // 팝업(open) 대신 페이지 안에 펼친다(embed) — 스크립트를 클릭 뒤 비동기로 불러오면 첫 팝업이 차단기에 막힌다.
+    const box = $(p + '-post-box');
+    const open = () => { box.classList.remove('hidden'); new daum.Postcode({ width: '100%', height: '100%', oncomplete: d => {
+      box.classList.add('hidden');
+      const road = d.roadAddress || d.autoRoadAddress || '';
+      $(p + '-addr').value = road + (d.buildingName ? ` (${d.buildingName})` : '');
+      if (marker) unconfirm();
+      const num = d.roadname && (road.match(new RegExp(d.roadname + '\\s+([0-9-]+)')) || [])[1];
+      const jibun = d.jibunAddress || d.autoJibunAddress || '';
+      const tries = [];
+      if (num) tries.push({ countrycodes: 'kr', street: `${num} ${d.roadname}`, city: d.sigungu, state: d.sido },
+                          { countrycodes: 'kr', q: `${d.roadname} ${num}, ${d.sido}` });
+      if (jibun) tries.push({ countrycodes: 'kr', q: jibun });
+      if (d.bname) tries.push({ countrycodes: 'kr', q: `${d.bname}, ${d.sigungu}, ${d.sido}` });
+      search(tries);
+    } }).embed(box); };
+    if (window.daum && daum.Postcode) return open();
+    const s = document.createElement('script');
+    s.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+    s.onload = open; s.onerror = () => { $(p + '-geo-hits').innerHTML = '<div class="msg err">주소 찾기를 불러오지 못했습니다 — 주소를 적고 [위치 찾기]를 눌러 주세요.</div>'; };
+    document.head.appendChild(s);
   };
   $(p + '-addr').addEventListener('input', () => { if (marker) unconfirm(); });
   return {
