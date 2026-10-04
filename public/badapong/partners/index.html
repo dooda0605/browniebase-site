@@ -63,6 +63,11 @@
   .hero { display:grid; gap:28px; }
   @media (min-width:900px){ .hero { grid-template-columns:1fr 340px; gap:44px; align-items:center; } }
   .hero-cta { display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+  /* [2026-10-05] 첫 화면 혜택 줄 — 인스타 광고로 온 사람이 3초 안에 「무엇을 얻는지」를 보게(광고 첫날 소개 16 → 포털 1). */
+  .offer { display:flex; flex-wrap:wrap; gap:6px; margin-top:16px; }
+  .offer span { background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.45); color:var(--ink);
+                border-radius:99px; padding:5px 12px; font-size:.86rem; font-weight:700; white-space:nowrap; }
+  .offer span.main { background:rgba(52,211,153,.22); }
 
   .btn { display:inline-block; background:var(--sea); color:#fff; border:0; border-radius:99px;
          padding:12px 24px; font-weight:700; cursor:pointer; text-decoration:none;
@@ -224,15 +229,21 @@
     <div class="hero">
       <div>
         <h1>바다 조건을 보고 오는 사람들에게<br/><span class="g">내 샵의 상품을</span></h1>
-        <p class="lead">
-           바다퐁에 들어오는 사람은 <b>이미 바다에 가기로 마음먹은 사람</b>입니다.
-           날짜와 스팟을 정해 놓고 그날 바다가 어떤지 보러 옵니다. 그 사람들 앞에 내 샵의 <b>펀다이빙 · 강습 · 체험 · 투어</b>와 <b>교육 과정</b>이 놓입니다.
-           모집·진행 판단은 전부 샵이 합니다 — 바다퐁은 자리를 내드릴 뿐입니다.</p>
+        <!-- [2026-10-05] 혜택을 첫 화면으로(사장님 「1번을 먼저 적용하자」). 문구는 아래 #membership 본문과 같은 조건만 — 바꾸면 둘 다. -->
+        <div class="offer">
+          <span class="main">🟢 10월 31일까지 사업자 인증하면 180일 무료</span>
+          <span>예약 수수료 0원</span>
+          <span>카드 등록 없음 · 자동 결제 없음</span>
+        </div>
         <div class="hero-cta">
-          <!-- [2026-09-20] 초대 링크 폐지 — 포털에서 로그인하고 바로 샵을 등록한다(스태프만 초대). -->
           <a class="btn" href="/badapong/partners/my/">파트너 시작하기 →</a>
           <a class="btn ghost" href="#membership">멤버십 안내</a>
         </div>
+        <p class="lead" style="margin-top:20px">
+           바다퐁에 들어오는 사람은 <b>이미 바다에 가기로 마음먹은 사람</b>입니다.
+           날짜와 스팟을 정해 놓고 그날 바다가 어떤지 보러 옵니다. 그 사람들 앞에 내 샵의 <b>펀다이빙 · 강습 · 체험 · 투어</b>와 <b>교육 과정</b>이 놓입니다.
+           모집·진행 판단은 전부 샵이 합니다 — 바다퐁은 자리를 내드릴 뿐입니다.</p>
+        <!-- [2026-09-20] 초대 링크 폐지 — 포털에서 로그인하고 바로 샵을 등록한다(스태프만 초대). 버튼은 10-05 혜택 줄 아래로 올렸다. -->
         <div class="kpis">
           <div class="kpi"><b><span data-k="installs.total_all">3,381</span>명</b><span>누적 사용자</span></div>
           <div class="kpi"><b><span data-k="installs.active_30d">3,252</span>명</b><span>최근 30일</span></div>
