@@ -19,7 +19,21 @@ const t = {
       list: [
         // salpim 카드는 홈에서 비노출 처리 (2026-07-04, /salpim/ 직접 URL·정책 문서는 유지)
         {
+          slug: 'aetherfuse',
+          img: '/aetherfuse/icon.webp',
+          name: 'Aetherfuse',
+          korean: '에테르퓨즈',
+          tagline: '원소 정령 합체 배틀 게임',
+          desc: '뽑은 정령은 알아서 싸워요. 싸우는 도중 붙은 두 정령 사이의 버튼을 눌러 직접 합체하세요.',
+          desc2: '같은 원소는 더 강하게 · 다른 원소는 새 정령으로 — 레시피를 찾아 도감을 채워요',
+          // 플레이 출시되면 status·statusColor 를 바다퐁처럼 바꾸고 aetherfuse/page.tsx 의 PLAY_URL 도 넣는다
+          status: 'Google Play 곧 출시',
+          statusColor: 'text-violet-700 bg-violet-50 border-violet-200',
+          ctaLabel: '자세히 보기',
+        },
+        {
           slug: 'badapong',
+          img: '/badapong-icon.png',
           icon: '🌊',
           color: 'from-cyan-500 to-teal-400',
           name: 'Badapong',
@@ -61,7 +75,20 @@ const t = {
       list: [
         // salpim card hidden from home (2026-07-04, /salpim/ direct URL & policy docs kept)
         {
+          slug: 'aetherfuse',
+          img: '/aetherfuse/icon.webp',
+          name: 'Aetherfuse',
+          korean: '에테르퓨즈',
+          tagline: 'Elemental Spirit Merge Battle',
+          desc: 'Your spirits fight on their own. Tap the button between two touching spirits to fuse them mid-battle.',
+          desc2: 'Same element grows stronger · different elements become a new spirit — find every recipe',
+          status: 'Coming soon to Google Play',
+          statusColor: 'text-violet-700 bg-violet-50 border-violet-200',
+          ctaLabel: 'Learn more',
+        },
+        {
           slug: 'badapong',
+          img: '/badapong-icon.png',
           icon: '🌊',
           color: 'from-cyan-500 to-teal-400',
           name: 'Badapong',
@@ -153,7 +180,7 @@ export default function BrowniebasePage() {
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1.5">{c.apps.title}</h2>
             <p className="text-sm text-gray-500">{c.apps.subtitle}</p>
           </div>
-          <div className="grid grid-cols-1 gap-6 max-w-xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
             {c.apps.list.map(app => (
               <a
                 key={app.slug}
@@ -162,7 +189,7 @@ export default function BrowniebasePage() {
               >
                 <div className="flex items-start justify-between mb-4">
                   <img
-                    src="/badapong-icon.png"
+                    src={app.img}
                     alt={app.name}
                     width={56}
                     height={56}
@@ -216,6 +243,7 @@ export default function BrowniebasePage() {
             <span className="font-bold">Browniebase</span>
           </div>
           <div className="flex flex-wrap gap-6 text-sm">
+            <a href="/aetherfuse/" className="text-gray-400 hover:text-white transition-colors">Aetherfuse</a>
             <a href="/badapong/" className="text-gray-400 hover:text-white transition-colors">Badapong</a>
             <a href="/badapong/partners/" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '제휴 문의' : 'For Business'}</a>
             <a href="/privacy-badapong.html" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
