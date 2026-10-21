@@ -33,17 +33,21 @@
 <h2>1. Information we process</h2>
 <div class="tbl"><table>
   <tr><th>Information</th><th>When</th><th>Purpose</th></tr>
-  <tr><td>Google account unique ID (we do <strong>not</strong> store your email address, name or photo)</td><td>Only if you choose to sign in with Google</td><td>Back up and restore your game data, identify you in leagues and rankings</td></tr>
+  <tr><td>Google or Apple account unique ID (we do <strong>not</strong> store your email address, name or photo)</td><td>Only if you choose to sign in with Google or Apple</td><td>Back up and restore your game data, identify you in leagues and rankings</td></tr>
   <tr><td>Game data: progress, upgrades, codex, scores, match results, rankings, medals, display name</td><td>After you sign in, while playing</td><td>Saving progress, showing rankings, preventing cheating</td></tr>
   <tr><td>Advertising ID, device and app information, approximate location derived from IP address, ad interactions, diagnostic data</td><td>When ads are loaded or shown (Google AdMob)</td><td>Showing rewarded ads, ad measurement, fraud prevention</td></tr>
+  <tr><td>Usage events: app opened, game started and ended (mode, chapter, result, play time, defeats, merges, score), tutorial finished, new elements found, upgrades, ads watched, sign-in; app version, device type, language and a random analytics ID</td><td>While you use the app (Android and iOS app only), and not in regions where consent is required</td><td>Understanding how the Game is played and improving balance and features</td></tr>
+  <tr><td>Error reports: error message, where in the code it happened, device and OS type, app version</td><td>When the app hits an error (Android and iOS app only)</td><td>Finding and fixing bugs</td></tr>
   <tr><td>Server access logs (IP address, time)</td><td>When the Game contacts our server</td><td>Security and troubleshooting</td></tr>
 </table></div>
+<p>Usage events and error reports do not include your name, email address or advertising ID, and are not used for ads.</p>
 <p>Live battles (if you use them) exchange only in-game inputs through our real-time server; they are not stored.</p>
 
 <h2>2. How long we keep it</h2>
 <ul>
   <li>Account and game data: until you delete your account. We delete it within 30 days of your request.</li>
   <li>Server access logs: up to 90 days.</li>
+  <li>Usage events: up to 1 year. Error reports: up to 90 days.</li>
   <li>Data on your device: until you delete the Game or its data.</li>
 </ul>
 
@@ -51,12 +55,15 @@
 <div class="tbl"><table>
   <tr><th>Provider</th><th>What they do</th><th>Location</th></tr>
   <tr><td>Google LLC (AdMob, Google Sign-In)</td><td>Ads, sign-in verification</td><td>United States and other countries where Google operates</td></tr>
+  <tr><td>Apple Inc. (Sign in with Apple)</td><td>Sign-in verification</td><td>United States</td></tr>
+  <tr><td>PostHog Inc.</td><td>Usage analytics</td><td>United States</td></tr>
+  <tr><td>Functional Software, Inc. (Sentry)</td><td>Error reports</td><td>United States</td></tr>
   <tr><td>Supabase Inc.</td><td>Game server and database</td><td>Data stored in Seoul, Republic of Korea; the provider is based in the United States</td></tr>
 </table></div>
 <p>We do not sell your personal information. Google's use of data for ads is described at <a href="https://policies.google.com/technologies/partner-sites">policies.google.com/technologies/partner-sites</a>.</p>
 
 <h2>4. Ads and your choices</h2>
-<p>The Game shows rewarded ads only when you choose to watch one. You can reset or delete your advertising ID, or turn off ad personalization, in your device settings. In regions where consent is required (such as the EEA and the UK), personalized ads are shown only with your consent.</p>
+<p>The Game shows rewarded ads only when you choose to watch one. You can reset or delete your advertising ID, or turn off ad personalization, in your device settings. In regions where consent is required (such as the EEA and the UK), personalized ads are shown only with your consent, and we do not collect usage events.</p>
 
 <h2>5. Your rights</h2>
 <p>You can ask to access, correct or delete your data, or to stop its processing. To delete your account and all server data, follow <a href="../delete-account/">browniebase.com/aetherfuse/delete-account</a> or email us. We respond without undue delay.</p>
@@ -85,17 +92,21 @@
 <h2>1. 처리하는 개인정보</h2>
 <div class="tbl"><table>
   <tr><th>항목</th><th>언제</th><th>목적</th></tr>
-  <tr><td>Google 계정 고유 식별값(이메일·이름·사진은 저장하지 않음)</td><td>Google 로그인을 선택한 경우</td><td>게임 기록 백업·복원, 리그·순위의 이용자 구분</td></tr>
+  <tr><td>Google 또는 Apple 계정 고유 식별값(이메일·이름·사진은 저장하지 않음)</td><td>Google·Apple 로그인을 선택한 경우</td><td>게임 기록 백업·복원, 리그·순위의 이용자 구분</td></tr>
   <tr><td>게임 기록: 진행·강화·도감·점수·대전 결과·순위·훈장·표시 이름</td><td>로그인 뒤 게임할 때</td><td>기록 보관, 순위 표시, 부정 이용 방지</td></tr>
   <tr><td>광고 ID, 기기·앱 정보, IP 기반 대략적 위치, 광고 상호작용, 진단 정보</td><td>광고를 불러오거나 볼 때(Google AdMob)</td><td>보상형 광고 제공, 광고 측정, 부정 방지</td></tr>
+  <tr><td>이용 기록: 앱 실행, 판 시작·끝(모드·장·결과·시간·처치·합체·점수), 길잡이 끝, 새 원소 발견, 강화, 광고 시청, 로그인, 앱 버전·기기 종류·언어·무작위 분석 ID</td><td>앱(안드로이드·iOS)을 쓸 때. 동의가 필요한 지역에서는 수집하지 않음</td><td>게임 이용 방식 파악, 밸런스·기능 개선</td></tr>
+  <tr><td>오류 보고: 오류 내용, 코드 위치, 기기·운영체제 종류, 앱 버전</td><td>앱(안드로이드·iOS)에서 오류가 날 때</td><td>오류 확인·수정</td></tr>
   <tr><td>서버 접속 기록(IP 주소, 시각)</td><td>게임이 서버에 접속할 때</td><td>보안, 오류 확인</td></tr>
 </table></div>
+<p>이용 기록과 오류 보고에는 이름·이메일·광고 ID 가 들어가지 않으며, 광고에 쓰지 않습니다.</p>
 <p>실시간 대전을 하면 게임 입력만 실시간 서버를 거쳐 주고받으며 저장하지 않습니다.</p>
 
 <h2>2. 보유 기간</h2>
 <ul>
   <li>계정·게임 기록: 계정을 삭제할 때까지. 삭제 요청 후 30일 안에 지웁니다.</li>
   <li>서버 접속 기록: 최대 90일.</li>
+  <li>이용 기록: 최대 1년. 오류 보고: 최대 90일.</li>
   <li>기기에 저장된 기록: 게임이나 그 데이터를 지울 때까지.</li>
 </ul>
 
@@ -103,12 +114,15 @@
 <div class="tbl"><table>
   <tr><th>받는 곳</th><th>맡기는 일</th><th>위치</th></tr>
   <tr><td>Google LLC (AdMob, Google 로그인)</td><td>광고 제공, 로그인 확인</td><td>미국 등 Google 운영 국가</td></tr>
+  <tr><td>Apple Inc. (Apple 로그인)</td><td>로그인 확인</td><td>미국</td></tr>
+  <tr><td>PostHog Inc.</td><td>이용 기록 분석</td><td>미국</td></tr>
+  <tr><td>Functional Software, Inc. (Sentry)</td><td>오류 보고</td><td>미국</td></tr>
   <tr><td>Supabase Inc.</td><td>게임 서버·데이터베이스</td><td>데이터는 대한민국 서울 리전에 저장, 운영사는 미국 법인</td></tr>
 </table></div>
 <p>회사는 개인정보를 판매하지 않습니다.</p>
 
 <h2>4. 광고와 이용자의 선택</h2>
-<p>보상형 광고는 이용자가 직접 고를 때만 나옵니다. 기기 설정에서 광고 ID 를 재설정·삭제하거나 맞춤 광고를 끌 수 있습니다. 동의가 필요한 지역(유럽 경제 지역·영국 등)에서는 동의한 경우에만 맞춤 광고를 보여 줍니다.</p>
+<p>보상형 광고는 이용자가 직접 고를 때만 나옵니다. 기기 설정에서 광고 ID 를 재설정·삭제하거나 맞춤 광고를 끌 수 있습니다. 동의가 필요한 지역(유럽 경제 지역·영국 등)에서는 동의한 경우에만 맞춤 광고를 보여 주며, 이용 기록을 수집하지 않습니다.</p>
 
 <h2>5. 이용자의 권리</h2>
 <p>개인정보 열람·정정·삭제·처리 정지를 요청할 수 있습니다. 계정과 서버 기록 삭제는 <a href="../delete-account/">browniebase.com/aetherfuse/delete-account</a> 안내를 따르거나 이메일로 요청해 주세요. 지체 없이 처리합니다.</p>
