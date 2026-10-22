@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>에테르퓨즈로 돌아가기 · Back to Aetherfuse</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #1c1236; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; text-align: center; padding: 24px; box-sizing: border-box; }
+    img { width: 96px; height: 96px; border-radius: 22px; }
+    p { margin: 0; font-size: 15px; line-height: 1.6; color: #d9d2ff; }
+    a.btn { display: inline-block; min-width: 240px; padding: 16px 24px; border-radius: 14px; background: #ffd84a; color: #1c1236; font-size: 18px; font-weight: 800; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <img src="../icon.webp" alt="" />
+  <p id="msg">카카오 로그인이 끝났어요<br><small>Kakao login finished</small></p>
+  <a class="btn" id="go" href="#">에테르퓨즈로 돌아가기</a>
+  <script>
+    // 카카오 로그인 뒤 서버(supabase/functions/kakao)가 여기로 보냄(#ticket=… 또는 #error=… — # 뒤라 이 서버로는 안 감).
+    // 크롬 탭은 사용자가 누르지 않은 「앱으로 열기」를 막아서, 자동으로 한 번 시도하고 안 되면 버튼을 누르게 함.
+    // 표만으로는 로그인할 수 없음(앱만 가진 verifier 가 함께 있어야 함).
+    var q = location.hash.slice(1), scheme = "com.browniebase.aetherfuse", url;
+    if (/android/i.test(navigator.userAgent)) url = "intent://kakao?" + q + "#Intent;scheme=" + scheme + ";package=" + scheme + ";end";
+    else url = scheme + "://kakao?" + q;
+    if (/error=/.test(q)) document.getElementById("msg").innerHTML = "카카오 로그인을 마치지 못했어요<br><small>Kakao login was not completed</small>";
+    document.getElementById("go").href = url;
+    location.href = url;
+  </script>
+</body>
+</html>
