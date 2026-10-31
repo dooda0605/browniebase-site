@@ -19,6 +19,19 @@ const t = {
       list: [
         // salpim 카드는 홈에서 비노출 처리 (2026-07-04, /salpim/ 직접 URL·정책 문서는 유지)
         {
+          slug: 'yunhoe',
+          img: '/yunhoe/icon.webp',
+          name: 'Yunhoe',
+          korean: '윤회',
+          tagline: '인생 시뮬레이션 게임',
+          desc: '태어난 날로 시작해 시간표를 짜고 갈림길에서 고르며 여든 살까지 한 사람의 인생을 살아 봐요.',
+          desc2: '여든에 수호신이 들려주는 인생 총평 · 다시 태어나 다른 삶 살아 보기',
+          // 출시되면 status·statusColor 를 바다퐁처럼 바꾸고 yunhoe/page.tsx 의 STORE 주소도 넣는다
+          status: 'App Store · Google Play 곧 출시',
+          statusColor: 'text-red-700 bg-red-50 border-red-200',
+          ctaLabel: '자세히 보기',
+        },
+        {
           slug: 'aetherfuse',
           img: '/aetherfuse/icon.webp',
           name: 'Aetherfuse',
@@ -74,6 +87,18 @@ const t = {
       subtitle: 'One at a time, with depth',
       list: [
         // salpim card hidden from home (2026-07-04, /salpim/ direct URL & policy docs kept)
+        {
+          slug: 'yunhoe',
+          img: '/yunhoe/icon.webp',
+          name: 'Yunhoe',
+          korean: '윤회',
+          tagline: 'Life Simulation Game',
+          desc: 'Start from the day you were born, plan your timetable, make choices at every crossroads and live one whole life to age 80.',
+          desc2: 'A guardian reviews your life at 80 · be reborn and live another one',
+          status: 'Coming soon to App Store · Google Play',
+          statusColor: 'text-red-700 bg-red-50 border-red-200',
+          ctaLabel: 'Learn more',
+        },
         {
           slug: 'aetherfuse',
           img: '/aetherfuse/icon.webp',
@@ -243,6 +268,7 @@ export default function BrowniebasePage() {
             <span className="font-bold">Browniebase</span>
           </div>
           <div className="flex flex-wrap gap-6 text-sm">
+            <a href="/yunhoe/" className="text-gray-400 hover:text-white transition-colors">Yunhoe</a>
             <a href="/aetherfuse/" className="text-gray-400 hover:text-white transition-colors">Aetherfuse</a>
             <a href="/badapong/" className="text-gray-400 hover:text-white transition-colors">Badapong</a>
             <a href="/badapong/partners/" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '제휴 문의' : 'For Business'}</a>
