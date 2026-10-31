@@ -81,7 +81,7 @@ a { color: var(--accent) }
 <p>AI 총평의 국외 이전을 원하지 않으면 설정에서 'AI 인생 총평 받기'를 끄면 됩니다. 꺼도 게임 이용에는 제한이 없고, 기본 총평을 보여 드립니다. 광고 관련 선택은 4절을 봐 주세요.</p>
 
 <h2>4. 광고 (앱만)</h2>
-<p>앱(안드로이드·iOS)은 무료로 AI 총평을 제공하려고 Google AdMob 전면 광고를 보여 줍니다. 광고는 중간 정산을 넘길 때와 AI 총평을 기다리는 동안에만, 2분에 한 번을 넘지 않게 나옵니다. 웹판에는 광고가 없습니다.</p>
+<p>앱(안드로이드·iOS)은 무료로 AI 총평을 제공하려고 Google AdMob 전면 광고를 보여 줍니다. 전면 광고는 중간 정산을 넘길 때와 AI 총평을 기다리는 동안에만, 2분에 한 번을 넘지 않게 나옵니다. '빠르게 살아보기'는 첫 1번이 무료이고, 그다음은 이용자가 고를 때만 보상형 광고를 보고 한 번 더 할 수 있습니다. 웹판에는 광고가 없습니다.</p>
 <div class="table"><table>
 <tr><th>Google이 처리하는 정보</th><td>기기 광고 ID(안드로이드 광고 ID, iOS는 추적을 허용한 경우의 광고 식별자 IDFA), IP 주소와 그로 짐작한 대략적 위치, 기기 종류·운영체제·앱 버전, 본 광고와 누른 광고 같은 광고 상호작용, 광고가 멈추거나 오류가 난 기록</td></tr>
 <tr><th>목적</th><td>광고 보여 주기, 광고 측정, 부정 클릭·사기 방지, (동의한 경우) 맞춤 광고</td></tr>
@@ -89,7 +89,7 @@ a { color: var(--accent) }
 </table></div>
 <ul>
 <li><b>유럽 경제 지역·영국·스위스 등</b>: 처음 실행할 때 Google의 동의 창이 뜹니다. 앱 <b>설정 → 개인정보 설정</b>에서 언제든 다시 고를 수 있습니다.</li>
-<li><b>iOS</b>: 첫 광고 직전에 '앱 추적 허용' 창이 한 번 뜹니다. 허용하지 않아도 게임은 똑같이 할 수 있고, 맞춤이 아닌 광고가 나옵니다. 기기 <b>설정 → 개인정보 보호 및 보안 → 추적</b>에서 바꿀 수 있습니다.</li>
+<li><b>iOS</b>: 앱을 처음 켤 때(광고를 불러오기 전) '앱 추적 허용' 창이 한 번 뜹니다. 허용하지 않아도 게임은 똑같이 할 수 있고, 맞춤이 아닌 광고가 나옵니다. 기기 <b>설정 → 개인정보 보호 및 보안 → 추적</b>에서 바꿀 수 있습니다.</li>
 <li><b>안드로이드</b>: 기기 <b>설정 → 개인정보 보호(또는 Google) → 광고</b>에서 광고 ID를 재설정하거나 삭제할 수 있습니다.</li>
 <li>Google이 정보를 어떻게 쓰는지: <a href="https://policies.google.com/technologies/partner-sites">policies.google.com/technologies/partner-sites</a></li>
 <li>광고 콘텐츠는 보호자 지도 수준(PG) 이하로 제한합니다.</li>
@@ -151,7 +151,7 @@ a { color: var(--accent) }
 <ul>
 <li><b>On your device by default:</b> your birth date and time, calendar type, gender, nickname and all game records are stored on your device.</li>
 <li><b>Optional sign-in (Apple, Google or Kakao):</b> every game feature works without an account. If you sign in, your account ID, the email the provider shares and your game records (including the birth date and time you entered) are stored on our Supabase server (data region: Sweden) so you can continue on another device. Settings → 계정 → 계정 지우기 (Delete account) deletes your account and server records immediately. No analytics tools.</li>
-<li><b>Ads (apps only):</b> the Android and iOS apps show Google AdMob interstitial ads after mid-life report cards and while the AI review loads (at most once every 2 minutes). Google LLC (USA) processes your device's advertising ID (on iOS, the IDFA only if you allow tracking), IP address and approximate location, device and app information, ad interactions and ad diagnostics for serving and measuring ads and preventing fraud. In the EEA, UK and Switzerland, Google's consent form is shown first and can be reopened in Settings → 개인정보 설정 (Privacy settings). On iOS the App Tracking Transparency prompt appears once before the first ad. You can reset or delete the advertising ID in your device settings. See policies.google.com/technologies/partner-sites. The web version has no ads.</li>
+<li><b>Ads (apps only):</b> the Android and iOS apps show Google AdMob interstitial ads after mid-life report cards and while the AI review loads (at most once every 2 minutes), plus an optional rewarded ad for an extra quick life after the free one. Google LLC (USA) processes your device's advertising ID (on iOS, the IDFA only if you allow tracking), IP address and approximate location, device and app information, ad interactions and ad diagnostics for serving and measuring ads and preventing fraud. In the EEA, UK and Switzerland, Google's consent form is shown first and can be reopened in Settings → 개인정보 설정 (Privacy settings). On iOS the App Tracking Transparency prompt appears once when the app first starts, before any ad loads. You can reset or delete the advertising ID in your device settings. See policies.google.com/technologies/partner-sites. The web version has no ads.</li>
 <li><b>Optional AI life review:</b> only if you agree (asked once, can be turned off in Settings), a summary of your in-game life (your in-game choices by life stage and their results, easy-language traits, stats, ratings, titles, relationship labels such as "mom") is sent over HTTPS to our server function (Supabase, Inc., USA), which asks OpenAI, L.L.C. (USA) to write the review. No birth date, time, gender, nickname or names are sent. Our server does not store the request or the review; logs contain only time, status, duration, token count and model name. OpenAI does not use API data for training and keeps it for up to 30 days for abuse monitoring. Your IP address is hashed and counted in memory for one minute for rate limiting, and never logged. If you decline or the request fails, a review generated on your device is shown. If an AI review looks wrong, tap "이상해요 (신고)" (Report) on its last page: the review text (nickname and names replaced) and the app version are sent to our server to improve the reviews and deleted within one year, and the review on your device is replaced with the built-in one.</li>
 <li><b>Delete your data:</b> Settings → "이 기기의 기록 모두 지우기" (Delete all records on this device), or uninstall the app. If you signed in, Settings → 계정 지우기 deletes your account and server records; otherwise we keep nothing on our servers. Ad data: reset or delete your advertising ID in device settings.</li>
 <li>The game is for fun and does not tell your real future.</li>
