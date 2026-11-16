@@ -24,7 +24,8 @@
 <body>
 
 <h1>개인정보처리방침 – Badapong <span style="float:right;font-size:0.85rem"><a href="privacy-badapong-en.html">English</a></span></h1>
-<p class="meta">시행일: 2026년 5월 3일 &nbsp;|&nbsp; 최종 수정·시행: 2026년 10월 4일</p>
+<p class="meta">시행일: 2026년 5월 3일 &nbsp;|&nbsp; 최종 수정: 2026년 11월 16일 &nbsp;|&nbsp; 지도 제공처 변경 시행: 2026년 11월 24일</p>
+<p class="meta">변경 안내(2026년 11월 16일): 2026년 11월 24일 이후 배포되는 앱 버전부터 국내 지도는 브이월드(V-World, 국토교통부)에서 받고, 해외 지도와 일부 화면(지도 탭·위치 선택)은 지금처럼 Mapbox에서 받습니다. 그 전 버전은 모든 지도를 Mapbox에서 받습니다.</p>
 
 <p>
   <strong>Browniebase</strong>(이하 "운영자")는 <strong>Badapong(바다퐁)</strong>(이하 "앱")을 제공함에 있어
@@ -41,7 +42,7 @@
   <li><strong>위치 정보 (선택)</strong> – "내 주변 spot" 기능 사용 시에만 정밀 위치(위도·경도) 1회 수집. 서버에 저장되지 않으며 즉시 폐기됩니다. 방문 후기 알림을 위한 스팟 근접 비교도 기기 내에서만 수행되며 좌표는 전송·저장되지 않습니다.</li>
   <li><strong>사용자 생성 콘텐츠 (선택)</strong> – 스팟 리뷰(텍스트·별점·사진), 컨디션 체감 피드백(예보와 실제 체감 비교 응답), 편의시설 정보 제보. 제출한 경우에만 저장됩니다.</li>
   <li><strong>사용 설정</strong> – 표시 언어, 선호 활동(스노클·스쿠버 등), 즐겨찾기 spot 목록</li>
-  <li><strong>지도 뷰포트 좌표</strong> – 지도 타일 로딩을 위해 Mapbox에 전송 (사용자 식별 정보 미포함)</li>
+  <li><strong>지도 뷰포트 좌표</strong> – 지도 타일 로딩을 위해 지도 제공처에 전송 (사용자 식별 정보 미포함). 국내 지도는 브이월드(V-World, 국토교통부), 해외 지도와 일부 화면(지도 탭·위치 선택)은 Mapbox</li>
   <li><strong>앱 사용 통계</strong> – 일일 접속(DAU), 화면 조회, 버튼 탭 등 이용 기록과 앱 버전·기기 종류·OS. 익명 기기 식별자 기준으로 PostHog에서 집계하며 이름·연락처는 포함하지 않습니다.</li>
   <li><strong>오류 기록</strong> – 앱이 비정상 종료되거나 오류가 날 때의 오류 내용·앱 버전·기기 종류·OS. Sentry로 전송되며, 이름·이메일·IP 등 개인 식별 정보는 보내지 않도록 설정되어 있습니다.</li>
   <li><strong>모임 · 채팅 (선택)</strong> – 모임 모집글(제목·소개·집결지·회차), 참여 기록, 채팅 메시지·사진, 표시 이름, 신고·차단 기록.
@@ -157,7 +158,8 @@
   <tr><td>Functional Software, Inc. (Sentry)</td><td>앱 오류 기록 수집·분석</td></tr>
   <tr><td>PostHog, Inc.</td><td>앱 이용 통계 수집·분석</td></tr>
   <tr><td>Google LLC</td><td>푸시 알림 발송(Firebase Cloud Messaging), 광고 게재(AdMob)</td></tr>
-  <tr><td>Mapbox, Inc.</td><td>지도 타일 제공</td></tr>
+  <tr><td>Mapbox, Inc.</td><td>해외 지도·일부 화면(지도 탭·위치 선택)의 지도 타일 제공</td></tr>
+  <tr><td>국토교통부 (브이월드 V-World, <a href="https://www.vworld.kr" target="_blank">www.vworld.kr</a>)</td><td>국내 지도 타일 제공 — 지도 화면 좌표만 전송(사용자 식별 정보 미포함, 국내 처리)</td></tr>
   <tr><td>Resend, Inc.</td><td>운영 알림 메일 발송(파트너 신청·인증 접수 알림 등)</td></tr>
 </table></div>
 <p>그 밖에 아래 서비스를 이용합니다.</p>
@@ -179,7 +181,7 @@
   <tr><td>Functional Software, Inc. (Sentry, <a href="https://sentry.io/privacy/" target="_blank">방침</a> · 문의 <a href="mailto:compliance@sentry.io">compliance@sentry.io</a>, 권리 행사 <a href="https://sentry.io/contact/gdpr/" target="_blank">요청 양식</a>)</td><td>미국</td><td>오류 내용·앱 버전·기기 종류·OS</td><td>오류 진단</td><td>30일(Sentry 무료 Developer 요금제 기준 · 유료 요금제로 바꾸면 최대 90일)</td><td>거부 설정은 제공하지 않습니다(개인 식별 정보는 보내지 않음)</td></tr>
   <tr><td>PostHog, Inc. (<a href="https://posthog.com/privacy" target="_blank">방침</a> · 문의 <a href="mailto:privacy@posthog.com">privacy@posthog.com</a>)</td><td>미국</td><td>익명 기기 식별자·화면 조회·버튼 탭 등 이용 기록·앱 버전·기기 종류·OS</td><td>이용 통계</td><td>요금제에 따라 1년(무료 요금제)~7년(유료 요금제)</td><td>거부 설정은 제공하지 않습니다(이름·연락처는 보내지 않음)</td></tr>
   <tr><td>Google LLC (<a href="https://policies.google.com/privacy" target="_blank">방침</a> · 문의 <a href="https://support.google.com/policies?p=privpol_privts" target="_blank">문의 양식</a>)</td><td>미국</td><td>푸시 알림 토큰 / 광고 식별자·대략적 위치 등 광고 요청 정보</td><td>푸시 알림 발송 / 광고 게재</td><td>알림을 끄거나 앱을 삭제할 때까지 / Google 방침에 따름</td><td>알림 끄기 / 기기 설정에서 맞춤 광고 끄기</td></tr>
-  <tr><td>Mapbox, Inc. (<a href="https://www.mapbox.com/legal/privacy" target="_blank">방침</a> · 문의 <a href="mailto:privacy@mapbox.com">privacy@mapbox.com</a>)</td><td>미국</td><td>지도 화면 좌표(사용자 식별 정보 미포함)</td><td>지도 타일 제공</td><td>Mapbox 방침에 따름</td><td>지도 화면을 열지 않으면 전송되지 않습니다</td></tr>
+  <tr><td>Mapbox, Inc. (<a href="https://www.mapbox.com/legal/privacy" target="_blank">방침</a> · 문의 <a href="mailto:privacy@mapbox.com">privacy@mapbox.com</a>)</td><td>미국</td><td>지도 화면 좌표(사용자 식별 정보 미포함)</td><td>해외 지도·일부 화면의 지도 타일 제공</td><td>Mapbox 방침에 따름</td><td>지도 화면을 열지 않으면 전송되지 않습니다</td></tr>
   <tr><td>Resend, Inc. (<a href="https://resend.com/legal/privacy-policy" target="_blank">방침</a> · 문의 <a href="mailto:support@resend.com">support@resend.com</a>)</td><td>미국</td><td>파트너 신청·인증 접수 알림 메일에 들어가는 샵명·신청 내용, 인증 접수 시 입력한 상호·등록번호·대표자명·주소(서류 이미지는 보내지 않음)</td><td>운영자에게 알림 메일 발송</td><td>Resend 방침에 따름</td><td>파트너 신청·인증을 하지 않으면 전송되지 않습니다</td></tr>
 </table></div>
 
