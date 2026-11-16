@@ -39,9 +39,8 @@ const t = {
           tagline: '원소 정령 합체 배틀 게임',
           desc: '뽑은 정령은 알아서 싸워요. 싸우는 도중 붙은 두 정령 사이의 버튼을 눌러 직접 합체하세요.',
           desc2: '같은 원소는 더 강하게 · 다른 원소는 새 정령으로 — 레시피를 찾아 도감을 채워요',
-          // 플레이 출시되면 status·statusColor 를 바다퐁처럼 바꾸고 aetherfuse/page.tsx 의 PLAY_URL 도 넣는다
-          status: 'Google Play 곧 출시',
-          statusColor: 'text-violet-700 bg-violet-50 border-violet-200',
+          status: 'App Store · Google Play 정식 출시',
+          statusColor: 'text-green-700 bg-green-50 border-green-200',
           ctaLabel: '자세히 보기',
         },
         {
@@ -107,8 +106,8 @@ const t = {
           tagline: 'Elemental Spirit Merge Battle',
           desc: 'Your spirits fight on their own. Tap the button between two touching spirits to fuse them mid-battle.',
           desc2: 'Same element grows stronger · different elements become a new spirit — find every recipe',
-          status: 'Coming soon to Google Play',
-          statusColor: 'text-violet-700 bg-violet-50 border-violet-200',
+          status: 'Live on App Store · Google Play',
+          statusColor: 'text-green-700 bg-green-50 border-green-200',
           ctaLabel: 'Learn more',
         },
         {

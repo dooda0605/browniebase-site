@@ -4,9 +4,9 @@ import BizInfo from '@/components/BizInfo'
 
 type Lang = 'ko' | 'en'
 
-// 구글 플레이 출시 전엔 빈 값 → 「곧 출시」 버튼. 출시되면 아래 주소를 넣고, 홈(src/app/page.tsx) 카드 status 도 함께 바꾼다.
-// 'https://play.google.com/store/apps/details?id=com.browniebase.aetherfuse'
-const PLAY_URL = ''
+// 구글 플레이 2026-10-22 · 앱스토어 2026-11-17 출시
+const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.browniebase.aetherfuse'
+const APP_URL = 'https://apps.apple.com/app/id6825150637'
 
 // 색은 게임 화면 그대로(짙은 보라 바탕 · 금색 · 연보라 글자) — 디자인 시안 「게임 소개 페이지」
 const c = {
@@ -14,7 +14,7 @@ const c = {
     sub: '에테르퓨즈\n싸우다 붙으면 합체!',
     intro: '싸우는 도중 붙은 두 정령을 직접 합쳐 더 강한 정령을 만드는 원소 합체 배틀',
     play: 'Google Play에서 받기',
-    soon: 'Google Play 곧 출시',
+    app: 'App Store에서 받기',
     features: [
       { tone: '#ffcf3a', title: '같은 원소', desc: '둘을 합치면 한 단계 위로. 최고 단계엔 왕관이 생겨요.' },
       { tone: '#c79bff', title: '다른 원소', desc: '바람과 돌은 모래폭풍, 불과 빛은 태양. 레시피를 찾아 도감을 채워요.' },
@@ -30,7 +30,7 @@ const c = {
     sub: 'Spirits that fuse mid-battle',
     intro: 'An elemental merge battle — fuse two touching spirits yourself, right in the middle of the fight.',
     play: 'Get it on Google Play',
-    soon: 'Coming soon to Google Play',
+    app: 'Download on the App Store',
     features: [
       { tone: '#ffcf3a', title: 'Same element', desc: 'Fuse two and they rise a tier. The top tier wears a crown.' },
       { tone: '#c79bff', title: 'Different elements', desc: 'Wind and stone make a sandstorm, fire and light a sun. Find every recipe to fill your codex.' },
@@ -48,13 +48,15 @@ const PLAY_PATH = (
   <path d="M3.6 2.31c-.36.2-.6.59-.6 1.04v17.3c0 .45.24.84.6 1.04l10.18-9.69L3.6 2.31zm12.06 8.65l-2.36 2.24 2.36 2.25 3.34-1.91c.7-.4.7-1.42 0-1.83l-3.34-1.91-.01.16zm-1.4 3.55l-9.4 5.36 8.45-8.04.95 2.68zm0-7.34l-8.45-8.04 9.4 5.36-.95 2.68z" />
 )
 
+const APPLE_PATH = <path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.5 1.3 0 1.7-.8 3.3-.8 1.5 0 1.9.8 3.3.8 1.4 0 2.2-1.2 3-2.5 1-1.4 1.4-2.8 1.4-2.8 0-.1-2.6-1-2.6-4.1zM13.9 5c.7-.8 1.2-2 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4z" />
+
 export default function AetherfusePage() {
   const [lang, setLang] = useState<Lang>('ko')
   const t = c[lang]
   const playInner = (
     <>
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{PLAY_PATH}</svg>
-      {PLAY_URL ? t.play : t.soon}
+      {t.play}
     </>
   )
   const btn = 'inline-flex items-center justify-center gap-2 min-h-[52px] px-6 rounded-2xl border-[3px] border-[#0b0920] font-bold'
@@ -82,11 +84,13 @@ export default function AetherfusePage() {
           <img src="/aetherfuse/logo.webp" alt="Aetherfuse" width={640} height={284} className="w-full max-w-[460px] h-auto" />
           <h1 className="text-2xl sm:text-3xl font-extrabold whitespace-pre-line [text-shadow:0_2px_8px_#0b0920]">{t.sub}</h1>
           <p className="text-base sm:text-lg text-[#e6e1ff] max-w-xl [text-shadow:0_1px_6px_#0b0920]">{t.intro}</p>
-          {PLAY_URL ? (
+          <div className="flex flex-wrap justify-center gap-3">
+            <a href={APP_URL} target="_blank" rel="noopener noreferrer" className={`${btn} bg-[#fff6dc] text-[#2a1600] hover:brightness-110`}>
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{APPLE_PATH}</svg>
+              {t.app}
+            </a>
             <a href={PLAY_URL} target="_blank" rel="noopener noreferrer" className={`${btn} bg-[#ffcf3a] text-[#2a1600] hover:brightness-110`}>{playInner}</a>
-          ) : (
-            <span aria-disabled="true" className={`${btn} bg-[#2a2566] text-[#cfc8f5]`}>{playInner}</span>
-          )}
+          </div>
         </div>
       </section>
 
