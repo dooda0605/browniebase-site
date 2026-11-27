@@ -137,13 +137,6 @@ const c = {
       primary: 'App Store에서 다운로드',
     },
     footerTagline: '해양 액티비티 기상 + 시야 예보',
-    shopBand: {
-      n: '292',
-      nLabel: '이미 등재된 국내 다이브샵 · 서핑샵',
-      title: '내 샵도 이 안에 있을 지 모릅니다',
-      body: '신청도 비용도 없이 스팟 근처 서비스로 먼저 올려두었습니다. 내 샵이 어느 스팟에 나오는지, 그 스팟을 몇 명이 봤는지 확인해 보세요.',
-      cta: '내 샵 확인하기',
-    },
   },
   en: {
     nav: { features: 'Features', regions: 'Regions', activities: 'Activities', faq: 'FAQ', launch: 'Get the App', partners: 'For Partners' },
@@ -259,13 +252,6 @@ const c = {
       primary: 'Download on App Store',
     },
     footerTagline: 'Marine weather + visibility forecast',
-    shopBand: {
-      n: '292',
-      nLabel: 'Korean dive and surf shops already listed',
-      title: 'Yours may already be one of them',
-      body: 'No application, no fee — we listed them as services near their spots. Check which spots your shop appears on, and how many people viewed them.',
-      cta: 'Find my shop',
-    },
   },
 } as const
 
@@ -307,7 +293,6 @@ export default function BadapongPage() {
             <a href="#features" className="text-sm text-[#A9BCD0] hover:text-[#7DBDFF] transition-colors">{t.nav.features}</a>
             <a href="#activities" className="text-sm text-[#A9BCD0] hover:text-[#7DBDFF] transition-colors">{t.nav.activities}</a>
             <a href="#regions" className="text-sm text-[#A9BCD0] hover:text-[#7DBDFF] transition-colors">{t.nav.regions}</a>
-            <a href="/badapong/partners/" className="text-sm text-[#A9BCD0] hover:text-[#7DBDFF] transition-colors">{t.nav.partners}</a>
             <a href="/salpim/" className="text-sm text-[#6B8AA8] hover:text-[#7B61FF] transition-colors">Salpim →</a>
           </div>
 
@@ -316,9 +301,6 @@ export default function BadapongPage() {
               <button onClick={() => setLang('ko')} className={`px-3 py-1 rounded-full transition-all font-medium ${lang === 'ko' ? 'bg-[#7DBDFF]/20 text-[#7DBDFF]' : 'text-[#6B8AA8]'}`}>KO</button>
               <button onClick={() => setLang('en')} className={`px-3 py-1 rounded-full transition-all font-medium ${lang === 'en' ? 'bg-[#7DBDFF]/20 text-[#7DBDFF]' : 'text-[#6B8AA8]'}`}>EN</button>
             </div>
-            <a href="/badapong/partners/" className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#1A73E8] to-[#14B8A6] text-white text-sm font-semibold px-3.5 sm:px-4 py-2 rounded-full hover:brightness-110 transition whitespace-nowrap">
-              {t.nav.partners}
-            </a>
           </div>
         </div>
       </nav>
@@ -592,33 +574,6 @@ export default function BadapongPage() {
         </div>
       </section>
 
-      {/* ── 샵 제휴 배너 ─────────────────────────────────────────
-          292 는 이 페이지에서 유일하게 "이미 해놨다"를 증명하는 숫자다.
-          문장 속에 묻어두면 아무도 안 읽는다. 앞으로 꺼낸다. */}
-      <section className="py-16 bg-[#0E1729] border-t border-white/10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row md:items-center gap-8 md:gap-12">
-            <div className="shrink-0 text-center md:text-left">
-              <div className="text-6xl sm:text-7xl font-black tabular-nums leading-none text-transparent bg-clip-text bg-gradient-to-br from-[#69F0AE] to-[#2DD4BF]">
-                {t.shopBand.n}
-              </div>
-              <p className="text-xs text-[#6B8AA8] mt-2 max-w-[13rem] leading-relaxed">{t.shopBand.nLabel}</p>
-            </div>
-            <div className="flex-1 text-center md:text-left">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-3">{t.shopBand.title}</h2>
-              <p className="text-[#A9BCD0] leading-relaxed mb-6">{t.shopBand.body}</p>
-              <a href="/badapong/partners/"
-                 className="inline-flex items-center gap-2 bg-white/5 border border-white/12 text-[#F0F4F8] px-6 py-3 rounded-full font-semibold hover:bg-white/10 transition">
-                {t.shopBand.cta}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ── Footer ──────────────────────────────────────────────── */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -635,7 +590,6 @@ export default function BadapongPage() {
             </div>
             <div className="flex flex-wrap gap-6">
               <a href="/" className="text-[#6B8AA8] hover:text-white text-sm transition-colors">Browniebase</a>
-              <a href="/badapong/partners/" className="text-[#6B8AA8] hover:text-white text-sm transition-colors">{lang === 'ko' ? '파트너 제휴' : 'For Partners'}</a>
               <a href="/salpim/" className="text-[#6B8AA8] hover:text-white text-sm transition-colors">Salpim</a>
               <a href={lang === 'ko' ? '/privacy-badapong.html' : '/privacy-badapong-en.html'} className="text-[#6B8AA8] hover:text-white text-sm transition-colors">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
               <a href={lang === 'ko' ? '/terms-badapong.html' : '/terms-badapong-en.html'} className="text-[#6B8AA8] hover:text-white text-sm transition-colors">{lang === 'ko' ? '이용약관' : 'Terms'}</a>

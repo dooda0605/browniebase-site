@@ -164,7 +164,6 @@ export default function BrowniebasePage() {
           <div className="hidden md:flex items-center gap-6">
             <a href="#apps" className="text-sm text-gray-600 hover:text-amber-700 transition-colors">{c.nav.apps}</a>
             <a href="#contact" className="text-sm text-gray-600 hover:text-amber-700 transition-colors">{c.nav.contact}</a>
-            <a href="/badapong/partners/" className="text-sm text-gray-600 hover:text-amber-700 transition-colors">{c.nav.partners}</a>
           </div>
 
           <div className="flex items-center gap-3">
@@ -270,7 +269,6 @@ export default function BrowniebasePage() {
             <a href="/yunhoe/" className="text-gray-400 hover:text-white transition-colors">Yunhoe</a>
             <a href="/aetherfuse/" className="text-gray-400 hover:text-white transition-colors">Aetherfuse</a>
             <a href="/badapong/" className="text-gray-400 hover:text-white transition-colors">Badapong</a>
-            <a href="/badapong/partners/" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '제휴 문의' : 'For Business'}</a>
             <a href="/privacy-badapong.html" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
             <a href="/terms-badapong.html" className="text-gray-400 hover:text-white transition-colors">{lang === 'ko' ? '이용약관' : 'Terms'}</a>
           </div>
